@@ -1,0 +1,9 @@
+extends ninetofiver/authentication/page.jade
+- load crispy_forms_tags
+
+block title
+  | {{ title }}
+
+block content
+  p You have been logged out successfully.
+  a(class='btn btn-outline-primary' href='{% url "home" %}') Continue

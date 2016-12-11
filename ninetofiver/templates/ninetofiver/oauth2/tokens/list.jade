@@ -1,0 +1,38 @@
+extends ninetofiver/account/page.jade
+- load i18n
+
+block title
+  | {% trans "Tokens" %}
+
+block content_main
+  if authorized_tokens
+    table(class='table table-hover table-bordered')
+      thead
+        tr
+          th Token
+          th Application
+          th Scopes
+          th Expires
+          th Actions
+      for x in authorized_tokens
+        tr
+          td {{ x.token | truncatechars:12 }}
+          td {{ x.application }}
+          td
+            ul(class='list-unstyled')
+              for name, description in x.scopes.items
+                li
+                  strong {{ name }}: 
+                  | {{ description }}
+          td {{ x.expires | date:'r' }}
+          td
+            div(class='btn-group btn-group-sm')
+              a(
+                href='{% url "oauth2_provider:authorized-token-delete" pk=x.pk %}'
+                class='btn btn-danger'
+              )
+                i(class='fa fa-trash')
+                | Revoke
+
+  else
+    p {% trans "There are no authorized tokens yet." %}

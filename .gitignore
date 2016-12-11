@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.idea/
+.ropeproject/
+dist/
+build/
+MANIFEST
+*.egg-info/
+*.sqlite3
+static/
