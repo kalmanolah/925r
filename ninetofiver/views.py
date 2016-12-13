@@ -23,7 +23,6 @@ def account_view(request):
     return render(request, 'ninetofiver/account/index.jade', context)
 
 
-@login_required
 @api_view(exclude_from_schema=True)
 @renderer_classes([OpenAPIRenderer, SwaggerUIRenderer, CoreJSONRenderer])
 @permission_classes((permissions.IsAuthenticated,))
