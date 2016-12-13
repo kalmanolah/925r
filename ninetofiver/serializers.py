@@ -6,7 +6,7 @@ from rest_framework import serializers
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = auth_models.User
-        fields = ('id', 'url', 'username', 'email', 'groups')
+        fields = ('id', 'url', 'username', 'email', 'groups', 'first_name', 'last_name')
         read_only_fields = ('id', 'url')
 
 
