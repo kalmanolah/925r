@@ -7,4 +7,4 @@ build/
 MANIFEST
 *.egg-info/
 *.sqlite3
-static/
+/static/
