@@ -20,3 +20,4 @@ coreapi==2.0.8
 https://github.com/syrusakbary/pyjade/archive/master.zip
 django-settings-export==1.2.1
 django-auth-ldap==1.2.8
+PyYAML==3.12

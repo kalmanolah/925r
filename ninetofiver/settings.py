@@ -12,7 +12,11 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 import os
 from configurations import Configuration
 import ldap
-from django_auth_ldap.config import LDAPSearch
+from django_auth_ldap.config import LDAPSearch, LDAPSearchUnion
+import yaml
+
+
+CFG_FILE_PATH = os.path.expanduser(os.environ.get('CFG_FILE_PATH', '/etc/925r/config.yml'))
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -22,6 +26,34 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 class Base(Configuration):
 
     """Base configuration."""
+
+    @classmethod
+    def pre_setup(cls):
+        super(Base, cls).pre_setup()
+        cls._load_cfg_file()
+        cls._process_cfg()
+
+    @classmethod
+    def _load_cfg_file(cls):
+        data = None
+
+        try:
+            with open(CFG_FILE_PATH, 'r') as f:
+                data = yaml.load(f)
+        except:
+            pass
+
+        if data:
+            for key, value in data.items():
+                setattr(cls, key, value)
+
+    @classmethod
+    def _process_cfg(cls):
+        cls.AUTH_LDAP_USER_SEARCH = LDAPSearchUnion(
+            *[LDAPSearch(x[0], getattr(ldap, x[1]), x[2]) for x in cls.AUTH_LDAP_USER_SEARCHES]
+        )
+
+        print(cls.AUTH_LDAP_USER_SEARCHES)
 
     # SECURITY WARNING: keep the secret key used in production secret!
     SECRET_KEY = '$6_rj^w8_*ihrkohpckeq4028ai1*no1cw1vp*2%oe8+#gp1sj'
@@ -225,7 +257,14 @@ class Base(Configuration):
     AUTH_LDAP_START_TLS = False
     AUTH_LDAP_BIND_DN = "cn=admin,dc=example,dc=org"
     AUTH_LDAP_BIND_PASSWORD = "admin"
-    AUTH_LDAP_USER_SEARCH = LDAPSearch("dc=example,dc=org", ldap.SCOPE_SUBTREE, "(cn=%(user)s)")
+    AUTH_LDAP_USER_SEARCHES = [
+        ['dc=example,dc=org', 'SCOPE_SUBTREE', '(cn=%(user)s)'],
+    ]
+    AUTH_LDAP_USER_ATTR_MAP = {
+        'email': 'mail',
+        'first_name': 'givenName',
+        'last_name': 'sn',
+    }
     AUTH_LDAP_ALWAYS_UPDATE_USER = True
 
 
