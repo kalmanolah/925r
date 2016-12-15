@@ -53,8 +53,6 @@ class Base(Configuration):
             *[LDAPSearch(x[0], getattr(ldap, x[1]), x[2]) for x in cls.AUTH_LDAP_USER_SEARCHES]
         )
 
-        print(cls.AUTH_LDAP_USER_SEARCHES)
-
     # SECURITY WARNING: keep the secret key used in production secret!
     SECRET_KEY = '$6_rj^w8_*ihrkohpckeq4028ai1*no1cw1vp*2%oe8+#gp1sj'
 
