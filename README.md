@@ -8,8 +8,8 @@ ninetofiver (or 925r) is a free and open source time and leave tracking applicat
 Create and activate a virtual environment:
 
 ```
-python3 -m virtualenv -p python3 ../ninetofiver_venv
-source ../ninetofiver_venv/bin/activate
+python3 -m virtualenv -p python3 ninetofiver_venv
+source ninetofiver_venv/bin/activate
 ```
 
 Install build dependencies:

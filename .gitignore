@@ -8,3 +8,4 @@ MANIFEST
 *.egg-info/
 *.sqlite3
 /static/
+ninetofiver_venv/
