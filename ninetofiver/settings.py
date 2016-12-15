@@ -199,6 +199,7 @@ class Base(Configuration):
             'rest_framework_filters.backends.DjangoFilterBackend',
         ),
         'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+        'DEFAULT_PAGINATION_CLASS': 'ninetofiver.pagination.CustomizablePageNumberPagination',
         'PAGE_SIZE': 25,
     }
 
