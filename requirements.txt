@@ -1,4 +1,4 @@
-django==1.10.2
+django==1.10.4
 djangorestframework==3.5.3
 django-filter==0.15.3
 django-rest-swagger==2.0.7
@@ -21,3 +21,4 @@ https://github.com/syrusakbary/pyjade/archive/master.zip
 django-settings-export==1.2.1
 django-auth-ldap==1.2.8
 PyYAML==3.12
+django-countries==4.0

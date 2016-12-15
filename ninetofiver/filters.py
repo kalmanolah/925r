@@ -52,3 +52,24 @@ class NullLastOrderingFilter(django_filters.OrderingFilter):
         qs = qs.order_by(*final_ordering)
 
         return qs
+
+
+class CompanyFilter(FilterSet):
+    class Meta:
+        model = models.Company
+        fields = {
+            'label': ['exact', 'contains', 'icontains'],
+            'vat_identification_number': ['exact', 'contains', 'icontains'],
+            'address': ['exact', 'contains', 'icontains'],
+            'internal': ['exact'],
+        }
+
+
+class EmploymentContractFilter(FilterSet):
+    class Meta:
+        model = models.EmploymentContract
+        fields = {
+            'legal_country': ['exact'],
+            'started_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'ended_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
+        }

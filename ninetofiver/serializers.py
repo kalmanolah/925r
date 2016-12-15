@@ -1,20 +1,21 @@
 """ninetofiver serializers."""
 from django.contrib.auth import models as auth_models
 from rest_framework import serializers
+from ninetofiver import models
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = auth_models.User
-        fields = ('id', 'url', 'username', 'email', 'groups', 'first_name', 'last_name')
-        read_only_fields = ('id', 'url')
+        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name')
+        read_only_fields = ('id',)
 
 
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = auth_models.Group
-        fields = ('id', 'url', 'name')
-        read_only_fields = ('id', 'url')
+        fields = ('id', 'name')
+        read_only_fields = ('id',)
 
 
 class BaseSerializer(serializers.ModelSerializer):
@@ -22,8 +23,8 @@ class BaseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = None
-        fields = ('id', 'url', 'created_at', 'updated_at', 'type')
-        read_only_fields = ('id', 'url', 'created_at', 'updated_at', 'type')
+        fields = ('id', 'created_at', 'updated_at', 'type')
+        read_only_fields = ('id', 'created_at', 'updated_at', 'type')
 
     def validate(self, data):
         super().validate(data)
@@ -39,3 +40,15 @@ class RelatedSerializableField(serializers.RelatedField):
     def to_representation(self, value):
         serializer = value.get_default_serializer()
         return serializer(value, context={'request': None}).data
+
+
+class CompanySerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.Company
+        fields = BaseSerializer.Meta.fields + ('label', 'vat_identification_number', 'internal', 'address')
+
+
+class EmploymentContractSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.EmploymentContract
+        fields = BaseSerializer.Meta.fields + ('user', 'company', 'legal_country', 'started_at', 'ended_at')

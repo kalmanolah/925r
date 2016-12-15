@@ -48,3 +48,23 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = auth_models.Group.objects.all()
     serializer_class = serializers.GroupSerializer
     permission_classes = (permissions.IsAuthenticated,)
+
+
+class CompanyViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows companies to be viewed or edited.
+    """
+    queryset = models.Company.objects.all()
+    serializer_class = serializers.CompanySerializer
+    filter_class = filters.CompanyFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class EmploymentContractViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows employment contracts to be viewed or edited.
+    """
+    queryset = models.EmploymentContract.objects.all()
+    serializer_class = serializers.EmploymentContractSerializer
+    filter_class = filters.EmploymentContractFilter
+    permission_classes = (permissions.IsAuthenticated,)

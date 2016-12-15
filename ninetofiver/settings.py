@@ -84,6 +84,7 @@ class Base(Configuration):
         'oauth2_provider',
         'crispy_forms',
         'django_gravatar',
+        'django_countries',
     ] + NINETOFIVER_APPS
 
     MIDDLEWARE = [

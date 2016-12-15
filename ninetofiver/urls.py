@@ -16,9 +16,8 @@ urlpatterns = [
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
-# router.register(r'entities', views.EntityHierarchicalReadOnlyViewSet)
-# router.register(r'metadata', views.MetadataHierarchicalReadOnlyViewSet)
-# router.register(r'relations', views.RelationHierarchicalReadOnlyViewSet)
+router.register(r'companies', views.CompanyViewSet)
+router.register(r'employment_contracts', views.EmploymentContractViewSet)
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
