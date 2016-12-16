@@ -68,3 +68,13 @@ class EmploymentContractViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.EmploymentContractSerializer
     filter_class = filters.EmploymentContractFilter
     permission_classes = (permissions.IsAuthenticated,)
+
+
+class WorkScheduleViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows employment contracts to be viewed or edited.
+    """
+    queryset = models.WorkSchedule.objects.all()
+    serializer_class = serializers.WorkScheduleSerializer
+    filter_class = filters.WorkScheduleFilter
+    permission_classes = (permissions.IsAuthenticated,)

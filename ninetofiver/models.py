@@ -74,12 +74,87 @@ class Company(BaseModel):
         return self.label
 
 
+class WorkSchedule(BaseModel):
+
+    """Work schedule model."""
+
+    label = models.CharField(unique=True, max_length=255)
+    monday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+    tuesday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+    wednesday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+    thursday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+    friday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+    saturday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+    sunday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+
+    def __str__(self):
+        """Return a string representation."""
+        return self.label
+
+
 class EmploymentContract(BaseModel):
 
     """Employment contract model."""
 
     user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
     company = models.ForeignKey(Company, on_delete=models.PROTECT)
+    work_schedule = models.ForeignKey(WorkSchedule, on_delete=models.PROTECT)
     legal_country = CountryField()
     started_at = models.DateField()
     ended_at = models.DateField(blank=True, null=True)
@@ -92,10 +167,10 @@ class EmploymentContract(BaseModel):
     def perform_additional_validation(cls, data, instance=None):
         """Perform additional validation on the object."""
         instance_id = instance.id if instance else None # noqa
-        user = data.get('user', instance.user if instance else None)
-        company = data.get('company', instance.company if instance else None)
-        started_at = data.get('started_at', instance.started_at if instance else None)
-        ended_at = data.get('ended_at', instance.ended_at if instance else None)
+        user = data.get('user', getattr(instance, 'user', None))
+        company = data.get('company', getattr(instance, 'company', None))
+        started_at = data.get('started_at', getattr(instance, 'started_at', None))
+        ended_at = data.get('ended_at', getattr(instance, 'ended_at', None))
 
         # Verify whether the end date of the employment contract
         # comes after the start date
@@ -107,61 +182,62 @@ class EmploymentContract(BaseModel):
 
         # Verify whether user has an active employment contract for the same
         # company/period
-        existing = None
-        if ended_at:
-            existing = cls.objects.filter(
-                models.Q(
-                    user=user,
-                    company=company,
-                ) &
-                (
-                    models.Q(
-                        ended_at__isnull=True,
-                        started_at__lte=ended_at,
-                    ) |
-                    models.Q(
-                        ended_at__isnull=False,
-                        started_at__lte=ended_at,
-                        ended_at__gte=started_at,
-                    )
-                )
-            )
-        else:
-            existing = cls.objects.filter(
-                models.Q(
-                    user=user,
-                    company=company,
-                ) &
-                (
-                    models.Q(
-                        ended_at__isnull=True,
-                    ) |
-                    models.Q(
-                        ended_at__isnull=False,
-                        started_at__lte=started_at,
-                        ended_at__gte=started_at,
-                    )
-                )
-            )
-
-        if instance_id:
-            existing = existing.exclude(id=instance_id)
-
-        try:
-            existing = existing.all()[0]
-        except (cls.DoesNotExist, IndexError):
+        if user and company:
             existing = None
+            if ended_at:
+                existing = cls.objects.filter(
+                    models.Q(
+                        user=user,
+                        company=company,
+                    ) &
+                    (
+                        models.Q(
+                            ended_at__isnull=True,
+                            started_at__lte=ended_at,
+                        ) |
+                        models.Q(
+                            ended_at__isnull=False,
+                            started_at__lte=ended_at,
+                            ended_at__gte=started_at,
+                        )
+                    )
+                )
+            else:
+                existing = cls.objects.filter(
+                    models.Q(
+                        user=user,
+                        company=company,
+                    ) &
+                    (
+                        models.Q(
+                            ended_at__isnull=True,
+                        ) |
+                        models.Q(
+                            ended_at__isnull=False,
+                            started_at__lte=started_at,
+                            ended_at__gte=started_at,
+                        )
+                    )
+                )
 
-        if existing:
-            raise ValidationError(
-                _('User already has an active employment contract for this company for this period'),
-            )
+            if instance_id:
+                existing = existing.exclude(id=instance_id)
+
+            try:
+                existing = existing.all()[0]
+            except (cls.DoesNotExist, IndexError):
+                existing = None
+
+            if existing:
+                raise ValidationError(
+                    _('User already has an active employment contract for this company for this period'),
+                )
 
     def get_validation_args(self):
         """Get a dict used for validation based on this instance."""
         return {
-            'user': self.user,
-            'company': self.company,
-            'started_at': self.started_at,
-            'ended_at': self.ended_at,
+            'user': getattr(self, 'user', None),
+            'company': getattr(self, 'company', None),
+            'started_at': getattr(self, 'started_at', None),
+            'ended_at': getattr(self, 'ended_at', None),
         }

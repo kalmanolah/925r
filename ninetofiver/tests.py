@@ -1,6 +1,7 @@
 from rest_framework.test import APITestCase
 from rest_assured import testcases
 from ninetofiver import factories
+from decimal import Decimal
 import datetime
 
 
@@ -45,15 +46,43 @@ class EmploymentContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, tes
 
     def setUp(self):
         self.company = factories.CompanyFactory.create()
+        self.work_schedule = factories.WorkScheduleFactory.create()
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(user=self.user, company=self.company)
+        return factory.create(user=self.user, company=self.company, work_schedule=self.work_schedule)
 
     def get_create_data(self):
         self.create_data.update({
             'company': self.company.id,
             'user': self.user.id,
+            'work_schedule': self.work_schedule.id,
         })
 
         return self.create_data
+
+
+class WorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'workschedule'
+    factory_class = factories.WorkScheduleFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'label': 'Test schedule #1',
+        'monday': Decimal('1.20'),
+        'tuesday': Decimal('1.50'),
+        'wednesday': Decimal('1.75'),
+        'thursday': Decimal('0'),
+        'friday': Decimal('2'),
+        'saturday': Decimal('0'),
+        'sunday': Decimal('0'),
+    }
+    update_data = {
+        'label': 'Test schedule #2',
+        'monday': Decimal('2.10'),
+        'tuesday': Decimal('5.10'),
+        'wednesday': Decimal('7.50'),
+        'thursday': Decimal('0'),
+        'friday': Decimal('4'),
+        'saturday': Decimal('0'),
+        'sunday': Decimal('3'),
+    }

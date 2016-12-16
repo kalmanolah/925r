@@ -11,3 +11,8 @@ class CompanyAdmin(admin.ModelAdmin):
 @admin.register(models.EmploymentContract)
 class EmploymentContractAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'company', 'legal_country', 'started_at', 'ended_at')
+
+
+@admin.register(models.WorkSchedule)
+class WorkScheduleAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'label', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')

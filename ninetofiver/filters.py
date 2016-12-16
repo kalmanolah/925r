@@ -73,3 +73,11 @@ class EmploymentContractFilter(FilterSet):
             'started_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'ended_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
         }
+
+
+class WorkScheduleFilter(FilterSet):
+    class Meta:
+        model = models.WorkSchedule
+        fields = {
+            'label': ['exact', 'contains', 'icontains'],
+        }

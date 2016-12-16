@@ -1,3 +1,4 @@
+import random
 import factory
 from faker import Faker
 from django.contrib.auth import models as auth_models
@@ -37,3 +38,17 @@ class EmploymentContractFactory(factory.DjangoModelFactory):
     legal_country = factory.LazyFunction(fake.country_code)
     started_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
     ended_at = factory.LazyFunction(lambda: fake.date_time_this_decade(after_now=True))
+
+
+class WorkScheduleFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.WorkSchedule
+
+    label = factory.LazyFunction(fake.word)
+    monday = factory.LazyFunction(lambda: random.randint(0, 24))
+    tuesday = factory.LazyFunction(lambda: random.randint(0, 24))
+    wednesday = factory.LazyFunction(lambda: random.randint(0, 24))
+    thursday = factory.LazyFunction(lambda: random.randint(0, 24))
+    friday = factory.LazyFunction(lambda: random.randint(0, 24))
+    saturday = factory.LazyFunction(lambda: random.randint(0, 24))
+    sunday = factory.LazyFunction(lambda: random.randint(0, 24))
