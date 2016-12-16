@@ -196,9 +196,10 @@ class Base(Configuration):
             'rest_framework.renderers.BrowsableAPIRenderer',
         ),
         'DEFAULT_FILTER_BACKENDS': (
-            'rest_framework_filters.backends.DjangoFilterBackend',
+            'django_filters.rest_framework.DjangoFilterBackend',
         ),
         'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+        'DEFAULT_PAGINATION_CLASS': 'ninetofiver.pagination.CustomizablePageNumberPagination',
         'PAGE_SIZE': 25,
     }
 
