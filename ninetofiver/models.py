@@ -52,7 +52,7 @@ class Company(BaseModel):
 
     """Company model."""
 
-    label = models.CharField(unique=True, max_length=255)
+    name = models.CharField(unique=True, max_length=255)
     vat_identification_number = models.CharField(
         max_length=15,
         unique=True,
@@ -71,8 +71,8 @@ class Company(BaseModel):
 
     def __str__(self):
         """Return a string representation."""
-        # return '%s [%s]' % (self.label, self.vat_identification_number)
-        return self.label
+        # return '%s [%s]' % (self.name, self.vat_identification_number)
+        return self.name
 
 
 class WorkSchedule(BaseModel):

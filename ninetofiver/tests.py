@@ -17,13 +17,13 @@ class CompanyAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Base
     factory_class = factories.CompanyFactory
     user_factory = factories.UserFactory
     create_data = {
-        'label': 'Foo BVBA',
+        'name': 'Foo BVBA',
         'vat_identification_number': 'BE123123123123',
         'internal': False,
         'address': 'Essensteenweg 29, 2930 Brasschaat, België',
     }
     update_data = {
-        'label': 'Foo sprl',
+        'name': 'Foo sprl',
         'vat_identification_number': 'BE321321321321',
         'internal': True,
         'address': 'Essensteenweg 31, 2930 Brasschaat, België',

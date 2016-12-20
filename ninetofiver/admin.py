@@ -5,7 +5,7 @@ from ninetofiver import models
 
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'label', 'vat_identification_number', 'address', 'internal')
+    list_display = ('__str__', 'name', 'vat_identification_number', 'address', 'internal')
 
 
 @admin.register(models.EmploymentContract)

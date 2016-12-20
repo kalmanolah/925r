@@ -25,7 +25,7 @@ class CompanyFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.Company
 
-    label = factory.LazyFunction(fake.company)
+    name = factory.LazyFunction(fake.company)
     vat_identification_number = factory.LazyFunction(lambda: '%s%s' % (fake.language_code(), fake.md5()[:10]))
     internal = factory.LazyFunction(fake.boolean)
     address = factory.LazyFunction(fake.address)

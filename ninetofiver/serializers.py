@@ -45,7 +45,7 @@ class RelatedSerializableField(serializers.RelatedField):
 class CompanySerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Company
-        fields = BaseSerializer.Meta.fields + ('label', 'vat_identification_number', 'internal', 'address')
+        fields = BaseSerializer.Meta.fields + ('name', 'vat_identification_number', 'internal', 'address')
 
 
 class EmploymentContractSerializer(BaseSerializer):

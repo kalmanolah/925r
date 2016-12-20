@@ -58,7 +58,7 @@ class CompanyFilter(FilterSet):
     class Meta:
         model = models.Company
         fields = {
-            'label': ['exact', 'contains', 'icontains'],
+            'name': ['exact', 'contains', 'icontains'],
             'vat_identification_number': ['exact', 'contains', 'icontains'],
             'address': ['exact', 'contains', 'icontains'],
             'internal': ['exact'],
