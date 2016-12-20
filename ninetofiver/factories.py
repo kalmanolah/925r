@@ -52,3 +52,13 @@ class WorkScheduleFactory(factory.DjangoModelFactory):
     friday = factory.LazyFunction(lambda: random.randint(0, 24))
     saturday = factory.LazyFunction(lambda: random.randint(0, 24))
     sunday = factory.LazyFunction(lambda: random.randint(0, 24))
+
+
+class UserRelativeFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.UserRelative
+
+    name = factory.LazyFunction(fake.name)
+    birth_date = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
+    gender = factory.LazyFunction(lambda: fake.simple_profile(sex=None)['sex'])
+    relation = factory.LazyFunction(fake.word)

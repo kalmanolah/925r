@@ -16,3 +16,8 @@ class EmploymentContractAdmin(admin.ModelAdmin):
 @admin.register(models.WorkSchedule)
 class WorkScheduleAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'label', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
+
+
+@admin.register(models.UserRelative)
+class UserRelativeAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'name', 'user', 'relation', 'gender', 'birth_date')

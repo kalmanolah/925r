@@ -78,3 +78,13 @@ class WorkScheduleViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.WorkScheduleSerializer
     filter_class = filters.WorkScheduleFilter
     permission_classes = (permissions.IsAuthenticated,)
+
+
+class UserRelativeViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows user relatives to be viewed or edited.
+    """
+    queryset = models.UserRelative.objects.all()
+    serializer_class = serializers.UserRelativeSerializer
+    filter_class = filters.UserRelativeFilter
+    permission_classes = (permissions.IsAuthenticated,)

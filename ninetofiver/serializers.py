@@ -60,3 +60,9 @@ class WorkScheduleSerializer(BaseSerializer):
         model = models.WorkSchedule
         fields = BaseSerializer.Meta.fields + ('label', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
                                                'saturday', 'sunday')
+
+
+class UserRelativeSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.UserRelative
+        fields = BaseSerializer.Meta.fields + ('name', 'relation', 'birth_date', 'gender', 'user')

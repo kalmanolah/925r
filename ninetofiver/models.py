@@ -6,6 +6,7 @@ from django.utils.translation import ugettext as _
 from django.contrib.auth import models as auth_models
 from polymorphic.models import PolymorphicModel, PolymorphicManager
 from django_countries.fields import CountryField
+from datetime import datetime
 
 
 class BaseManager(PolymorphicManager):
@@ -244,3 +245,36 @@ class EmploymentContract(BaseModel):
             'started_at': getattr(self, 'started_at', None),
             'ended_at': getattr(self, 'ended_at', None),
         }
+
+
+class UserRelative(BaseModel):
+
+    """User relative model."""
+
+    GENDER_CHOICES = (
+        ('m', _('Male')),
+        ('f', _('Female')),
+    )
+
+    user = models.ForeignKey(auth_models.User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    birth_date = models.DateField()
+    gender = models.CharField(max_length=2, choices=GENDER_CHOICES)
+    relation = models.CharField(max_length=255)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s [%s → %s]' % (self.name, self.relation, self.user)
+
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object."""
+        instance_id = instance.id if instance else None # noqa
+        birth_date = data.get('birth_date', getattr(instance, 'birth_date', None))
+
+        # Verify whether the birth date of the relative comes before "now"
+        if birth_date:
+            if birth_date > datetime.now().date():
+                raise ValidationError(
+                    _('A birth date should not be set in the future'),
+                )

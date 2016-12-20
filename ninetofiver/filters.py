@@ -81,3 +81,14 @@ class WorkScheduleFilter(FilterSet):
         fields = {
             'label': ['exact', 'contains', 'icontains'],
         }
+
+
+class UserRelativeFilter(FilterSet):
+    class Meta:
+        model = models.UserRelative
+        fields = {
+            'name': ['exact', 'contains', 'icontains'],
+            'relation': ['exact', 'contains', 'icontains'],
+            'birth_date': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'gender': ['exact'],
+        }

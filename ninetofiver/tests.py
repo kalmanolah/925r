@@ -86,3 +86,31 @@ class WorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
         'saturday': Decimal('0'),
         'sunday': Decimal('3'),
     }
+
+
+class UserRelativeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'userrelative'
+    factory_class = factories.UserRelativeFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'birth_date': datetime.date(datetime.date.today().year - 10, 1, 15),
+        'name': 'John Doe',
+        'gender': 'm',
+        'relation': 'Dad',
+    }
+    update_data = {
+        'birth_date': datetime.date(datetime.date.today().year - 10, 1, 15),
+        'name': 'Jane Doe',
+        'gender': 'f',
+        'relation': 'Mom',
+    }
+
+    def get_object(self, factory):
+        return factory.create(user=self.user)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'user': self.user.id,
+        })
+
+        return self.create_data
