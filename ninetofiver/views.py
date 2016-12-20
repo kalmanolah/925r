@@ -88,3 +88,13 @@ class UserRelativeViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.UserRelativeSerializer
     filter_class = filters.UserRelativeFilter
     permission_classes = (permissions.IsAuthenticated,)
+
+
+class HolidayViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows holidays to be viewed or edited.
+    """
+    queryset = models.Holiday.objects.all()
+    serializer_class = serializers.HolidaySerializer
+    filter_class = filters.HolidayFilter
+    permission_classes = (permissions.IsAuthenticated,)

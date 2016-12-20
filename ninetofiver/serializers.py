@@ -66,3 +66,9 @@ class UserRelativeSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.UserRelative
         fields = BaseSerializer.Meta.fields + ('name', 'relation', 'birth_date', 'gender', 'user')
+
+
+class HolidaySerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.Holiday
+        fields = BaseSerializer.Meta.fields + ('name', 'country', 'date')

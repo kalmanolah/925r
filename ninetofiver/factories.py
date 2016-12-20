@@ -62,3 +62,12 @@ class UserRelativeFactory(factory.DjangoModelFactory):
     birth_date = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
     gender = factory.LazyFunction(lambda: fake.simple_profile(sex=None)['sex'])
     relation = factory.LazyFunction(fake.word)
+
+
+class HolidayFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.Holiday
+
+    name = factory.LazyFunction(fake.word)
+    date = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
+    country = factory.LazyFunction(fake.country_code)

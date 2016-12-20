@@ -21,3 +21,8 @@ class WorkScheduleAdmin(admin.ModelAdmin):
 @admin.register(models.UserRelative)
 class UserRelativeAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'user', 'relation', 'gender', 'birth_date')
+
+
+@admin.register(models.Holiday)
+class HolidayAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'name', 'date', 'country')

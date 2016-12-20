@@ -114,3 +114,19 @@ class UserRelativeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
         })
 
         return self.create_data
+
+
+class HolidayAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'holiday'
+    factory_class = factories.HolidayFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'name': 'Friday Night Deploy',
+        'date': datetime.date(datetime.date.today().year, 1, 15),
+        'country': 'BE',
+    }
+    update_data = {
+        'name': 'Saturday Morning Deploy',
+        'date': datetime.date(datetime.date.today().year, 1, 16),
+        'country': 'BE',
+    }

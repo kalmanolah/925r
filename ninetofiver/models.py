@@ -278,3 +278,16 @@ class UserRelative(BaseModel):
                 raise ValidationError(
                     _('A birth date should not be set in the future'),
                 )
+
+
+class Holiday(BaseModel):
+
+    """Holiday model."""
+
+    name = models.CharField(max_length=255)
+    date = models.DateField()
+    country = CountryField()
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s [%s]' % (self.name, self.country)

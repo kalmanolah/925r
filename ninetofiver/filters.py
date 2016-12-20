@@ -92,3 +92,13 @@ class UserRelativeFilter(FilterSet):
             'birth_date': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'gender': ['exact'],
         }
+
+
+class HolidayFilter(FilterSet):
+    class Meta:
+        model = models.Holiday
+        fields = {
+            'name': ['exact', 'contains', 'icontains'],
+            'date': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'country': ['exact'],
+        }
