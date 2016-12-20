@@ -152,8 +152,11 @@ class EmploymentContract(BaseModel):
 
     """Employment contract model."""
 
+    def company_choices():
+        return {'internal': True}
+
     user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
-    company = models.ForeignKey(Company, on_delete=models.PROTECT)
+    company = models.ForeignKey(Company, on_delete=models.PROTECT, limit_choices_to=company_choices)
     work_schedule = models.ForeignKey(WorkSchedule, on_delete=models.PROTECT)
     legal_country = CountryField()
     started_at = models.DateField()
