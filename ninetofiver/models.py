@@ -290,4 +290,4 @@ class Holiday(BaseModel):
 
     def __str__(self):
         """Return a string representation."""
-        return '%s [%s]' % (self.name, self.country)
+        return '%s [%s]' % (self.name, self.country.name)
