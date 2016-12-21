@@ -34,6 +34,10 @@ class CompanyFactory(factory.DjangoModelFactory):
     address = factory.LazyFunction(fake.address)
 
 
+class InternalCompanyFactory(CompanyFactory):
+    internal = True
+
+
 class EmploymentContractFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.EmploymentContract
@@ -95,3 +99,34 @@ class LeaveDateFactory(factory.DjangoModelFactory):
 
     starts_at = factory.LazyFunction(lambda: fake.date_time_between(start_date='-1h', end_date='now', tzinfo=utc))
     ends_at = factory.LazyFunction(lambda: fake.date_time_between(start_date='now', end_date='+1h', tzinfo=utc))
+
+
+class PerformanceTypeFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.PerformanceType
+
+    label = factory.LazyFunction(fake.word)
+    description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
+    multiplier = factory.LazyFunction(lambda: random.randint(0, 3))
+
+
+class ContractFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.Contract
+
+    label = factory.LazyFunction(fake.word)
+    description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
+    active = factory.LazyFunction(fake.boolean)
+
+
+class ContractRoleFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.ContractRole
+
+    label = factory.LazyFunction(fake.word)
+    description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
+
+
+class ContractUserFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.ContractUser

@@ -89,3 +89,27 @@ class LeaveDateSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.LeaveDate
         fields = BaseSerializer.Meta.fields + ('leave', 'starts_at', 'ends_at')
+
+
+class PerformanceTypeSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.PerformanceType
+        fields = BaseSerializer.Meta.fields + ('label', 'description', 'multiplier')
+
+
+class ContractSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.Contract
+        fields = BaseSerializer.Meta.fields + ('label', 'description', 'company', 'customer', 'active')
+
+
+class ContractRoleSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.ContractRole
+        fields = BaseSerializer.Meta.fields + ('label', 'description')
+
+
+class ContractUserSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.ContractUser
+        fields = BaseSerializer.Meta.fields + ('user', 'contract', 'contract_role')

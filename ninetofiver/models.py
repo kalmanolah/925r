@@ -363,3 +363,70 @@ class LeaveDate(BaseModel):
             'starts_at': getattr(self, 'starts_at', None),
             'ends_at': getattr(self, 'ends_at', None)
         }
+
+
+class PerformanceType(BaseModel):
+
+    """Performance type model."""
+
+    label = models.CharField(unique=True, max_length=255)
+    description = models.TextField(max_length=255, blank=True, null=True)
+    multiplier = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=1.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(5),
+        ]
+    )
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s [%s%%]' % (self.label, int(self.multiplier * 100))
+
+
+class Contract(BaseModel):
+
+    """Contract model."""
+
+    def company_choices():
+        return {'internal': True}
+
+    label = models.CharField(max_length=255)
+    description = models.TextField(max_length=255, blank=True, null=True)
+    company = models.ForeignKey(Company, on_delete=models.PROTECT, limit_choices_to=company_choices)
+    customer = models.ForeignKey(Company, on_delete=models.PROTECT, related_name='customercontact_set')
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s [%s → %s]' % (self.label, self.company, self.customer)
+
+
+class ContractRole(BaseModel):
+
+    """Contract role model (no pun intended)."""
+
+    label = models.CharField(unique=True, max_length=255)
+    description = models.TextField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s' % self.label
+
+
+class ContractUser(BaseModel):
+
+    """Contract user model."""
+
+    user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
+    contract_role = models.ForeignKey(ContractRole, on_delete=models.PROTECT)
+
+    class Meta(BaseModel.Meta):
+        unique_together = (('user', 'contract', 'contract_role'),)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s [%s]' % (self.user, self.contract_role)

@@ -52,3 +52,33 @@ class LeaveAdmin(admin.ModelAdmin):
 @admin.register(models.LeaveDate)
 class LeaveDateAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'leave', 'starts_at', 'ends_at')
+
+
+@admin.register(models.PerformanceType)
+class PerformanceTypeAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'label', 'description', 'multiplier')
+
+
+class ContractUserInline(admin.TabularInline):
+    model = models.ContractUser
+
+
+@admin.register(models.Contract)
+class ContractAdmin(admin.ModelAdmin):
+    def contract_users(self, obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
+
+    list_display = ('__str__', 'label', 'company', 'customer', 'contract_users', 'description', 'active')
+    inlines = [
+        ContractUserInline,
+    ]
+
+
+@admin.register(models.ContractRole)
+class ContractRoleAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'label', 'description')
+
+
+@admin.register(models.ContractUser)
+class ContractUserAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'user', 'contract', 'contract_role')

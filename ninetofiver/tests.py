@@ -203,3 +203,87 @@ class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
         })
 
         return self.create_data
+
+
+class PerformanceTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'performancetype'
+    factory_class = factories.PerformanceTypeFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'label': 'Regular',
+        'multiplier': 1.00,
+    }
+    update_data = {
+        'label': 'Sundays',
+        'multiplier': 2.00,
+    }
+
+
+class ContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'contract'
+    factory_class = factories.ContractFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'label': 'Consulting & Stuff',
+        'active': True,
+    }
+    update_data = {
+        'label': 'More Consulting & Stuff',
+        'active': True,
+    }
+
+    def setUp(self):
+        self.company = factories.InternalCompanyFactory.create()
+        self.customer = factories.CompanyFactory.create()
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(company=self.company, customer=self.customer)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'company': self.company.id,
+            'customer': self.customer.id,
+        })
+
+        return self.create_data
+
+
+class ContractRoleTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'contractrole'
+    factory_class = factories.ContractRoleFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'label': 'Project Manager',
+    }
+    update_data = {
+        'label': 'Developer',
+    }
+
+
+class ContractUserTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'contractuser'
+    factory_class = factories.ContractUserFactory
+    user_factory = factories.UserFactory
+    create_data = {}
+    update_data = {}
+
+    def setUp(self):
+        self.contract = factories.ContractFactory.create(
+            company=factories.InternalCompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        self.contract_role = factories.ContractRoleFactory.create()
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(contract=self.contract, contract_role=self.contract_role, user=self.user)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'contract': self.contract.id,
+            'contract_role': factories.ContractRoleFactory.create().id,
+            'user': self.user.id,
+        })
+
+        return self.create_data

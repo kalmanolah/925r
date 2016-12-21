@@ -128,3 +128,43 @@ class LeaveDateViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.LeaveDateSerializer
     filter_class = filters.LeaveDateFilter
     permission_classes = (permissions.IsAuthenticated,)
+
+
+class PerformanceTypeViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows performance types to be viewed or edited.
+    """
+    queryset = models.PerformanceType.objects.all()
+    serializer_class = serializers.PerformanceTypeSerializer
+    filter_class = filters.PerformanceTypeFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class ContractViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows contracts to be viewed or edited.
+    """
+    queryset = models.Contract.objects.all()
+    serializer_class = serializers.ContractSerializer
+    filter_class = filters.ContractFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class ContractRoleViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows contract roles to be viewed or edited.
+    """
+    queryset = models.ContractRole.objects.all()
+    serializer_class = serializers.ContractRoleSerializer
+    filter_class = filters.ContractRoleFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class ContractUserViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows contract users to be viewed or edited.
+    """
+    queryset = models.ContractUser.objects.all()
+    serializer_class = serializers.ContractUserSerializer
+    filter_class = filters.ContractUserFilter
+    permission_classes = (permissions.IsAuthenticated,)

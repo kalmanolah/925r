@@ -128,3 +128,39 @@ class LeaveDateFilter(FilterSet):
             'starts_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'ends_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
         }
+
+
+class PerformanceTypeFilter(FilterSet):
+    class Meta:
+        model = models.PerformanceType
+        fields = {
+            'label': ['exact', 'contains', 'icontains'],
+            'description': ['exact', 'contains', 'icontains'],
+            'multiplier': ['exact', 'gt', 'gte', 'lt', 'lte'],
+        }
+
+
+class ContractFilter(FilterSet):
+    class Meta:
+        model = models.Contract
+        fields = {
+            'label': ['exact', 'contains', 'icontains'],
+            'description': ['exact', 'contains', 'icontains'],
+            'active': ['exact'],
+        }
+
+
+class ContractRoleFilter(FilterSet):
+    class Meta:
+        model = models.ContractRole
+        fields = {
+            'label': ['exact', 'contains', 'icontains'],
+            'description': ['exact', 'contains', 'icontains'],
+        }
+
+
+class ContractUserFilter(FilterSet):
+    class Meta:
+        model = models.ContractUser
+        fields = {
+        }
