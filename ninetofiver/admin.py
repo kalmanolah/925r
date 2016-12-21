@@ -5,12 +5,12 @@ from ninetofiver import models
 
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'name', 'vat_identification_number', 'address', 'internal')
+    list_display = ('__str__', 'name', 'vat_identification_number', 'address', 'country', 'internal')
 
 
 @admin.register(models.EmploymentContract)
 class EmploymentContractAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'user', 'company', 'legal_country', 'started_at', 'ended_at')
+    list_display = ('__str__', 'user', 'company', 'started_at', 'ended_at')
 
 
 @admin.register(models.WorkSchedule)

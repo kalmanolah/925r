@@ -21,12 +21,14 @@ class CompanyAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Base
         'vat_identification_number': 'BE123123123123',
         'internal': False,
         'address': 'Essensteenweg 29, 2930 Brasschaat, België',
+        'country': 'BE',
     }
     update_data = {
         'name': 'Foo sprl',
         'vat_identification_number': 'BE321321321321',
         'internal': True,
         'address': 'Essensteenweg 31, 2930 Brasschaat, België',
+        'country': 'BE',
     }
 
 
@@ -36,12 +38,10 @@ class EmploymentContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, tes
     user_factory = factories.UserFactory
     create_data = {
         'started_at': datetime.date(datetime.date.today().year + 10, 1, 15),
-        'legal_country': 'BE',
     }
     update_data = {
         'started_at': datetime.date(datetime.date.today().year + 10, 1, 15),
         'ended_at': datetime.date(datetime.date.today().year + 10, 1, 16),
-        'legal_country': 'BE',
     }
 
     def setUp(self):

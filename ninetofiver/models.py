@@ -65,6 +65,7 @@ class Company(BaseModel):
     )
     address = models.TextField(max_length=255)
     internal = models.BooleanField(default=False)
+    country = CountryField()
 
     class Meta(BaseModel.Meta):
         verbose_name_plural = 'companies'
@@ -159,7 +160,6 @@ class EmploymentContract(BaseModel):
     user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
     company = models.ForeignKey(Company, on_delete=models.PROTECT, limit_choices_to=company_choices)
     work_schedule = models.ForeignKey(WorkSchedule, on_delete=models.PROTECT)
-    legal_country = CountryField()
     started_at = models.DateField()
     ended_at = models.DateField(blank=True, null=True)
 

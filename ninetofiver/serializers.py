@@ -45,14 +45,13 @@ class RelatedSerializableField(serializers.RelatedField):
 class CompanySerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Company
-        fields = BaseSerializer.Meta.fields + ('name', 'vat_identification_number', 'internal', 'address')
+        fields = BaseSerializer.Meta.fields + ('name', 'country', 'vat_identification_number', 'internal', 'address')
 
 
 class EmploymentContractSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.EmploymentContract
-        fields = BaseSerializer.Meta.fields + ('user', 'company', 'work_schedule', 'legal_country', 'started_at',
-                                               'ended_at')
+        fields = BaseSerializer.Meta.fields + ('user', 'company', 'work_schedule', 'started_at', 'ended_at')
 
 
 class WorkScheduleSerializer(BaseSerializer):

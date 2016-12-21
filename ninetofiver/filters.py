@@ -59,6 +59,7 @@ class CompanyFilter(FilterSet):
         model = models.Company
         fields = {
             'name': ['exact', 'contains', 'icontains'],
+            'country': ['exact'],
             'vat_identification_number': ['exact', 'contains', 'icontains'],
             'address': ['exact', 'contains', 'icontains'],
             'internal': ['exact'],
@@ -69,7 +70,6 @@ class EmploymentContractFilter(FilterSet):
     class Meta:
         model = models.EmploymentContract
         fields = {
-            'legal_country': ['exact'],
             'started_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'ended_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
         }

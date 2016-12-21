@@ -26,6 +26,7 @@ class CompanyFactory(factory.DjangoModelFactory):
         model = models.Company
 
     name = factory.LazyFunction(fake.company)
+    country = factory.LazyFunction(fake.country_code)
     vat_identification_number = factory.LazyFunction(lambda: '%s%s' % (fake.language_code(), fake.md5()[:10]))
     internal = factory.LazyFunction(fake.boolean)
     address = factory.LazyFunction(fake.address)
@@ -35,7 +36,6 @@ class EmploymentContractFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.EmploymentContract
 
-    legal_country = factory.LazyFunction(fake.country_code)
     started_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
     ended_at = factory.LazyFunction(lambda: fake.date_time_this_decade(after_now=True))
 
