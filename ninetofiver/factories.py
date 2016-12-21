@@ -2,6 +2,7 @@ import random
 import factory
 from faker import Faker
 from django.contrib.auth import models as auth_models
+from django.utils.timezone import utc
 from ninetofiver import models
 
 
@@ -14,6 +15,7 @@ class UserFactory(factory.DjangoModelFactory):
 
     first_name = factory.LazyFunction(fake.first_name)
     last_name = factory.LazyFunction(fake.last_name)
+    username = factory.LazyFunction(fake.name)
     is_staff = False
 
 
@@ -71,3 +73,25 @@ class HolidayFactory(factory.DjangoModelFactory):
     name = factory.LazyFunction(fake.word)
     date = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
     country = factory.LazyFunction(fake.country_code)
+
+
+class LeaveTypeFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.LeaveType
+
+    label = factory.LazyFunction(fake.word)
+
+
+class LeaveFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.Leave
+
+    description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
+
+
+class LeaveDateFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.LeaveDate
+
+    starts_at = factory.LazyFunction(lambda: fake.date_time_between(start_date='-1h', end_date='now', tzinfo=utc))
+    ends_at = factory.LazyFunction(lambda: fake.date_time_between(start_date='now', end_date='+1h', tzinfo=utc))

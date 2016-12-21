@@ -279,6 +279,12 @@ class UserRelative(BaseModel):
                     _('A birth date should not be set in the future'),
                 )
 
+    def get_validation_args(self):
+        """Get a dict used for validation based on this instance."""
+        return {
+            'birth_date': getattr(self, 'birth_date', None),
+        }
+
 
 class Holiday(BaseModel):
 
@@ -291,3 +297,69 @@ class Holiday(BaseModel):
     def __str__(self):
         """Return a string representation."""
         return '%s [%s]' % (self.name, self.country.name)
+
+
+class LeaveType(BaseModel):
+
+    """Leave type model."""
+
+    label = models.CharField(unique=True, max_length=255)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s' % self.label
+
+
+class Leave(BaseModel):
+
+    """Leave model."""
+
+    STATUS_CHOICES = (
+        ('DRAFT', _('Draft')),
+        ('PENDING', _('Pending')),
+        ('APPROVED', _('Approved')),
+        ('REJECTED', _('Rejected')),
+    )
+
+    user = models.ForeignKey(auth_models.User, on_delete=models.CASCADE)
+    leave_type = models.ForeignKey(LeaveType, on_delete=models.PROTECT)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default='DRAFT')
+    description = models.TextField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s - %s' % (self.leave_type, self.user)
+
+
+class LeaveDate(BaseModel):
+
+    """Leave date model."""
+
+    leave = models.ForeignKey(Leave, on_delete=models.CASCADE)
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField()
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s - %s' % (self.starts_at.strftime('%Y-%m-%d %H:%M:%S'), self.ends_at.strftime('%Y-%m-%d %H:%M:%S'))
+
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object."""
+        instance_id = instance.id if instance else None # noqa
+        starts_at = data.get('starts_at', getattr(instance, 'starts_at', None))
+        ends_at = data.get('ends_at', getattr(instance, 'ends_at', None))
+
+        # Verify whether the start datetime of the leave date comes before the end datetime
+        if starts_at and ends_at:
+            if starts_at >= ends_at:
+                raise ValidationError(
+                    _('The start date should be set before the end date'),
+                )
+
+    def get_validation_args(self):
+        """Get a dict used for validation based on this instance."""
+        return {
+            'starts_at': getattr(self, 'starts_at', None),
+            'ends_at': getattr(self, 'ends_at', None)
+        }

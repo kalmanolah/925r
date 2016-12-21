@@ -71,3 +71,21 @@ class HolidaySerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Holiday
         fields = BaseSerializer.Meta.fields + ('name', 'country', 'date')
+
+
+class LeaveTypeSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.LeaveType
+        fields = BaseSerializer.Meta.fields + ('label',)
+
+
+class LeaveSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.Leave
+        fields = BaseSerializer.Meta.fields + ('user', 'leave_type', 'status', 'description')
+
+
+class LeaveDateSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.LeaveDate
+        fields = BaseSerializer.Meta.fields + ('leave', 'starts_at', 'ends_at')

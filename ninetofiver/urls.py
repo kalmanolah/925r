@@ -21,6 +21,9 @@ router.register(r'employment_contracts', views.EmploymentContractViewSet)
 router.register(r'work_schedules', views.WorkScheduleViewSet)
 router.register(r'user_relatives', views.UserRelativeViewSet)
 router.register(r'holidays', views.HolidayViewSet)
+router.register(r'leave_types', views.LeaveTypeViewSet)
+router.register(r'leaves', views.LeaveViewSet)
+router.register(r'leave_dates', views.LeaveDateViewSet)
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.

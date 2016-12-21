@@ -98,3 +98,33 @@ class HolidayViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.HolidaySerializer
     filter_class = filters.HolidayFilter
     permission_classes = (permissions.IsAuthenticated,)
+
+
+class LeaveTypeViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows leave types to be viewed or edited.
+    """
+    queryset = models.LeaveType.objects.all()
+    serializer_class = serializers.LeaveTypeSerializer
+    filter_class = filters.LeaveTypeFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class LeaveViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows leaves to be viewed or edited.
+    """
+    queryset = models.Leave.objects.all()
+    serializer_class = serializers.LeaveSerializer
+    filter_class = filters.LeaveFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class LeaveDateViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows leave dates to be viewed or edited.
+    """
+    queryset = models.LeaveDate.objects.all()
+    serializer_class = serializers.LeaveDateSerializer
+    filter_class = filters.LeaveDateFilter
+    permission_classes = (permissions.IsAuthenticated,)

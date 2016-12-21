@@ -102,3 +102,29 @@ class HolidayFilter(FilterSet):
             'date': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'country': ['exact'],
         }
+
+
+class LeaveTypeFilter(FilterSet):
+    class Meta:
+        model = models.LeaveType
+        fields = {
+            'label': ['exact', 'contains', 'icontains'],
+        }
+
+
+class LeaveFilter(FilterSet):
+    class Meta:
+        model = models.Leave
+        fields = {
+            'status': ['exact'],
+            'description': ['exact', 'contains', 'icontains'],
+        }
+
+
+class LeaveDateFilter(FilterSet):
+    class Meta:
+        model = models.LeaveDate
+        fields = {
+            'starts_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'ends_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
+        }

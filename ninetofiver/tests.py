@@ -1,5 +1,6 @@
 from rest_framework.test import APITestCase
 from rest_assured import testcases
+from django.utils.timezone import utc
 from ninetofiver import factories
 from decimal import Decimal
 import datetime
@@ -130,3 +131,75 @@ class HolidayAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Base
         'date': datetime.date(datetime.date.today().year, 1, 16),
         'country': 'BE',
     }
+
+
+class LeaveTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'leavetype'
+    factory_class = factories.LeaveTypeFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'label': 'ADV',
+    }
+    update_data = {
+        'label': 'Recup',
+    }
+
+
+class LeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'leave'
+    factory_class = factories.LeaveFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'description': 'Not going to work',
+        'status': 'DRAFT',
+    }
+    update_data = {
+        'description': 'Going to sleep',
+        'status': 'PENDING',
+    }
+
+    def setUp(self):
+        self.leave_type = factories.LeaveTypeFactory.create()
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(user=self.user, leave_type=self.leave_type)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'leave_type': self.leave_type.id,
+            'user': self.user.id,
+        })
+
+        return self.create_data
+
+
+class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'leavedate'
+    factory_class = factories.LeaveDateFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'starts_at': datetime.datetime(datetime.date.today().year, 1, 16, 7, 34, 34, tzinfo=utc),
+        'ends_at': datetime.datetime(datetime.date.today().year, 1, 16, 8, 34, 34, tzinfo=utc),
+    }
+    update_data = {
+        'starts_at': datetime.datetime(datetime.date.today().year, 1, 16, 9, 34, 34, tzinfo=utc),
+        'ends_at': datetime.datetime(datetime.date.today().year, 1, 16, 10, 34, 34, tzinfo=utc),
+    }
+
+    def setUp(self):
+        self.leave = factories.LeaveFactory.create(
+            user=factories.UserFactory.create(),
+            leave_type=factories.LeaveTypeFactory.create(),
+        )
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(leave=self.leave)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'leave': self.leave.id,
+        })
+
+        return self.create_data
