@@ -9,6 +9,14 @@ from django_countries.fields import CountryField
 from datetime import datetime
 
 
+# Monkey patch user model to serialize properly
+def user_str(self):
+    if self.get_full_name():
+        return '%s [%s]' % (self.get_full_name(), self.username)
+    return self.username
+auth_models.User.__str__ = user_str
+
+
 class BaseManager(PolymorphicManager):
 
     """Base manager."""

@@ -25,7 +25,7 @@ nav(class='navbar navbar-full navbar-light bg-faded')
           aria-expanded='false'
         )
           i(class='fa fa-user') &nbsp;
-          | {{ request.user.username }}
+          | {{ request.user }}
         div(class='dropdown-menu dropdown-menu-right')
           a(class='dropdown-item' href='{% url "account" %}') Your account
           div(class='dropdown-divider')
