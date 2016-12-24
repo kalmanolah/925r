@@ -306,6 +306,9 @@ class Holiday(BaseModel):
         """Return a string representation."""
         return '%s [%s]' % (self.name, self.country.name)
 
+    class Meta(BaseModel.Meta):
+        unique_together = (('name', 'date', 'country'),)
+
 
 class LeaveType(BaseModel):
 
