@@ -409,6 +409,7 @@ class Contract(BaseModel):
     company = models.ForeignKey(Company, on_delete=models.PROTECT, limit_choices_to=company_choices)
     customer = models.ForeignKey(Company, on_delete=models.PROTECT, related_name='customercontact_set')
     active = models.BooleanField(default=True)
+    performance_types = models.ManyToManyField(PerformanceType, blank=True)
 
     def __str__(self):
         """Return a string representation."""

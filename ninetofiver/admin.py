@@ -68,7 +68,11 @@ class ContractAdmin(admin.ModelAdmin):
     def contract_users(self, obj):
         return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
 
-    list_display = ('__str__', 'label', 'company', 'customer', 'contract_users', 'description', 'active')
+    def performance_types(obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.performance_types.all())))
+
+    list_display = ('__str__', 'label', 'company', 'customer', 'contract_users',
+                    performance_types, 'description', 'active')
     inlines = [
         ContractUserInline,
     ]
