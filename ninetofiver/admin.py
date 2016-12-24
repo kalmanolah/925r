@@ -86,3 +86,8 @@ class ContractRoleAdmin(admin.ModelAdmin):
 @admin.register(models.ContractUser)
 class ContractUserAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'contract', 'contract_role')
+
+
+@admin.register(models.Timesheet)
+class TimesheetAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'user', 'month', 'year', 'closed')

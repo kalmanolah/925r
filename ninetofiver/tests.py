@@ -287,3 +287,29 @@ class ContractUserTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
         })
 
         return self.create_data
+
+
+class TimesheetTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'timesheet'
+    factory_class = factories.TimesheetFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'closed': False,
+        'year': datetime.date.today().year,
+        'month': datetime.date.today().month,
+    }
+    update_data = {
+        'closed': False,
+        'year': datetime.date.today().year,
+        'month': datetime.date.today().month,
+    }
+
+    def get_object(self, factory):
+        return factory.create(user=self.user)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'user': self.user.id,
+        })
+
+        return self.create_data

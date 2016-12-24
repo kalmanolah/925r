@@ -164,3 +164,13 @@ class ContractUserFilter(FilterSet):
         model = models.ContractUser
         fields = {
         }
+
+
+class TimesheetFilter(FilterSet):
+    class Meta:
+        model = models.Timesheet
+        fields = {
+            'year': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'month': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'closed': ['exact'],
+        }

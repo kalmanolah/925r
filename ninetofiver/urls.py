@@ -28,6 +28,7 @@ router.register(r'performance_types', views.PerformanceTypeViewSet)
 router.register(r'contracts', views.ContractViewSet)
 router.register(r'contract_roles', views.ContractRoleViewSet)
 router.register(r'contract_users', views.ContractUserViewSet)
+router.register(r'timesheets', views.TimesheetViewSet)
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.

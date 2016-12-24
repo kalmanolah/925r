@@ -114,3 +114,9 @@ class ContractUserSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.ContractUser
         fields = BaseSerializer.Meta.fields + ('user', 'contract', 'contract_role')
+
+
+class TimesheetSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.Timesheet
+        fields = BaseSerializer.Meta.fields + ('user', 'year', 'month', 'closed')

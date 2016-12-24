@@ -168,3 +168,13 @@ class ContractUserViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ContractUserSerializer
     filter_class = filters.ContractUserFilter
     permission_classes = (permissions.IsAuthenticated,)
+
+
+class TimesheetViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows timesheets to be viewed or edited.
+    """
+    queryset = models.Timesheet.objects.all()
+    serializer_class = serializers.TimesheetSerializer
+    filter_class = filters.TimesheetFilter
+    permission_classes = (permissions.IsAuthenticated,)

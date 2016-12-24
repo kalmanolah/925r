@@ -442,3 +442,30 @@ class ContractUser(BaseModel):
     def __str__(self):
         """Return a string representation."""
         return '%s [%s]' % (self.user, self.contract_role)
+
+
+class Timesheet(BaseModel):
+
+    """Timesheet model."""
+
+    user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
+    year = models.PositiveSmallIntegerField(
+        validators=[
+            validators.MinValueValidator(2000),
+            validators.MaxValueValidator(3000),
+        ]
+    )
+    month = models.PositiveSmallIntegerField(
+        validators=[
+            validators.MinValueValidator(1),
+            validators.MaxValueValidator(12),
+        ]
+    )
+    closed = models.BooleanField(default=False)
+
+    class Meta(BaseModel.Meta):
+        unique_together = (('user', 'year', 'month'),)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%02d-%04d [%s]' % (self.month, self.year, self.user)

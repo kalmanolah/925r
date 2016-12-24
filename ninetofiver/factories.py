@@ -130,3 +130,12 @@ class ContractRoleFactory(factory.DjangoModelFactory):
 class ContractUserFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.ContractUser
+
+
+class TimesheetFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.Timesheet
+
+    year = factory.LazyFunction(lambda: random.randint(2000, 3000))
+    month = factory.LazyFunction(lambda: random.randint(1, 12))
+    closed = factory.LazyFunction(fake.boolean)
