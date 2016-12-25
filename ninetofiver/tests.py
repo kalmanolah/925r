@@ -1,8 +1,41 @@
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
 from rest_assured import testcases
 from django.utils.timezone import utc
 from ninetofiver import factories
 from decimal import Decimal
 import datetime
+
+
+class AuthenticatedAPITestCase(APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = factories.UserFactory()
+        self.user.set_password('password')
+        self.user.save()
+        self.client.login(username=self.user.username, password='password')
+        # self.client.force_authenticate(self.user)
+
+
+class GenericViewTests(AuthenticatedAPITestCase):
+    def setUp(self):
+        super().setUp()
+
+    def test_home_view(self):
+        """Test the home view."""
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_account_view(self):
+        """Test the account view."""
+        response = self.client.get(reverse('account'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_api_schema_view(self):
+        """Test the API schema view."""
+        response = self.client.get(reverse('api_docs'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class CompanyAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
