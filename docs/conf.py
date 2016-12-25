@@ -80,7 +80,10 @@ todo_include_todos = True
 # Automatic summaries are cool
 autosummary_generate = True
 
-# Mock some libs
+# Autodoc configuration
+autodoc_default_flags = [
+    'no-undoc-members',
+]
 autodoc_mock_imports = [
     'pyldap',
     'ldap',

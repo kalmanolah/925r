@@ -6,7 +6,10 @@
 Welcome to 925r's documentation!
 ================================
 
-.. include modules.rst
+.. toctree::
+   :maxdepth: 2
+
+   ninetofiver
 
 Indices and tables
 ==================
