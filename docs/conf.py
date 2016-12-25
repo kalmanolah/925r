@@ -88,7 +88,7 @@ todo_include_todos = True
 autosummary_generate = True
 
 # Mock some libs
-autodoc_mock_imports = ['pyldap']
+autodoc_mock_imports = ['pyldap', 'ldap']
 
 
 # -- Options for HTML output ----------------------------------------------
