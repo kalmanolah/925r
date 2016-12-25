@@ -3,6 +3,7 @@ ninetofiver
 
 [![Build Status](https://travis-ci.org/kalmanolah/925r.svg?branch=master)](https://travis-ci.org/kalmanolah/925r)
 [![Coverage Status](https://coveralls.io/repos/github/kalmanolah/925r/badge.svg?branch=master)](https://coveralls.io/github/kalmanolah/925r?branch=master)
+[![Documentation Status](https://readthedocs.org/projects/925r/badge/?version=latest)](http://925r.readthedocs.io/en/latest/?badge=latest)
 [![GitHub issues](https://img.shields.io/github/issues/kalmanolah/925r.svg)](https://shields.io)
 [![license](https://img.shields.io/github/license/kalmanolah/925r.svg)](https://shields.io)
 
