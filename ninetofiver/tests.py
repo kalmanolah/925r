@@ -1,16 +1,8 @@
-from rest_framework.test import APITestCase
 from rest_assured import testcases
 from django.utils.timezone import utc
 from ninetofiver import factories
 from decimal import Decimal
 import datetime
-
-
-class AuthenticatedAPITestCase(APITestCase):
-    def setUp(self):
-        super().setUp()
-        self.user = factories.UserFactory()
-        self.client.force_authenticate(self.user)
 
 
 class CompanyAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):

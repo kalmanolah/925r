@@ -36,10 +36,10 @@ class BaseSerializer(serializers.ModelSerializer):
         return obj.__class__.__name__
 
 
-class RelatedSerializableField(serializers.RelatedField):
-    def to_representation(self, value):
-        serializer = value.get_default_serializer()
-        return serializer(value, context={'request': None}).data
+# class RelatedSerializableField(serializers.RelatedField):
+#     def to_representation(self, value):
+#         serializer = value.get_default_serializer()
+#         return serializer(value, context={'request': None}).data
 
 
 class CompanySerializer(BaseSerializer):
