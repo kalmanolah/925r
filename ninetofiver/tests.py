@@ -219,16 +219,30 @@ class PerformanceTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
     }
 
 
-class ContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class ContractAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'contract'
     factory_class = factories.ContractFactory
     user_factory = factories.UserFactory
+
+    def setUp(self):
+        self.company = factories.InternalCompanyFactory.create()
+        self.customer = factories.CompanyFactory.create()
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(company=self.company, customer=self.customer)
+
+
+class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'projectcontract'
+    factory_class = factories.ProjectContractFactory
+    user_factory = factories.UserFactory
     create_data = {
-        'label': 'Consulting & Stuff',
+        'label': 'Projects & Stuff',
         'active': True,
     }
     update_data = {
-        'label': 'More Consulting & Stuff',
+        'label': 'More Projects & Stuff',
         'active': True,
     }
 
@@ -249,7 +263,75 @@ class ContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Bas
         return self.create_data
 
 
-class ContractRoleTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class ConsultancyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'consultancycontract'
+    factory_class = factories.ConsultancyContractFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'label': 'Consultancy & Stuff',
+        'starts_at': datetime.date.today(),
+        'day_rate': 600,
+        'active': True,
+    }
+    update_data = {
+        'label': 'More Consultancy & Stuff',
+        'starts_at': datetime.date.today(),
+        'day_rate': 600,
+        'active': True,
+    }
+
+    def setUp(self):
+        self.company = factories.InternalCompanyFactory.create()
+        self.customer = factories.CompanyFactory.create()
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(company=self.company, customer=self.customer)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'company': self.company.id,
+            'customer': self.customer.id,
+        })
+
+        return self.create_data
+
+
+class SupportContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'supportcontract'
+    factory_class = factories.SupportContractFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'label': 'Support & Stuff',
+        'starts_at': datetime.date.today(),
+        'day_rate': 600,
+        'active': True,
+    }
+    update_data = {
+        'label': 'More Support & Stuff',
+        'starts_at': datetime.date.today(),
+        'day_rate': 600,
+        'active': True,
+    }
+
+    def setUp(self):
+        self.company = factories.InternalCompanyFactory.create()
+        self.customer = factories.CompanyFactory.create()
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(company=self.company, customer=self.customer)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'company': self.company.id,
+            'customer': self.customer.id,
+        })
+
+        return self.create_data
+
+
+class ContractRoleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'contractrole'
     factory_class = factories.ContractRoleFactory
     user_factory = factories.UserFactory
@@ -261,7 +343,7 @@ class ContractRoleTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
     }
 
 
-class ContractUserTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class ContractUserAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'contractuser'
     factory_class = factories.ContractUserFactory
     user_factory = factories.UserFactory
@@ -289,7 +371,7 @@ class ContractUserTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
         return self.create_data
 
 
-class TimesheetTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'timesheet'
     factory_class = factories.TimesheetFactory
     user_factory = factories.UserFactory
@@ -310,6 +392,88 @@ class TimesheetTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseR
     def get_create_data(self):
         self.create_data.update({
             'user': self.user.id,
+        })
+
+        return self.create_data
+
+
+class PerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'performance'
+    factory_class = factories.PerformanceFactory
+    user_factory = factories.UserFactory
+
+    def setUp(self):
+        self.timesheet = factories.OpenTimesheetFactory.create(
+            user=factories.UserFactory.create(),
+        )
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(timesheet=self.timesheet)
+
+
+class ActivityPerformanceTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'activityperformance'
+    factory_class = factories.ActivityPerformanceFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'day': datetime.date.today().day,
+        'duration': 12,
+        'description': 'Just doing things',
+    }
+    update_data = {
+        'day': datetime.date.today().day,
+        'duration': 13,
+        'description': 'Not doing all that much',
+    }
+
+    def setUp(self):
+        self.timesheet = factories.OpenTimesheetFactory.create(
+            user=factories.UserFactory.create(),
+        )
+        self.performance_type = factories.PerformanceTypeFactory.create()
+        self.contract = factories.ContractFactory.create(
+            company=factories.InternalCompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(timesheet=self.timesheet, performance_type=self.performance_type, contract=self.contract)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'timesheet': self.timesheet.id,
+            'contract': self.contract.id,
+            'performance_type': self.performance_type.id,
+        })
+
+        return self.create_data
+
+
+class StandbyPerformanceTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'standbyperformance'
+    factory_class = factories.StandbyPerformanceFactory
+    user_factory = factories.UserFactory
+    create_data = {
+        'day': datetime.date.today().day,
+    }
+    update_data = {
+        'day': datetime.date.today().day,
+    }
+
+    def setUp(self):
+        self.timesheet = factories.OpenTimesheetFactory.create(
+            user=factories.UserFactory.create(),
+        )
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(timesheet=self.timesheet)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'timesheet': self.timesheet.id,
         })
 
         return self.create_data

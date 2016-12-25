@@ -150,6 +150,36 @@ class ContractFilter(FilterSet):
         }
 
 
+class ProjectContractFilter(ContractFilter):
+    class Meta(ContractFilter.Meta):
+        model = models.ProjectContract
+        fields = {**ContractFilter.Meta.fields, **{  # noqa
+        }}
+
+
+class ConsultancyContractFilter(ContractFilter):
+    class Meta(ContractFilter.Meta):
+        model = models.ConsultancyContract
+        fields = {**ContractFilter.Meta.fields, **{  # noqa
+            'day_rate': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'starts_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'ends_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'duration': ['exact', 'gt', 'gte', 'lt', 'lte'],
+        }}
+
+
+class SupportContractFilter(ContractFilter):
+    class Meta(ContractFilter.Meta):
+        model = models.SupportContract
+        fields = {**ContractFilter.Meta.fields, **{  # noqa
+            'day_rate': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'starts_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'ends_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'fixed_fee': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'fixed_fee_period': ['exact'],
+        }}
+
+
 class ContractRoleFilter(FilterSet):
     class Meta:
         model = models.ContractRole
@@ -174,3 +204,27 @@ class TimesheetFilter(FilterSet):
             'month': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'closed': ['exact'],
         }
+
+
+class PerformanceFilter(FilterSet):
+    class Meta:
+        model = models.Performance
+        fields = {
+            'day': ['exact', 'gt', 'gte', 'lt', 'lte'],
+        }
+
+
+class ActivityPerformanceFilter(PerformanceFilter):
+    class Meta(PerformanceFilter.Meta):
+        model = models.ActivityPerformance
+        fields = {**PerformanceFilter.Meta.fields, **{  # noqa
+            'duration': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'description': ['exact', 'contains', 'icontains'],
+        }}
+
+
+class StandbyPerformanceFilter(PerformanceFilter):
+    class Meta(PerformanceFilter.Meta):
+        model = models.StandbyPerformance
+        fields = {**PerformanceFilter.Meta.fields, **{
+        }}

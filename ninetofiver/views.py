@@ -8,6 +8,7 @@ from rest_framework.renderers import CoreJSONRenderer
 from rest_framework.decorators import api_view, renderer_classes, permission_classes
 from rest_framework_swagger.renderers import OpenAPIRenderer, SwaggerUIRenderer
 from ninetofiver import models, serializers, filters
+from ninetofiver.viewsets import GenericHierarchicalReadOnlyViewSet
 
 
 def home_view(request):
@@ -140,13 +141,48 @@ class PerformanceTypeViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
 
 
-class ContractViewSet(viewsets.ModelViewSet):
+class ContractViewSet(GenericHierarchicalReadOnlyViewSet):
     """
     API endpoint that allows contracts to be viewed or edited.
     """
     queryset = models.Contract.objects.all()
     serializer_class = serializers.ContractSerializer
+    serializer_classes = {
+        models.ProjectContract: serializers.ProjectContractSerializer,
+        models.ConsultancyContract: serializers.ConsultancyContractSerializer,
+        models.SupportContract: serializers.SupportContractSerializer,
+    }
     filter_class = filters.ContractFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class ProjectContractViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows project contracts to be viewed or edited.
+    """
+    queryset = models.ProjectContract.objects.all()
+    serializer_class = serializers.ProjectContractSerializer
+    filter_class = filters.ProjectContractFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class ConsultancyContractViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows consultancy contracts to be viewed or edited.
+    """
+    queryset = models.ConsultancyContract.objects.all()
+    serializer_class = serializers.ConsultancyContractSerializer
+    filter_class = filters.ConsultancyContractFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class SupportContractViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows support contracts to be viewed or edited.
+    """
+    queryset = models.SupportContract.objects.all()
+    serializer_class = serializers.SupportContractSerializer
+    filter_class = filters.SupportContractFilter
     permission_classes = (permissions.IsAuthenticated,)
 
 
@@ -177,4 +213,38 @@ class TimesheetViewSet(viewsets.ModelViewSet):
     queryset = models.Timesheet.objects.all()
     serializer_class = serializers.TimesheetSerializer
     filter_class = filters.TimesheetFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class PerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
+    """
+    API endpoint that allows performances to be viewed or edited.
+    """
+    queryset = models.Performance.objects.all()
+    serializer_class = serializers.PerformanceSerializer
+    serializer_classes = {
+        models.StandbyPerformance: serializers.StandbyPerformanceSerializer,
+        models.ActivityPerformance: serializers.ActivityPerformanceSerializer,
+    }
+    filter_class = filters.PerformanceFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class ActivityPerformanceViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows activity performances to be viewed or edited.
+    """
+    queryset = models.ActivityPerformance.objects.all()
+    serializer_class = serializers.ActivityPerformanceSerializer
+    filter_class = filters.ActivityPerformanceFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class StandbyPerformanceViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows standby performances to be viewed or edited.
+    """
+    queryset = models.StandbyPerformance.objects.all()
+    serializer_class = serializers.StandbyPerformanceSerializer
+    filter_class = filters.StandbyPerformanceFilter
     permission_classes = (permissions.IsAuthenticated,)

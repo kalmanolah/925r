@@ -22,3 +22,4 @@ django-settings-export==1.2.1
 django-auth-ldap==1.2.8
 PyYAML==3.12
 django-countries==4.0
+django-model-utils==2.6

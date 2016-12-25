@@ -6,7 +6,9 @@ from django.utils.translation import ugettext as _
 from django.contrib.auth import models as auth_models
 from polymorphic.models import PolymorphicModel, PolymorphicManager
 from django_countries.fields import CountryField
+from model_utils import Choices
 from datetime import datetime
+from calendar import monthrange
 
 
 # Monkey patch user model to serialize properly
@@ -259,7 +261,7 @@ class UserRelative(BaseModel):
 
     """User relative model."""
 
-    GENDER_CHOICES = (
+    GENDER = Choices(
         ('m', _('Male')),
         ('f', _('Female')),
     )
@@ -267,7 +269,7 @@ class UserRelative(BaseModel):
     user = models.ForeignKey(auth_models.User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     birth_date = models.DateField()
-    gender = models.CharField(max_length=2, choices=GENDER_CHOICES)
+    gender = models.CharField(max_length=2, choices=GENDER)
     relation = models.CharField(max_length=255)
 
     def __str__(self):
@@ -325,7 +327,7 @@ class Leave(BaseModel):
 
     """Leave model."""
 
-    STATUS_CHOICES = (
+    STATUS = Choices(
         ('DRAFT', _('Draft')),
         ('PENDING', _('Pending')),
         ('APPROVED', _('Approved')),
@@ -334,7 +336,7 @@ class Leave(BaseModel):
 
     user = models.ForeignKey(auth_models.User, on_delete=models.CASCADE)
     leave_type = models.ForeignKey(LeaveType, on_delete=models.PROTECT)
-    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default='DRAFT')
+    status = models.CharField(max_length=16, choices=STATUS, default=STATUS.DRAFT)
     description = models.TextField(max_length=255, blank=True, null=True)
 
     def __str__(self):
@@ -449,6 +451,132 @@ class Contract(BaseModel):
         return '%s [%s → %s]' % (self.label, self.company, self.customer)
 
 
+class ProjectContract(Contract):
+
+    """Project contract model."""
+
+
+class ConsultancyContract(Contract):
+
+    """Consultancy contract model."""
+
+    day_rate = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(9999),
+        ]
+    )
+    starts_at = models.DateField()
+    ends_at = models.DateField(blank=True, null=True)
+    duration = models.PositiveSmallIntegerField(blank=True, null=True)
+
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object."""
+        instance_id = instance.id if instance else None # noqa
+        starts_at = data.get('starts_at', getattr(instance, 'starts_at', None))
+        ends_at = data.get('ends_at', getattr(instance, 'ends_at', None))
+
+        if starts_at and ends_at:
+            # Verify whether the start date of the contract comes before the end date
+            if starts_at >= ends_at:
+                raise ValidationError(
+                    _('The start date should be set before the end date'),
+                )
+
+    def get_validation_args(self):
+        """Get a dict used for validation based on this instance."""
+        return {
+            'starts_at': getattr(self, 'starts_at', None),
+            'ends_at': getattr(self, 'ends_at', None),
+
+        }
+
+
+class SupportContract(Contract):
+
+    """Support contract model."""
+
+    FIXED_FEE_PERIOD = Choices(
+        ('DAILY', _('Daily')),
+        ('WEEKLY', _('Weekly')),
+        ('MONTHLY', _('Monthly')),
+        ('YEARLY', _('Yearly')),
+    )
+
+    day_rate = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=6,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(9999),
+        ]
+    )
+    fixed_fee = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=9,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(9999999),
+        ]
+    )
+    fixed_fee_period = models.CharField(blank=True, null=True, max_length=10, choices=FIXED_FEE_PERIOD)
+    starts_at = models.DateField()
+    ends_at = models.DateField(blank=True, null=True)
+
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object."""
+        instance_id = instance.id if instance else None # noqa
+        starts_at = data.get('starts_at', getattr(instance, 'starts_at', None))
+        ends_at = data.get('ends_at', getattr(instance, 'ends_at', None))
+        day_rate = data.get('day_rate', getattr(instance, 'day_rate', None))
+        fixed_fee = data.get('fixed_fee', getattr(instance, 'fixed_fee', None))
+        fixed_fee_period = data.get('fixed_fee_period', getattr(instance, 'fixed_fee_period', None))
+
+        if starts_at and ends_at:
+            # Verify whether the start date of the contract comes before the end date
+            if starts_at >= ends_at:
+                raise ValidationError(
+                    _('The start date should be set before the end date'),
+                )
+
+        # Ensure we have either a day rate or a fixed fee + period, but never both
+        if day_rate:
+            if fixed_fee:
+                raise ValidationError(
+                    _('A contract can not have both a fixed fee and a day rate'),
+                )
+        elif fixed_fee:
+            if not fixed_fee_period:
+                raise ValidationError(
+                    _('A contract with a fixed fee requires a fixed fee period'),
+                )
+        else:
+            raise ValidationError(
+                _('A contract should have either a fixed fee or a day rate'),
+            )
+
+    def get_validation_args(self):
+        """Get a dict used for validation based on this instance."""
+        return {
+            'starts_at': getattr(self, 'starts_at', None),
+            'ends_at': getattr(self, 'ends_at', None),
+            'day_rate': getattr(self, 'day_rate', None),
+            'fixed_fee': getattr(self, 'fixed_fee', None),
+            'fixed_fee_period': getattr(self, 'fixed_fee_period', None),
+        }
+
+
 class ContractRole(BaseModel):
 
     """Contract role model (no pun intended)."""
@@ -502,3 +630,81 @@ class Timesheet(BaseModel):
     def __str__(self):
         """Return a string representation."""
         return '%02d-%04d [%s]' % (self.month, self.year, self.user)
+
+
+class Performance(BaseModel):
+
+    """Performance model."""
+
+    timesheet = models.ForeignKey(Timesheet, on_delete=models.PROTECT)
+    day = models.PositiveSmallIntegerField(
+        validators=[
+            validators.MinValueValidator(1),
+            validators.MaxValueValidator(31),
+        ]
+    )
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s-%s' % (self.day, self.timesheet)
+
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object."""
+        instance_id = instance.id if instance else None # noqa
+        timesheet = data.get('timesheet', getattr(instance, 'timesheet', None))
+        day = data.get('day', getattr(instance, 'day', None))
+
+        if timesheet:
+            # Ensure no performance is added/modified for a closed timesheet
+            if timesheet.closed:
+                raise ValidationError(
+                    _('Performance attached to a closed timesheet cannot be modified'),
+                )
+
+            if day:
+                # Verify whether the day is valid for the month/year of the timesheet
+                month_days = monthrange(timesheet.year, timesheet.month)[1]
+
+                if day > month_days:
+                    raise ValidationError(
+                        _('There are only %s days in the month this timesheet is attached to' % month_days),
+                    )
+
+    def get_validation_args(self):
+        """Get a dict used for validation based on this instance."""
+        return {
+            'timesheet': getattr(self, 'timesheet', None),
+            'day': getattr(self, 'day', None),
+        }
+
+
+class ActivityPerformance(Performance):
+
+    """Activity performance model."""
+
+    contract = models.ForeignKey(Contract, on_delete=models.PROTECT)
+    performance_type = models.ForeignKey(PerformanceType, on_delete=models.PROTECT)
+    description = models.TextField(max_length=255, blank=True, null=True)
+    duration = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s - %s' % (self.performance_type, super().__str__())
+
+
+class StandbyPerformance(Performance):
+
+    """Standby (oncall) performance model."""
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s - %s' % (_('Standby'), super().__str__())

@@ -43,7 +43,7 @@ class EmploymentContractFactory(factory.DjangoModelFactory):
         model = models.EmploymentContract
 
     started_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
-    ended_at = factory.LazyFunction(lambda: fake.date_time_this_decade(after_now=True))
+    ended_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=False, after_now=True))
 
 
 class WorkScheduleFactory(factory.DjangoModelFactory):
@@ -119,6 +119,30 @@ class ContractFactory(factory.DjangoModelFactory):
     active = factory.LazyFunction(fake.boolean)
 
 
+class ProjectContractFactory(ContractFactory):
+    class Meta:
+        model = models.ProjectContract
+
+
+class ConsultancyContractFactory(ContractFactory):
+    class Meta:
+        model = models.ConsultancyContract
+
+    starts_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
+    ends_at = None
+    duration = factory.LazyFunction(lambda: random.randint(0, 9999))
+    day_rate = factory.LazyFunction(lambda: random.randint(0, 9999))
+
+
+class SupportContractFactory(ContractFactory):
+    class Meta:
+        model = models.SupportContract
+
+    starts_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
+    ends_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=False, after_now=True))
+    day_rate = factory.LazyFunction(lambda: random.randint(0, 9999))
+
+
 class ContractRoleFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.ContractRole
@@ -139,3 +163,27 @@ class TimesheetFactory(factory.DjangoModelFactory):
     year = factory.LazyFunction(lambda: random.randint(2000, 3000))
     month = factory.LazyFunction(lambda: random.randint(1, 12))
     closed = factory.LazyFunction(fake.boolean)
+
+
+class OpenTimesheetFactory(TimesheetFactory):
+    closed = False
+
+
+class PerformanceFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.Performance
+
+    day = factory.LazyFunction(lambda: random.randint(1, 27))
+
+
+class ActivityPerformanceFactory(PerformanceFactory):
+    class Meta:
+        model = models.ActivityPerformance
+
+    description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
+    duration = factory.LazyFunction(lambda: random.randint(0, 24))
+
+
+class StandbyPerformanceFactory(PerformanceFactory):
+    class Meta:
+        model = models.StandbyPerformance

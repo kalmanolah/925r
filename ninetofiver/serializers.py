@@ -104,6 +104,24 @@ class ContractSerializer(BaseSerializer):
                                                'active')
 
 
+class ProjectContractSerializer(ContractSerializer):
+    class Meta(ContractSerializer.Meta):
+        model = models.ProjectContract
+        fields = ContractSerializer.Meta.fields
+
+
+class ConsultancyContractSerializer(ContractSerializer):
+    class Meta(ContractSerializer.Meta):
+        model = models.ConsultancyContract
+        fields = ContractSerializer.Meta.fields + ('starts_at', 'ends_at', 'day_rate', 'duration')
+
+
+class SupportContractSerializer(ContractSerializer):
+    class Meta(ContractSerializer.Meta):
+        model = models.SupportContract
+        fields = ContractSerializer.Meta.fields + ('starts_at', 'ends_at', 'day_rate', 'fixed_fee', 'fixed_fee_period')
+
+
 class ContractRoleSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.ContractRole
@@ -120,3 +138,21 @@ class TimesheetSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Timesheet
         fields = BaseSerializer.Meta.fields + ('user', 'year', 'month', 'closed')
+
+
+class PerformanceSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.Performance
+        fields = BaseSerializer.Meta.fields + ('timesheet', 'day')
+
+
+class ActivityPerformanceSerializer(PerformanceSerializer):
+    class Meta(PerformanceSerializer.Meta):
+        model = models.ActivityPerformance
+        fields = PerformanceSerializer.Meta.fields + ('duration', 'description', 'performance_type', 'contract')
+
+
+class StandbyPerformanceSerializer(PerformanceSerializer):
+    class Meta(PerformanceSerializer.Meta):
+        model = models.StandbyPerformance
+        fields = PerformanceSerializer.Meta.fields

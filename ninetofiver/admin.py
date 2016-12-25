@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
+from django.utils.translation import ugettext as _
+from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter
 from ninetofiver import models
 
 
@@ -63,8 +64,34 @@ class ContractUserInline(admin.TabularInline):
     model = models.ContractUser
 
 
+class ContractChildAdmin(PolymorphicChildModelAdmin):
+    base_model = models.Contract
+    inlines = [
+        ContractUserInline,
+    ]
+
+
+@admin.register(models.ProjectContract)
+class ProjectContractChildAdmin(ContractChildAdmin):
+    base_model = models.ProjectContract
+
+
+@admin.register(models.ConsultancyContract)
+class ConsultancyContractChildAdmin(ContractChildAdmin):
+    base_model = models.ConsultancyContract
+
+
+@admin.register(models.SupportContract)
+class SupportContractChildAdmin(ContractChildAdmin):
+    base_model = models.SupportContract
+
+
 @admin.register(models.Contract)
-class ContractAdmin(admin.ModelAdmin):
+class ContractParentAdmin(PolymorphicParentModelAdmin):
+    base_model = models.Contract
+    child_models = (models.ProjectContract, models.ConsultancyContract, models.SupportContract)
+    list_filter = (PolymorphicChildModelFilter,)
+
     def contract_users(self, obj):
         return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
 
@@ -73,9 +100,6 @@ class ContractAdmin(admin.ModelAdmin):
 
     list_display = ('__str__', 'label', 'company', 'customer', 'contract_users',
                     performance_types, 'description', 'active')
-    inlines = [
-        ContractUserInline,
-    ]
 
 
 @admin.register(models.ContractRole)
@@ -91,3 +115,69 @@ class ContractUserAdmin(admin.ModelAdmin):
 @admin.register(models.Timesheet)
 class TimesheetAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'month', 'year', 'closed')
+
+
+class PerformanceChildAdmin(PolymorphicChildModelAdmin):
+    base_model = models.Performance
+
+
+@admin.register(models.ActivityPerformance)
+class ActivityPerformanceChildAdmin(PerformanceChildAdmin):
+    base_model = models.ActivityPerformance
+
+
+@admin.register(models.StandbyPerformance)
+class StandbyPerformanceChildAdmin(PerformanceChildAdmin):
+    base_model = models.StandbyPerformance
+
+
+@admin.register(models.Performance)
+class PerformanceParentAdmin(PolymorphicParentModelAdmin):
+    def duration(self, obj):
+        try:
+            activity = getattr(obj, 'activityperformance', None)
+        except:
+            activity = None
+
+        if activity:
+            return activity.duration
+
+        return None
+
+    def contract(self, obj):
+        try:
+            activity = getattr(obj, 'activityperformance', None)
+        except:
+            activity = None
+
+        if activity:
+            return activity.contract
+
+        return _('Standby')
+
+    def performance_type(self, obj):
+        try:
+            activity = getattr(obj, 'activityperformance', None)
+        except:
+            activity = None
+
+        if activity:
+            return activity.performance_type
+
+        return _('Standby')
+
+    def description(self, obj):
+        try:
+            activity = getattr(obj, 'activityperformance', None)
+        except:
+            activity = None
+
+        if activity:
+            return activity.description
+
+        return None
+
+    base_model = models.Performance
+    child_models = (models.ActivityPerformance, models.StandbyPerformance)
+    list_filter = (PolymorphicChildModelFilter,)
+    list_display = ('__str__', 'timesheet', 'day', 'contract', 'performance_type', 'duration', 'description')
