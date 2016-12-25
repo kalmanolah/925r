@@ -9,3 +9,5 @@ install:
 script:
   # - python manage.py testninetofiver
   - coverage run --source=ninetofiver manage.py testninetofiver
+after_success:
+  - coveralls
