@@ -4,19 +4,11 @@
 import os
 import sys
 import configurations
-# from unittest.mock import MagicMock
+from unittest.mock import MagicMock
 
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
-
-# class Mock(MagicMock):
-#     @classmethod
-#     def __getattr__(cls, name):
-#             return MagicMock()
-#
-# MOCK_MODULES = ['pyldap']
-# sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 sys.path.insert(0, os.path.abspath('../'))
 
@@ -200,7 +192,14 @@ epub_exclude_files = ['search.html']
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
 
-# Django-specific: we need an environment variable for settings
+
+# Django-specifics
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+sys.modules.update((mod_name, Mock()) for mod_name in autodoc_mock_imports)
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ninetofiver.settings')
 os.environ.setdefault('DJANGO_CONFIGURATION', 'Dev')
 configurations.setup()
