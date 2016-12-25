@@ -3,19 +3,19 @@
 
 import os
 import sys
-from unittest.mock import MagicMock
+# from unittest.mock import MagicMock
 
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
 
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-            return MagicMock()
-
-MOCK_MODULES = ['pyldap']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+# class Mock(MagicMock):
+#     @classmethod
+#     def __getattr__(cls, name):
+#             return MagicMock()
+#
+# MOCK_MODULES = ['pyldap']
+# sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 sys.path.insert(0, os.path.abspath('../'))
 
@@ -87,6 +87,9 @@ todo_include_todos = True
 
 # Automatic summaries are cool
 autosummary_generate = True
+
+# Mock some libs
+autodoc_mock_imports = ['pyldap']
 
 
 # -- Options for HTML output ----------------------------------------------
