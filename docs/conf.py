@@ -3,6 +3,7 @@
 
 import os
 import sys
+import configurations
 # from unittest.mock import MagicMock
 
 
@@ -200,5 +201,6 @@ epub_exclude_files = ['search.html']
 intersphinx_mapping = {'https://docs.python.org/': None}
 
 # Django-specific: we need an environment variable for settings
-os.environ['DJANGO_CONFIGURATION'] = 'Prod'
-os.environ['DJANGO_SETTINGS_MODULE'] = 'ninetofiver.settings'
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ninetofiver.settings')
+os.environ.setdefault('DJANGO_CONFIGURATION', 'Dev')
+configurations.setup()
