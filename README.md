@@ -81,7 +81,7 @@ Generate the docs:
 
 ```
 pip install sphinx
-sphinx-apidoc -f -a -d 4 -o docs ninetofiver ninetofiver/migrations
+sphinx-apidoc -e -f -a -d 2 -o docs ninetofiver ninetofiver/migrations
 cd docs && make html && cd ../
 ```
 

@@ -4,14 +4,9 @@ ninetofiver.management.commands package
 Submodules
 ----------
 
-ninetofiver.management.commands.testninetofiver module
-------------------------------------------------------
+.. toctree::
 
-.. automodule:: ninetofiver.management.commands.testninetofiver
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+   ninetofiver.management.commands.testninetofiver
 
 Module contents
 ---------------
