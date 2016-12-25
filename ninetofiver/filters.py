@@ -4,6 +4,7 @@ from django.db.models import Func
 from collections import Counter
 from rest_framework import generics
 from ninetofiver import models
+from ninetofiver.utils import merge_dicts
 
 
 class IsNull(Func):
@@ -153,31 +154,30 @@ class ContractFilter(FilterSet):
 class ProjectContractFilter(ContractFilter):
     class Meta(ContractFilter.Meta):
         model = models.ProjectContract
-        fields = {**ContractFilter.Meta.fields, **{  # noqa
-        }}
+        fields = ContractFilter.Meta.fields
 
 
 class ConsultancyContractFilter(ContractFilter):
     class Meta(ContractFilter.Meta):
         model = models.ConsultancyContract
-        fields = {**ContractFilter.Meta.fields, **{  # noqa
+        fields = merge_dicts(ContractFilter.Meta.fields, {
             'day_rate': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'starts_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'ends_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'duration': ['exact', 'gt', 'gte', 'lt', 'lte'],
-        }}
+        })
 
 
 class SupportContractFilter(ContractFilter):
     class Meta(ContractFilter.Meta):
         model = models.SupportContract
-        fields = {**ContractFilter.Meta.fields, **{  # noqa
+        fields = merge_dicts(ContractFilter.Meta.fields, {
             'day_rate': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'starts_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'ends_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'fixed_fee': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'fixed_fee_period': ['exact'],
-        }}
+        })
 
 
 class ContractRoleFilter(FilterSet):
@@ -217,14 +217,13 @@ class PerformanceFilter(FilterSet):
 class ActivityPerformanceFilter(PerformanceFilter):
     class Meta(PerformanceFilter.Meta):
         model = models.ActivityPerformance
-        fields = {**PerformanceFilter.Meta.fields, **{  # noqa
+        fields = merge_dicts(PerformanceFilter.Meta.fields, {
             'duration': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'description': ['exact', 'contains', 'icontains'],
-        }}
+        })
 
 
 class StandbyPerformanceFilter(PerformanceFilter):
     class Meta(PerformanceFilter.Meta):
         model = models.StandbyPerformance
-        fields = {**PerformanceFilter.Meta.fields, **{
-        }}
+        fields = PerformanceFilter.Meta.fields

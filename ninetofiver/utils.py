@@ -8,3 +8,11 @@ def str_import(string):
     attr = getattr(module, attr)
 
     return attr
+
+
+def merge_dicts(*dicts):
+    """Merge two dicts."""
+    result = {}
+    [result.update(x) for x in dicts]
+
+    return result
