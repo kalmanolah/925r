@@ -81,9 +81,12 @@ Generate the docs:
 
 ```
 pip install sphinx
-sphinx-apidoc -f -a -d 4 -o docs ninetofiver ninetofiver/migrations
+sphinx-apidoc -f -a -d 4 -o docs ninetofiver ninetofiver/migrations ninetofiver/management/commands/runasyncio.py
 cd docs && make html && cd ../
 ```
+
+NOTE: Some modules are ignored because they are not supported by the python
+version used by readthedocs.
 
 ## License
 

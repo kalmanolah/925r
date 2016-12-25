@@ -4,14 +4,6 @@ ninetofiver.management.commands package
 Submodules
 ----------
 
-ninetofiver.management.commands.runasyncio module
--------------------------------------------------
-
-.. automodule:: ninetofiver.management.commands.runasyncio
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 ninetofiver.management.commands.testninetofiver module
 ------------------------------------------------------
 
