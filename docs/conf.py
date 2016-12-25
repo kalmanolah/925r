@@ -195,4 +195,5 @@ epub_exclude_files = ['search.html']
 intersphinx_mapping = {'https://docs.python.org/': None}
 
 # Django-specific: we need an environment variable for settings
+os.environ['DJANGO_CONFIGURATION'] = 'Prod'
 os.environ['DJANGO_SETTINGS_MODULE'] = 'ninetofiver.settings'
