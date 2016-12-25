@@ -61,6 +61,14 @@ Note: The `insecure` flag is used to allow the server to serve static files.
 python manage.py runserver --configuration=Prod --insecure
 ```
 
+## Testing
+
+Run the test suite:
+
+```
+python manage.py testninetofiver
+```
+
 ## License
 
 See [LICENSE](LICENSE)
