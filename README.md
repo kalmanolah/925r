@@ -2,6 +2,7 @@ ninetofiver
 ===========
 
 [![Build Status](https://travis-ci.org/kalmanolah/925r.svg?branch=master)](https://travis-ci.org/kalmanolah/925r)
+[![Coverage Status](https://coveralls.io/repos/github/kalmanolah/925r/badge.svg?branch=master)](https://coveralls.io/github/kalmanolah/925r?branch=master)
 
 ninetofiver (or 925r) is a free and open source time and leave tracking application.
 
