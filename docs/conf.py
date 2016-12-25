@@ -88,7 +88,7 @@ todo_include_todos = True
 autosummary_generate = True
 
 # Mock some libs
-autodoc_mock_imports = ['pyldap', 'ldap']
+autodoc_mock_imports = ['pyldap', 'ldap', 'django_auth_ldap']
 
 
 # -- Options for HTML output ----------------------------------------------
