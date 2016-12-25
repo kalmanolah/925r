@@ -360,19 +360,52 @@ class LeaveDate(BaseModel):
         instance_id = instance.id if instance else None # noqa
         starts_at = data.get('starts_at', getattr(instance, 'starts_at', None))
         ends_at = data.get('ends_at', getattr(instance, 'ends_at', None))
+        leave = data.get('leave', getattr(instance, 'leave', None))
 
-        # Verify whether the start datetime of the leave date comes before the end datetime
         if starts_at and ends_at:
+            # Verify whether the start datetime of the leave date comes before the end datetime
             if starts_at >= ends_at:
                 raise ValidationError(
                     _('The start date should be set before the end date'),
                 )
 
+            # Verify whether start and end datetime of the leave date occur on the same date
+            if starts_at.date() != ends_at.date():
+                raise ValidationError(
+                    _('The start date should occur on the same day as the end date'),
+                )
+
+            if leave:
+                # Check whether the user already has leave planned during this time frame
+                existing = cls.objects.filter(
+                    models.Q(
+                        leave__user=leave.user,
+                    ) &
+                    models.Q(
+                        starts_at__lte=ends_at,
+                        ends_at__gte=starts_at,
+                    )
+                )
+
+                if instance_id:
+                    existing = existing.exclude(id=instance_id)
+
+                try:
+                    existing = existing.all()[0]
+                except (cls.DoesNotExist, IndexError):
+                    existing = None
+
+                if existing:
+                    raise ValidationError(
+                        _('User already has leave planned during this time'),
+                    )
+
     def get_validation_args(self):
         """Get a dict used for validation based on this instance."""
         return {
             'starts_at': getattr(self, 'starts_at', None),
-            'ends_at': getattr(self, 'ends_at', None)
+            'ends_at': getattr(self, 'ends_at', None),
+            'leave': getattr(self, 'leave', None),
         }
 
 
