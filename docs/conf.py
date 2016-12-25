@@ -86,6 +86,7 @@ autodoc_mock_imports = [
     'ldap',
     'django_auth_ldap',
     'django_auth_ldap.config',
+    'django_auth_ldap.backend',
 ]
 
 
