@@ -1,4 +1,4 @@
 [run]
 omit =
     # omit some management commands
-    */ninetofiver/runasyncio.py
+    */ninetofiver/management/commands/runasyncio.py
