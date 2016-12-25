@@ -75,6 +75,16 @@ Run the test suite:
 python manage.py testninetofiver
 ```
 
+## Documentation
+
+Generate the docs:
+
+```
+pip install sphinx
+sphinx-apidoc -f -a -d 4 -o docs ninetofiver ninetofiver/migrations
+cd docs && make html && cd ../
+```
+
 ## License
 
 See [LICENSE](LICENSE)

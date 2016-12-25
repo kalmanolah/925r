@@ -193,3 +193,6 @@ epub_exclude_files = ['search.html']
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+# Django-specific: we need an environment variable for settings
+os.environ['DJANGO_SETTINGS_MODULE'] = 'ninetofiver.settings'
