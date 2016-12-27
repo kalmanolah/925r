@@ -9,6 +9,8 @@ from django_countries.fields import CountryField
 from model_utils import Choices
 from datetime import datetime
 from calendar import monthrange
+from decimal import Decimal
+from ninetofiver.utils import merge_dicts
 
 
 # Monkey patch user model to serialize properly
@@ -691,7 +693,7 @@ class ActivityPerformance(Performance):
         decimal_places=2,
         default=1.00,
         validators=[
-            validators.MinValueValidator(0.01),
+            validators.MinValueValidator(Decimal('0.01')),
             validators.MaxValueValidator(24),
         ]
     )
@@ -703,6 +705,8 @@ class ActivityPerformance(Performance):
     @classmethod
     def perform_additional_validation(cls, data, instance=None):
         """Perform additional validation on the object."""
+        super().perform_additional_validation(data, instance=instance)
+
         instance_id = instance.id if instance else None # noqa
         contract = data.get('contract', getattr(instance, 'contract', None))
         performance_type = data.get('performance_type', getattr(instance, 'performance_type', None))
@@ -718,10 +722,10 @@ class ActivityPerformance(Performance):
 
     def get_validation_args(self):
         """Get a dict used for validation based on this instance."""
-        return {
+        return merge_dicts(super().get_validation_args(), {
             'contract': getattr(self, 'contract', None),
             'performance_type': getattr(self, 'performance_type', None),
-        }
+        })
 
 
 class StandbyPerformance(Performance):
