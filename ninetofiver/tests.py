@@ -37,6 +37,12 @@ class GenericViewTests(AuthenticatedAPITestCase):
         response = self.client.get(reverse('api_docs'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_my_user_service_api_view(self):
+        """Test the 'My User' service API view."""
+        response = self.client.get(reverse('my_user_service'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['display_label'], str(self.user))
+
 
 class CompanyAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'company'

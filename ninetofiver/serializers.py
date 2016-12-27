@@ -5,10 +5,15 @@ from ninetofiver import models
 
 
 class UserSerializer(serializers.ModelSerializer):
+    display_label = serializers.SerializerMethodField()
+
     class Meta:
         model = auth_models.User
-        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name')
+        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label')
         read_only_fields = ('id',)
+
+    def get_display_label(self, obj):
+        return str(obj)
 
 
 class GroupSerializer(serializers.ModelSerializer):

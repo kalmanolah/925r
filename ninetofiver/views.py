@@ -248,3 +248,16 @@ class StandbyPerformanceViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.StandbyPerformanceSerializer
     filter_class = filters.StandbyPerformanceFilter
     permission_classes = (permissions.IsAuthenticated,)
+
+
+class MyUserServiceAPIView(APIView):
+    """
+    Get the currently authenticated user.
+
+    """
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, format=None):
+        entity = request.user
+        data = serializers.UserSerializer(entity, context={'request': request}).data
+        return Response(data)

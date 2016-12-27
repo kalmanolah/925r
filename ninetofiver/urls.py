@@ -40,7 +40,9 @@ router.register(r'performances', views.PerformanceViewSet)
 # Additionally, we include login URLs for the browsable API.
 urlpatterns += [
     url(r'^$', views.home_view, name='home'),
-    url(r'^api/v1/', include(router.urls)),
+    url(r'^api/v1/', include(router.urls + [
+        url(r'^services/my_user/$', views.MyUserServiceAPIView.as_view(), name='my_user_service'),
+    ])),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
     # # OAuth2
