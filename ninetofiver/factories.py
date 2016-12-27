@@ -181,7 +181,7 @@ class ActivityPerformanceFactory(PerformanceFactory):
         model = models.ActivityPerformance
 
     description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
-    duration = factory.LazyFunction(lambda: random.randint(0, 24))
+    duration = factory.LazyFunction(lambda: random.randint(1, 24))
 
 
 class StandbyPerformanceFactory(PerformanceFactory):

@@ -689,9 +689,9 @@ class ActivityPerformance(Performance):
     duration = models.DecimalField(
         max_digits=4,
         decimal_places=2,
-        default=0.00,
+        default=1.00,
         validators=[
-            validators.MinValueValidator(0),
+            validators.MinValueValidator(0.01),
             validators.MaxValueValidator(24),
         ]
     )
@@ -699,6 +699,29 @@ class ActivityPerformance(Performance):
     def __str__(self):
         """Return a string representation."""
         return '%s - %s' % (self.performance_type, super().__str__())
+
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object."""
+        instance_id = instance.id if instance else None # noqa
+        contract = data.get('contract', getattr(instance, 'contract', None))
+        performance_type = data.get('performance_type', getattr(instance, 'performance_type', None))
+
+        if contract and performance_type:
+            # Ensure the performance type is valid for the contract
+            allowed_types = list(contract.performance_types.all())
+
+            if allowed_types and (performance_type not in allowed_types):
+                raise ValidationError(
+                    _('The selected performance type is not valid for the selected contract'),
+                )
+
+    def get_validation_args(self):
+        """Get a dict used for validation based on this instance."""
+        return {
+            'contract': getattr(self, 'contract', None),
+            'performance_type': getattr(self, 'performance_type', None),
+        }
 
 
 class StandbyPerformance(Performance):
