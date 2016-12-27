@@ -17,19 +17,25 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
+    display_label = serializers.SerializerMethodField()
+
     class Meta:
         model = auth_models.Group
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'display_label')
         read_only_fields = ('id',)
+
+    def get_display_label(self, obj):
+        return str(obj)
 
 
 class BaseSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
+    display_label = serializers.SerializerMethodField()
 
     class Meta:
         model = None
-        fields = ('id', 'created_at', 'updated_at', 'type')
-        read_only_fields = ('id', 'created_at', 'updated_at', 'type')
+        fields = ('id', 'created_at', 'updated_at', 'type', 'display_label')
+        read_only_fields = ('id', 'created_at', 'updated_at', 'type', 'display_label')
 
     def validate(self, data):
         super().validate(data)
@@ -39,6 +45,9 @@ class BaseSerializer(serializers.ModelSerializer):
 
     def get_type(self, obj):
         return obj.__class__.__name__
+
+    def get_display_label(self, obj):
+        return str(obj)
 
 
 # class RelatedSerializableField(serializers.RelatedField):
