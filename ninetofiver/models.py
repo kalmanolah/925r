@@ -541,7 +541,16 @@ class ConsultancyContract(Contract):
     )
     starts_at = models.DateField()
     ends_at = models.DateField(blank=True, null=True)
-    duration = models.PositiveSmallIntegerField(blank=True, null=True)
+    duration = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=6,
+        decimal_places=2,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(9999),
+        ]
+    )
 
     @classmethod
     def perform_additional_validation(cls, data, instance=None):
