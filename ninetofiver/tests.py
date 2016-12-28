@@ -8,6 +8,9 @@ from decimal import Decimal
 import datetime
 
 
+now = datetime.date.today()
+
+
 class AuthenticatedAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
@@ -191,23 +194,18 @@ class LeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRE
 
     def setUp(self):
         self.leave_type = factories.LeaveTypeFactory.create()
-        self.timesheet = factories.OpenTimesheetFactory.create(
-            user=factories.UserFactory.create(),
-        )
         super().setUp()
 
     def get_object(self, factory):
         return factory.create(
             user=self.user,
             leave_type=self.leave_type,
-            timesheet=self.timesheet,
         )
 
     def get_create_data(self):
         self.create_data.update({
             'user': self.user.id,
             'leave_type': self.leave_type.id,
-            'timesheet': self.timesheet.id,
         })
 
         return self.create_data
@@ -218,12 +216,12 @@ class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
     factory_class = factories.LeaveDateFactory
     user_factory = factories.UserFactory
     create_data = {
-        'starts_at': datetime.datetime(datetime.date.today().year, 1, 16, 7, 34, 34, tzinfo=utc),
-        'ends_at': datetime.datetime(datetime.date.today().year, 1, 16, 8, 34, 34, tzinfo=utc),
+        'starts_at': datetime.datetime(now.year, now.month, 16, 7, 34, 34, tzinfo=utc),
+        'ends_at': datetime.datetime(now.year, now.month, 16, 8, 34, 34, tzinfo=utc),
     }
     update_data = {
-        'starts_at': datetime.datetime(datetime.date.today().year, 1, 16, 9, 34, 34, tzinfo=utc),
-        'ends_at': datetime.datetime(datetime.date.today().year, 1, 16, 10, 34, 34, tzinfo=utc),
+        'starts_at': datetime.datetime(now.year, now.month, 16, 9, 34, 34, tzinfo=utc),
+        'ends_at': datetime.datetime(now.year, now.month, 16, 10, 34, 34, tzinfo=utc),
     }
 
     def setUp(self):
@@ -231,16 +229,22 @@ class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
         self.leave = factories.LeaveFactory.create(
             user=user,
             leave_type=factories.LeaveTypeFactory.create(),
-            timesheet=factories.OpenTimesheetFactory.create(user=user),
         )
+        self.timesheet = factories.OpenTimesheetFactory.create(
+            user=user,
+        )
+        self.timesheet.year = now.year
+        self.timesheet.month = now.month
+        self.timesheet.save()
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(leave=self.leave)
+        return factory.create(leave=self.leave, timesheet=self.timesheet)
 
     def get_create_data(self):
         self.create_data.update({
             'leave': self.leave.id,
+            'timesheet': self.timesheet.id,
         })
 
         return self.create_data

@@ -96,13 +96,13 @@ class LeaveTypeSerializer(BaseSerializer):
 class LeaveSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Leave
-        fields = BaseSerializer.Meta.fields + ('user', 'timesheet', 'leave_type', 'status', 'description')
+        fields = BaseSerializer.Meta.fields + ('user', 'leave_type', 'status', 'description')
 
 
 class LeaveDateSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.LeaveDate
-        fields = BaseSerializer.Meta.fields + ('leave', 'starts_at', 'ends_at')
+        fields = BaseSerializer.Meta.fields + ('leave', 'timesheet', 'starts_at', 'ends_at')
 
 
 class PerformanceTypeSerializer(BaseSerializer):

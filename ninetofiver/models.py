@@ -388,7 +388,6 @@ class Leave(BaseModel):
 
     user = models.ForeignKey(auth_models.User, on_delete=models.CASCADE)
     leave_type = models.ForeignKey(LeaveType, on_delete=models.PROTECT)
-    timesheet = models.ForeignKey(Timesheet, on_delete=models.PROTECT)
     status = models.CharField(max_length=16, choices=STATUS, default=STATUS.DRAFT)
     description = models.TextField(max_length=255, blank=True, null=True)
 
@@ -402,6 +401,7 @@ class LeaveDate(BaseModel):
     """Leave date model."""
 
     leave = models.ForeignKey(Leave, on_delete=models.CASCADE)
+    timesheet = models.ForeignKey(Timesheet, on_delete=models.PROTECT)
     starts_at = models.DateTimeField()
     ends_at = models.DateTimeField()
 
@@ -413,6 +413,7 @@ class LeaveDate(BaseModel):
     def perform_additional_validation(cls, data, instance=None):
         """Perform additional validation on the object."""
         instance_id = instance.id if instance else None # noqa
+        timesheet = data.get('timesheet', getattr(instance, 'timesheet', None))
         starts_at = data.get('starts_at', getattr(instance, 'starts_at', None))
         ends_at = data.get('ends_at', getattr(instance, 'ends_at', None))
         leave = data.get('leave', getattr(instance, 'leave', None))
@@ -455,9 +456,25 @@ class LeaveDate(BaseModel):
                         _('User already has leave planned during this time'),
                     )
 
+            if timesheet:
+                if (starts_at.year != timesheet.year) or (starts_at.month != timesheet.month):
+                    raise ValidationError(
+                        _('You cannot attach leave dates to a timesheet for a different month')
+                    )
+
+        if timesheet:
+            if timesheet.closed:
+                raise ValidationError(
+                    _('You cannot attach leave dates to a closed timesheet'),
+                )
+
+
+
+
     def get_validation_args(self):
         """Get a dict used for validation based on this instance."""
         return {
+            'timesheet': getattr(self, 'timesheet', None),
             'starts_at': getattr(self, 'starts_at', None),
             'ends_at': getattr(self, 'ends_at', None),
             'leave': getattr(self, 'leave', None),
