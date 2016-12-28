@@ -191,15 +191,23 @@ class LeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRE
 
     def setUp(self):
         self.leave_type = factories.LeaveTypeFactory.create()
+        self.timesheet = factories.OpenTimesheetFactory.create(
+            user=factories.UserFactory.create(),
+        )
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(user=self.user, leave_type=self.leave_type)
+        return factory.create(
+            user=self.user,
+            leave_type=self.leave_type,
+            timesheet=self.timesheet,
+        )
 
     def get_create_data(self):
         self.create_data.update({
-            'leave_type': self.leave_type.id,
             'user': self.user.id,
+            'leave_type': self.leave_type.id,
+            'timesheet': self.timesheet.id,
         })
 
         return self.create_data
@@ -219,9 +227,11 @@ class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
     }
 
     def setUp(self):
+        user = factories.UserFactory.create()
         self.leave = factories.LeaveFactory.create(
-            user=factories.UserFactory.create(),
+            user=user,
             leave_type=factories.LeaveTypeFactory.create(),
+            timesheet=factories.OpenTimesheetFactory.create(user=user),
         )
         super().setUp()
 

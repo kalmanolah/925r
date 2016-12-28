@@ -298,6 +298,56 @@ class UserRelative(BaseModel):
         }
 
 
+class Timesheet(BaseModel):
+
+    """Timesheet model."""
+
+    user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
+    year = models.PositiveSmallIntegerField(
+        validators=[
+            validators.MinValueValidator(2000),
+            validators.MaxValueValidator(3000),
+        ]
+    )
+    month = models.PositiveSmallIntegerField(
+        validators=[
+            validators.MinValueValidator(1),
+            validators.MaxValueValidator(12),
+        ]
+    )
+    closed = models.BooleanField(default=False)
+
+    class Meta(BaseModel.Meta):
+        unique_together = (('user', 'year', 'month'),)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%02d-%04d [%s]' % (self.month, self.year, self.user)
+
+    # @classmethod
+    # def perform_additional_validation(cls, data, instance=None):
+    #     """Perform additional validation on the object."""
+    #     instance_id = instance.id if instance else None # noqa
+    #     year = data.get('year', getattr(instance, 'year', None))
+    #     month = data.get('month', getattr(instance, 'month', None))
+    #
+    #     if year and month:
+    #         # Ensure no timesheet can be created for the future
+    #         today = datetime.now().date()
+    #
+    #         if (year > today.year) or ((year == today.year) and (month > today.month)):
+    #             raise ValidationError(
+    #                 _('Timesheets cannot be created for future months'),
+    #             )
+    #
+    # def get_validation_args(self):
+    #     """Get a dict used for validation based on this instance."""
+    #     return {
+    #         'year': getattr(self, 'year', None),
+    #         'month': getattr(self, 'month', None),
+    #     }
+
+
 class Holiday(BaseModel):
 
     """Holiday model."""
@@ -338,6 +388,7 @@ class Leave(BaseModel):
 
     user = models.ForeignKey(auth_models.User, on_delete=models.CASCADE)
     leave_type = models.ForeignKey(LeaveType, on_delete=models.PROTECT)
+    timesheet = models.ForeignKey(Timesheet, on_delete=models.PROTECT)
     status = models.CharField(max_length=16, choices=STATUS, default=STATUS.DRAFT)
     description = models.TextField(max_length=255, blank=True, null=True)
 
@@ -605,56 +656,6 @@ class ContractUser(BaseModel):
     def __str__(self):
         """Return a string representation."""
         return '%s [%s]' % (self.user, self.contract_role)
-
-
-class Timesheet(BaseModel):
-
-    """Timesheet model."""
-
-    user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
-    year = models.PositiveSmallIntegerField(
-        validators=[
-            validators.MinValueValidator(2000),
-            validators.MaxValueValidator(3000),
-        ]
-    )
-    month = models.PositiveSmallIntegerField(
-        validators=[
-            validators.MinValueValidator(1),
-            validators.MaxValueValidator(12),
-        ]
-    )
-    closed = models.BooleanField(default=False)
-
-    class Meta(BaseModel.Meta):
-        unique_together = (('user', 'year', 'month'),)
-
-    def __str__(self):
-        """Return a string representation."""
-        return '%02d-%04d [%s]' % (self.month, self.year, self.user)
-
-    # @classmethod
-    # def perform_additional_validation(cls, data, instance=None):
-    #     """Perform additional validation on the object."""
-    #     instance_id = instance.id if instance else None # noqa
-    #     year = data.get('year', getattr(instance, 'year', None))
-    #     month = data.get('month', getattr(instance, 'month', None))
-    #
-    #     if year and month:
-    #         # Ensure no timesheet can be created for the future
-    #         today = datetime.now().date()
-    #
-    #         if (year > today.year) or ((year == today.year) and (month > today.month)):
-    #             raise ValidationError(
-    #                 _('Timesheets cannot be created for future months'),
-    #             )
-    #
-    # def get_validation_args(self):
-    #     """Get a dict used for validation based on this instance."""
-    #     return {
-    #         'year': getattr(self, 'year', None),
-    #         'month': getattr(self, 'month', None),
-    #     }
 
 
 class Performance(BaseModel):
