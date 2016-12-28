@@ -633,6 +633,29 @@ class Timesheet(BaseModel):
         """Return a string representation."""
         return '%02d-%04d [%s]' % (self.month, self.year, self.user)
 
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object."""
+        instance_id = instance.id if instance else None # noqa
+        year = data.get('year', getattr(instance, 'year', None))
+        month = data.get('month', getattr(instance, 'month', None))
+
+        if year and month:
+            # Ensure no timesheet can be created for the future
+            today = datetime.now().date()
+
+            if (year > today.year) or ((year == today.year) and (month > today.month)):
+                raise ValidationError(
+                    _('Timesheets cannot be created for future months'),
+                )
+
+    def get_validation_args(self):
+        """Get a dict used for validation based on this instance."""
+        return {
+            'year': getattr(self, 'year', None),
+            'month': getattr(self, 'month', None),
+        }
+
 
 class Performance(BaseModel):
 
