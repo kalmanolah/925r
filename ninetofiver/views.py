@@ -39,7 +39,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = auth_models.User.objects.all().order_by('-date_joined')
     serializer_class = serializers.UserSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -48,7 +48,7 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = auth_models.Group.objects.all()
     serializer_class = serializers.GroupSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class CompanyViewSet(viewsets.ModelViewSet):
@@ -58,7 +58,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
     queryset = models.Company.objects.all()
     serializer_class = serializers.CompanySerializer
     filter_class = filters.CompanyFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class EmploymentContractViewSet(viewsets.ModelViewSet):
@@ -68,7 +68,7 @@ class EmploymentContractViewSet(viewsets.ModelViewSet):
     queryset = models.EmploymentContract.objects.all()
     serializer_class = serializers.EmploymentContractSerializer
     filter_class = filters.EmploymentContractFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class WorkScheduleViewSet(viewsets.ModelViewSet):
@@ -78,7 +78,7 @@ class WorkScheduleViewSet(viewsets.ModelViewSet):
     queryset = models.WorkSchedule.objects.all()
     serializer_class = serializers.WorkScheduleSerializer
     filter_class = filters.WorkScheduleFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class UserRelativeViewSet(viewsets.ModelViewSet):
@@ -88,7 +88,7 @@ class UserRelativeViewSet(viewsets.ModelViewSet):
     queryset = models.UserRelative.objects.all()
     serializer_class = serializers.UserRelativeSerializer
     filter_class = filters.UserRelativeFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class HolidayViewSet(viewsets.ModelViewSet):
@@ -98,7 +98,7 @@ class HolidayViewSet(viewsets.ModelViewSet):
     queryset = models.Holiday.objects.all()
     serializer_class = serializers.HolidaySerializer
     filter_class = filters.HolidayFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class LeaveTypeViewSet(viewsets.ModelViewSet):
@@ -108,7 +108,7 @@ class LeaveTypeViewSet(viewsets.ModelViewSet):
     queryset = models.LeaveType.objects.all()
     serializer_class = serializers.LeaveTypeSerializer
     filter_class = filters.LeaveTypeFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class LeaveViewSet(viewsets.ModelViewSet):
@@ -118,7 +118,7 @@ class LeaveViewSet(viewsets.ModelViewSet):
     queryset = models.Leave.objects.all()
     serializer_class = serializers.LeaveSerializer
     filter_class = filters.LeaveFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class LeaveDateViewSet(viewsets.ModelViewSet):
@@ -128,7 +128,7 @@ class LeaveDateViewSet(viewsets.ModelViewSet):
     queryset = models.LeaveDate.objects.all()
     serializer_class = serializers.LeaveDateSerializer
     filter_class = filters.LeaveDateFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class PerformanceTypeViewSet(viewsets.ModelViewSet):
@@ -138,7 +138,7 @@ class PerformanceTypeViewSet(viewsets.ModelViewSet):
     queryset = models.PerformanceType.objects.all()
     serializer_class = serializers.PerformanceTypeSerializer
     filter_class = filters.PerformanceTypeFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class ContractViewSet(GenericHierarchicalReadOnlyViewSet):
@@ -153,7 +153,7 @@ class ContractViewSet(GenericHierarchicalReadOnlyViewSet):
         models.SupportContract: serializers.SupportContractSerializer,
     }
     filter_class = filters.ContractFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class ProjectContractViewSet(viewsets.ModelViewSet):
@@ -163,7 +163,7 @@ class ProjectContractViewSet(viewsets.ModelViewSet):
     queryset = models.ProjectContract.objects.all()
     serializer_class = serializers.ProjectContractSerializer
     filter_class = filters.ProjectContractFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class ConsultancyContractViewSet(viewsets.ModelViewSet):
@@ -173,7 +173,7 @@ class ConsultancyContractViewSet(viewsets.ModelViewSet):
     queryset = models.ConsultancyContract.objects.all()
     serializer_class = serializers.ConsultancyContractSerializer
     filter_class = filters.ConsultancyContractFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class SupportContractViewSet(viewsets.ModelViewSet):
@@ -183,7 +183,7 @@ class SupportContractViewSet(viewsets.ModelViewSet):
     queryset = models.SupportContract.objects.all()
     serializer_class = serializers.SupportContractSerializer
     filter_class = filters.SupportContractFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class ContractRoleViewSet(viewsets.ModelViewSet):
@@ -193,7 +193,7 @@ class ContractRoleViewSet(viewsets.ModelViewSet):
     queryset = models.ContractRole.objects.all()
     serializer_class = serializers.ContractRoleSerializer
     filter_class = filters.ContractRoleFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class ContractUserViewSet(viewsets.ModelViewSet):
@@ -203,7 +203,7 @@ class ContractUserViewSet(viewsets.ModelViewSet):
     queryset = models.ContractUser.objects.all()
     serializer_class = serializers.ContractUserSerializer
     filter_class = filters.ContractUserFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class TimesheetViewSet(viewsets.ModelViewSet):
@@ -213,7 +213,7 @@ class TimesheetViewSet(viewsets.ModelViewSet):
     queryset = models.Timesheet.objects.all()
     serializer_class = serializers.TimesheetSerializer
     filter_class = filters.TimesheetFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class PerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
@@ -227,7 +227,7 @@ class PerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
         models.ActivityPerformance: serializers.ActivityPerformanceSerializer,
     }
     filter_class = filters.PerformanceFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class ActivityPerformanceViewSet(viewsets.ModelViewSet):
@@ -237,7 +237,7 @@ class ActivityPerformanceViewSet(viewsets.ModelViewSet):
     queryset = models.ActivityPerformance.objects.all()
     serializer_class = serializers.ActivityPerformanceSerializer
     filter_class = filters.ActivityPerformanceFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class StandbyPerformanceViewSet(viewsets.ModelViewSet):
@@ -247,7 +247,7 @@ class StandbyPerformanceViewSet(viewsets.ModelViewSet):
     queryset = models.StandbyPerformance.objects.all()
     serializer_class = serializers.StandbyPerformanceSerializer
     filter_class = filters.StandbyPerformanceFilter
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
 class MyUserServiceAPIView(APIView):

@@ -17,10 +17,12 @@ class UserFactory(factory.DjangoModelFactory):
     last_name = factory.LazyFunction(fake.last_name)
     username = factory.LazyFunction(fake.name)
     is_staff = False
+    is_superuser = False
 
 
 class AdminFactory(UserFactory):
     is_staff = True
+    is_superuser = True
 
 
 class CompanyFactory(factory.DjangoModelFactory):

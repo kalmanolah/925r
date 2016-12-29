@@ -50,7 +50,7 @@ class GenericViewTests(AuthenticatedAPITestCase):
 class CompanyAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'company'
     factory_class = factories.CompanyFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'name': 'Foo BVBA',
         'vat_identification_number': 'BE123123123123',
@@ -70,7 +70,7 @@ class CompanyAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Base
 class EmploymentContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'employmentcontract'
     factory_class = factories.EmploymentContractFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'started_at': datetime.date(datetime.date.today().year + 10, 1, 15),
     }
@@ -100,7 +100,7 @@ class EmploymentContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, tes
 class WorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'workschedule'
     factory_class = factories.WorkScheduleFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'label': 'Test schedule #1',
         'monday': Decimal('1.20'),
@@ -126,7 +126,7 @@ class WorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
 class UserRelativeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'userrelative'
     factory_class = factories.UserRelativeFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'birth_date': datetime.date(datetime.date.today().year - 10, 1, 15),
         'name': 'John Doe',
@@ -154,7 +154,7 @@ class UserRelativeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
 class HolidayAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'holiday'
     factory_class = factories.HolidayFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'name': 'Friday Night Deploy',
         'date': datetime.date(datetime.date.today().year, 1, 15),
@@ -170,7 +170,7 @@ class HolidayAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Base
 class LeaveTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'leavetype'
     factory_class = factories.LeaveTypeFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'label': 'ADV',
     }
@@ -182,7 +182,7 @@ class LeaveTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
 class LeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'leave'
     factory_class = factories.LeaveFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'description': 'Not going to work',
         'status': 'DRAFT',
@@ -214,7 +214,7 @@ class LeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRE
 class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'leavedate'
     factory_class = factories.LeaveDateFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'starts_at': datetime.datetime(now.year, now.month, 16, 7, 34, 34, tzinfo=utc),
         'ends_at': datetime.datetime(now.year, now.month, 16, 8, 34, 34, tzinfo=utc),
@@ -225,7 +225,7 @@ class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
     }
 
     def setUp(self):
-        user = factories.UserFactory.create()
+        user = factories.AdminFactory.create()
         self.leave = factories.LeaveFactory.create(
             user=user,
             leave_type=factories.LeaveTypeFactory.create(),
@@ -253,7 +253,7 @@ class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
 class PerformanceTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'performancetype'
     factory_class = factories.PerformanceTypeFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'label': 'Regular',
         'multiplier': 1.00,
@@ -267,7 +267,7 @@ class PerformanceTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
 class ContractAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'contract'
     factory_class = factories.ContractFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
 
     def setUp(self):
         self.company = factories.InternalCompanyFactory.create()
@@ -281,7 +281,7 @@ class ContractAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseREST
 class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'projectcontract'
     factory_class = factories.ProjectContractFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'label': 'Projects & Stuff',
         'active': True,
@@ -311,7 +311,7 @@ class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
 class ConsultancyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'consultancycontract'
     factory_class = factories.ConsultancyContractFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'label': 'Consultancy & Stuff',
         'starts_at': datetime.date.today(),
@@ -345,7 +345,7 @@ class ConsultancyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
 class SupportContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'supportcontract'
     factory_class = factories.SupportContractFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'label': 'Support & Stuff',
         'starts_at': datetime.date.today(),
@@ -379,7 +379,7 @@ class SupportContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
 class ContractRoleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'contractrole'
     factory_class = factories.ContractRoleFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'label': 'Project Manager',
     }
@@ -391,7 +391,7 @@ class ContractRoleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
 class ContractUserAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'contractuser'
     factory_class = factories.ContractUserFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {}
     update_data = {}
 
@@ -419,7 +419,7 @@ class ContractUserAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
 class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'timesheet'
     factory_class = factories.TimesheetFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
         'closed': False,
         'year': datetime.date.today().year,
@@ -445,11 +445,11 @@ class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
 class PerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'performance'
     factory_class = factories.PerformanceFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
 
     def setUp(self):
         self.timesheet = factories.OpenTimesheetFactory.create(
-            user=factories.UserFactory.create(),
+            user=factories.AdminFactory.create(),
         )
         super().setUp()
 
@@ -460,21 +460,21 @@ class PerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseR
 class ActivityPerformanceTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'activityperformance'
     factory_class = factories.ActivityPerformanceFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
-        'day': datetime.date.today().day,
+        'day': 12,
         'duration': 12,
         'description': 'Just doing things',
     }
     update_data = {
-        'day': datetime.date.today().day,
+        'day': 13,
         'duration': 13,
         'description': 'Not doing all that much',
     }
 
     def setUp(self):
         self.timesheet = factories.OpenTimesheetFactory.create(
-            user=factories.UserFactory.create(),
+            user=factories.AdminFactory.create(),
         )
         self.performance_type = factories.PerformanceTypeFactory.create()
         self.contract = factories.ContractFactory.create(
@@ -499,17 +499,17 @@ class ActivityPerformanceTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testc
 class StandbyPerformanceTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'standbyperformance'
     factory_class = factories.StandbyPerformanceFactory
-    user_factory = factories.UserFactory
+    user_factory = factories.AdminFactory
     create_data = {
-        'day': datetime.date.today().day,
+        'day': 12,
     }
     update_data = {
-        'day': datetime.date.today().day,
+        'day': 13,
     }
 
     def setUp(self):
         self.timesheet = factories.OpenTimesheetFactory.create(
-            user=factories.UserFactory.create(),
+            user=factories.AdminFactory.create(),
         )
         super().setUp()
 
