@@ -599,7 +599,7 @@ class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
 
 class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'mytimesheet'
-    factory_class = factories.TimesheetFactory
+    factory_class = factories.OpenTimesheetFactory
     user_factory = factories.AdminFactory
     create_data = {
         'closed': False,

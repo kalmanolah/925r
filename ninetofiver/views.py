@@ -299,7 +299,7 @@ class MyTimesheetViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return user.timesheet_set.all()
+        return user.timesheet_set.exclude(closed=True)
 
 
 class MyPerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
