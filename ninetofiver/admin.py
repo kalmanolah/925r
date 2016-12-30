@@ -41,12 +41,25 @@ class LeaveDateInline(admin.TabularInline):
 
 @admin.register(models.Leave)
 class LeaveAdmin(admin.ModelAdmin):
+    def make_approved(self, request, queryset):
+        queryset.update(status=models.Leave.STATUS.APPROVED)
+    make_approved.short_description = _('Approve selected leaves')
+
+    def make_rejected(self, request, queryset):
+        queryset.update(status=models.Leave.STATUS.REJECTED)
+    make_rejected.short_description = _('Reject selected leaves')
+
     def leave_dates(self, obj):
         return format_html('<br>'.join(str(x) for x in list(obj.leavedate_set.all())))
 
     list_display = ('__str__', 'user', 'leave_type', 'leave_dates', 'status', 'description')
+    list_filter = ('status',)
     inlines = [
         LeaveDateInline,
+    ]
+    actions = [
+        'make_approved',
+        'make_rejected',
     ]
 
 
