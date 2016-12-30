@@ -170,3 +170,33 @@ class StandbyPerformanceSerializer(PerformanceSerializer):
     class Meta(PerformanceSerializer.Meta):
         model = models.StandbyPerformance
         fields = PerformanceSerializer.Meta.fields
+
+
+class MyUserSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + ('is_staff', 'is_superuser', 'user_permissions')
+        depth = 2
+
+
+class MyLeaveSerializer(LeaveSerializer):
+    status = serializers.ChoiceField(choices=(models.Leave.STATUS.DRAFT, models.Leave.STATUS.PENDING))
+
+    class Meta(LeaveSerializer.Meta):
+        read_only_fields = LeaveSerializer.Meta.read_only_fields + ('user',)
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class MyLeaveDateSerializer(LeaveDateSerializer):
+    def validate_leave(self, value):
+        if value.status != models.Leave.STATUS.DRAFT:
+            raise serializers.ValidationError('You can only manipulate leave dates attached to draft leaves')
+
+        if value.user != self.context['request'].user:
+            print(value.user)
+            print(self.context['request'].user)
+            raise serializers.ValidationError('You can only manipulate leave dates attached to your own leaves')
+
+        return value

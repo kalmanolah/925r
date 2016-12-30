@@ -457,7 +457,7 @@ class PerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseR
         return factory.create(timesheet=self.timesheet)
 
 
-class ActivityPerformanceTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class ActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'activityperformance'
     factory_class = factories.ActivityPerformanceFactory
     user_factory = factories.AdminFactory
@@ -496,7 +496,7 @@ class ActivityPerformanceTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testc
         return self.create_data
 
 
-class StandbyPerformanceTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class StandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
     base_name = 'standbyperformance'
     factory_class = factories.StandbyPerformanceFactory
     user_factory = factories.AdminFactory
@@ -518,6 +518,79 @@ class StandbyPerformanceTestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
 
     def get_create_data(self):
         self.create_data.update({
+            'timesheet': self.timesheet.id,
+        })
+
+        return self.create_data
+
+
+class MyLeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'myleave'
+    factory_class = factories.LeaveFactory
+    user_factory = factories.AdminFactory
+    create_data = {
+        'description': 'Not going to work',
+        'status': 'DRAFT',
+    }
+    update_data = {
+        'description': 'Going to sleep',
+        'status': 'PENDING',
+    }
+
+    def setUp(self):
+        self.leave_type = factories.LeaveTypeFactory.create()
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(
+            user=self.user,
+            leave_type=self.leave_type,
+        )
+
+    def get_create_data(self):
+        self.create_data.update({
+            'leave_type': self.leave_type.id,
+        })
+
+        return self.create_data
+
+
+class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+    base_name = 'myleavedate'
+    factory_class = factories.LeaveDateFactory
+    # user_factory = factories.AdminFactory
+    create_data = {
+        'starts_at': datetime.datetime(now.year, now.month, 16, 7, 34, 34, tzinfo=utc),
+        'ends_at': datetime.datetime(now.year, now.month, 16, 8, 34, 34, tzinfo=utc),
+    }
+    update_data = {
+        'starts_at': datetime.datetime(now.year, now.month, 16, 9, 34, 34, tzinfo=utc),
+        'ends_at': datetime.datetime(now.year, now.month, 16, 10, 34, 34, tzinfo=utc),
+    }
+
+    def setUp(self):
+        self.user = factories.AdminFactory.create()
+        self.client.force_authenticate(self.user)
+
+        self.leave = factories.LeaveFactory.create(
+            user=self.user,
+            leave_type=factories.LeaveTypeFactory.create(),
+        )
+        self.leave.save()
+        self.timesheet = factories.OpenTimesheetFactory.create(
+            user=self.user,
+        )
+        self.timesheet.year = now.year
+        self.timesheet.month = now.month
+        self.timesheet.save()
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(leave=self.leave, timesheet=self.timesheet)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'leave': self.leave.id,
             'timesheet': self.timesheet.id,
         })
 

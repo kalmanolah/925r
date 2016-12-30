@@ -259,5 +259,31 @@ class MyUserServiceAPIView(APIView):
 
     def get(self, request, format=None):
         entity = request.user
-        data = serializers.UserSerializer(entity, context={'request': request}).data
+        data = serializers.MyUserSerializer(entity, context={'request': request}).data
         return Response(data)
+
+
+class MyLeaveViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows leaves for the currently authenticated user to be viewed or edited.
+    """
+    serializer_class = serializers.MyLeaveSerializer
+    filter_class = filters.LeaveFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return user.leave_set.all()
+
+
+class MyLeaveDateViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows leave dates for the currently authenticated user to be viewed or edited.
+    """
+    serializer_class = serializers.MyLeaveDateSerializer
+    filter_class = filters.LeaveDateFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return models.LeaveDate.objects.filter(leave__user=user)

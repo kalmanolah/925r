@@ -457,19 +457,25 @@ class LeaveDate(BaseModel):
                     )
 
             if timesheet:
+                # Verify timesheet this leave date is linked to is for the correct month/year
                 if (starts_at.year != timesheet.year) or (starts_at.month != timesheet.month):
                     raise ValidationError(
                         _('You cannot attach leave dates to a timesheet for a different month')
                     )
 
         if timesheet:
+            # Verify timesheet this leave date is attached to isn't closed
             if timesheet.closed:
                 raise ValidationError(
                     _('You cannot attach leave dates to a closed timesheet'),
                 )
 
-
-
+            if leave:
+                # Verify linked timesheet and leave are for the same user
+                if leave.user != timesheet.user:
+                    raise ValidationError(
+                        _('You cannot attach leave dates to leaves and timesheets for different users')
+                    )
 
     def get_validation_args(self):
         """Get a dict used for validation based on this instance."""
