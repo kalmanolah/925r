@@ -37,6 +37,10 @@ router.register(r'performances/standby', views.StandbyPerformanceViewSet)
 router.register(r'performances', views.PerformanceViewSet)
 router.register(r'my_leaves', views.MyLeaveViewSet, base_name='myleave')
 router.register(r'my_leave_dates', views.MyLeaveDateViewSet, base_name='myleavedate')
+router.register(r'my_timesheets', views.MyTimesheetViewSet, base_name='mytimesheet')
+router.register(r'my_performances/activity', views.MyActivityPerformanceViewSet, base_name='myactivityperformance')
+router.register(r'my_performances/standby', views.MyStandbyPerformanceViewSet, base_name='mystandbyperformance')
+router.register(r'my_performances', views.MyPerformanceViewSet, base_name='myperformance')
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.

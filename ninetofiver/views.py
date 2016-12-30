@@ -287,3 +287,59 @@ class MyLeaveDateViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return models.LeaveDate.objects.filter(leave__user=user)
+
+
+class MyTimesheetViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows timesheets for the currently authenticated user to be viewed or edited.
+    """
+    serializer_class = serializers.MyTimesheetSerializer
+    filter_class = filters.TimesheetFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return user.timesheet_set.all()
+
+
+class MyPerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
+    """
+    API endpoint that allows performances for the currently authenticated user to be viewed or edited.
+    """
+    serializer_class = serializers.MyPerformanceSerializer
+    serializer_classes = {
+        models.StandbyPerformance: serializers.MyStandbyPerformanceSerializer,
+        models.ActivityPerformance: serializers.MyActivityPerformanceSerializer,
+    }
+    filter_class = filters.PerformanceFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return models.Performance.objects.filter(timesheet__user=user)
+
+
+class MyActivityPerformanceViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows activity performances for the currently authenticated user to be viewed or edited.
+    """
+    serializer_class = serializers.MyActivityPerformanceSerializer
+    filter_class = filters.ActivityPerformanceFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return models.ActivityPerformance.objects.filter(timesheet__user=user)
+
+
+class MyStandbyPerformanceViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows standby performances for the currently authenticated user to be viewed or edited.
+    """
+    serializer_class = serializers.MyStandbyPerformanceSerializer
+    filter_class = filters.StandbyPerformanceFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return models.StandbyPerformance.objects.filter(timesheet__user=user)

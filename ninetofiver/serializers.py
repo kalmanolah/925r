@@ -195,8 +195,33 @@ class MyLeaveDateSerializer(LeaveDateSerializer):
             raise serializers.ValidationError('You can only manipulate leave dates attached to draft leaves')
 
         if value.user != self.context['request'].user:
-            print(value.user)
-            print(self.context['request'].user)
             raise serializers.ValidationError('You can only manipulate leave dates attached to your own leaves')
 
         return value
+
+
+class MyTimesheetSerializer(TimesheetSerializer):
+    class Meta(TimesheetSerializer.Meta):
+        read_only_fields = TimesheetSerializer.Meta.read_only_fields + ('user',)
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class MyPerformanceSerializer(PerformanceSerializer):
+    def validate_timesheet(self, value):
+        if value.user != self.context['request'].user:
+            raise serializers.ValidationError('You can only manipulate performances attached to your own timesheets')
+
+        return value
+
+
+class MyActivityPerformanceSerializer(MyPerformanceSerializer, ActivityPerformanceSerializer):
+    class Meta(ActivityPerformanceSerializer.Meta):
+        pass
+
+
+class MyStandbyPerformanceSerializer(MyPerformanceSerializer, StandbyPerformanceSerializer):
+    class Meta(StandbyPerformanceSerializer.Meta):
+        pass
