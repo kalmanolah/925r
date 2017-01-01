@@ -127,7 +127,20 @@ class ContractUserAdmin(admin.ModelAdmin):
 
 @admin.register(models.Timesheet)
 class TimesheetAdmin(admin.ModelAdmin):
+    def make_closed(self, request, queryset):
+        queryset.update(closed=True)
+    make_closed.short_description = _('Close selected timesheets')
+
+    def make_opened(self, request, queryset):
+        queryset.update(closed=False)
+    make_opened.short_description = _('Open selected timesheets')
+
     list_display = ('__str__', 'user', 'month', 'year', 'closed')
+    list_filter = ('closed',)
+    actions = [
+        'make_closed',
+        'make_opened',
+    ]
 
 
 class PerformanceChildAdmin(PolymorphicChildModelAdmin):
