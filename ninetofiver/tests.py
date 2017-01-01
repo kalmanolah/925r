@@ -21,6 +21,19 @@ class AuthenticatedAPITestCase(APITestCase):
         # self.client.force_authenticate(self.user)
 
 
+class ModelTestMixin:
+
+    """This test case mixin provides some additional tests for model instances."""
+
+    def test_absolute_url(self):
+        """Test whether the absolute URL for an object can be generated."""
+        self.assertIsNotNone(self.object.get_absolute_url())
+
+    def test_extended_validation(self):
+        """Test extended validation for an object."""
+        self.object.validate_unique()
+
+
 class GenericViewTests(AuthenticatedAPITestCase):
     def setUp(self):
         super().setUp()
@@ -47,7 +60,7 @@ class GenericViewTests(AuthenticatedAPITestCase):
         self.assertEqual(response.data['display_label'], str(self.user))
 
 
-class CompanyAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class CompanyAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'company'
     factory_class = factories.CompanyFactory
     user_factory = factories.AdminFactory
@@ -67,7 +80,7 @@ class CompanyAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Base
     }
 
 
-class EmploymentContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class EmploymentContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'employmentcontract'
     factory_class = factories.EmploymentContractFactory
     user_factory = factories.AdminFactory
@@ -97,7 +110,7 @@ class EmploymentContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, tes
         return self.create_data
 
 
-class WorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class WorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'workschedule'
     factory_class = factories.WorkScheduleFactory
     user_factory = factories.AdminFactory
@@ -123,7 +136,7 @@ class WorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
     }
 
 
-class UserRelativeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class UserRelativeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'userrelative'
     factory_class = factories.UserRelativeFactory
     user_factory = factories.AdminFactory
@@ -151,7 +164,7 @@ class UserRelativeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
         return self.create_data
 
 
-class HolidayAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class HolidayAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'holiday'
     factory_class = factories.HolidayFactory
     user_factory = factories.AdminFactory
@@ -167,7 +180,7 @@ class HolidayAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Base
     }
 
 
-class LeaveTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class LeaveTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'leavetype'
     factory_class = factories.LeaveTypeFactory
     user_factory = factories.AdminFactory
@@ -179,7 +192,7 @@ class LeaveTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
     }
 
 
-class LeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class LeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'leave'
     factory_class = factories.LeaveFactory
     user_factory = factories.AdminFactory
@@ -211,7 +224,7 @@ class LeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRE
         return self.create_data
 
 
-class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'leavedate'
     factory_class = factories.LeaveDateFactory
     user_factory = factories.AdminFactory
@@ -250,7 +263,7 @@ class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
         return self.create_data
 
 
-class PerformanceTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class PerformanceTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'performancetype'
     factory_class = factories.PerformanceTypeFactory
     user_factory = factories.AdminFactory
@@ -264,7 +277,7 @@ class PerformanceTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
     }
 
 
-class ContractAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class ContractAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'contract'
     factory_class = factories.ContractFactory
     user_factory = factories.AdminFactory
@@ -278,7 +291,7 @@ class ContractAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseREST
         return factory.create(company=self.company, customer=self.customer)
 
 
-class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'projectcontract'
     factory_class = factories.ProjectContractFactory
     user_factory = factories.AdminFactory
@@ -308,7 +321,7 @@ class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
         return self.create_data
 
 
-class ConsultancyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class ConsultancyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'consultancycontract'
     factory_class = factories.ConsultancyContractFactory
     user_factory = factories.AdminFactory
@@ -342,7 +355,7 @@ class ConsultancyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
         return self.create_data
 
 
-class SupportContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class SupportContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'supportcontract'
     factory_class = factories.SupportContractFactory
     user_factory = factories.AdminFactory
@@ -376,7 +389,7 @@ class SupportContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
         return self.create_data
 
 
-class ContractRoleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class ContractRoleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'contractrole'
     factory_class = factories.ContractRoleFactory
     user_factory = factories.AdminFactory
@@ -388,7 +401,7 @@ class ContractRoleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
     }
 
 
-class ContractUserAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class ContractUserAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'contractuser'
     factory_class = factories.ContractUserFactory
     user_factory = factories.AdminFactory
@@ -416,7 +429,7 @@ class ContractUserAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
         return self.create_data
 
 
-class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'timesheet'
     factory_class = factories.TimesheetFactory
     user_factory = factories.AdminFactory
@@ -442,7 +455,7 @@ class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
         return self.create_data
 
 
-class PerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class PerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'performance'
     factory_class = factories.PerformanceFactory
     user_factory = factories.AdminFactory
@@ -457,7 +470,7 @@ class PerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseR
         return factory.create(timesheet=self.timesheet)
 
 
-class ActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class ActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'activityperformance'
     factory_class = factories.ActivityPerformanceFactory
     user_factory = factories.AdminFactory
@@ -496,7 +509,7 @@ class ActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
         return self.create_data
 
 
-class StandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class StandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'standbyperformance'
     factory_class = factories.StandbyPerformanceFactory
     user_factory = factories.AdminFactory
@@ -524,7 +537,7 @@ class StandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, tes
         return self.create_data
 
 
-class MyLeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class MyLeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'myleave'
     factory_class = factories.LeaveFactory
     user_factory = factories.AdminFactory
@@ -555,7 +568,7 @@ class MyLeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Base
         return self.create_data
 
 
-class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'myleavedate'
     factory_class = factories.LeaveDateFactory
     # user_factory = factories.AdminFactory
@@ -597,7 +610,7 @@ class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
         return self.create_data
 
 
-class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'mytimesheet'
     factory_class = factories.OpenTimesheetFactory
     user_factory = factories.AdminFactory
@@ -616,7 +629,7 @@ class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
         return factory.create(user=self.user)
 
 
-class MyPerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class MyPerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'myperformance'
     factory_class = factories.PerformanceFactory
     # user_factory = factories.AdminFactory
@@ -634,7 +647,7 @@ class MyPerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.Bas
         return factory.create(timesheet=self.timesheet)
 
 
-class MyActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class MyActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'myactivityperformance'
     factory_class = factories.ActivityPerformanceFactory
     # user_factory = factories.AdminFactory
@@ -676,7 +689,7 @@ class MyActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, 
         return self.create_data
 
 
-class MyStandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase):
+class MyStandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'mystandbyperformance'
     factory_class = factories.StandbyPerformanceFactory
     # user_factory = factories.AdminFactory

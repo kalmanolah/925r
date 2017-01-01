@@ -67,7 +67,7 @@ class UserRelativeFactory(factory.DjangoModelFactory):
         model = models.UserRelative
 
     name = factory.LazyFunction(fake.name)
-    birth_date = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
+    birth_date = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True).date())
     gender = factory.LazyFunction(lambda: fake.simple_profile(sex=None)['sex'])
     relation = factory.LazyFunction(fake.word)
 
