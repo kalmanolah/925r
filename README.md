@@ -13,14 +13,14 @@ ninetofiver (or 925r) is a free and open source time and leave tracking applicat
 
 Create and activate a virtual environment:
 
-```
+```bash
 python3 -m virtualenv -p python3 ninetofiver_venv
 source ninetofiver_venv/bin/activate
 ```
 
 Install build dependencies:
 
-```
+```bash
 apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev
 ```
 
@@ -43,7 +43,7 @@ Running the command below starts linked docker containers
 running OpenLDAP and ninetofiver at `http://127.0.0.1:8888`.
 You may need to install docker and docker-compose first.
 
-```
+```bash
 docker-compose -f ./scripts/docker/docker-compose.yml up
 ```
 
@@ -52,7 +52,7 @@ docker-compose -f ./scripts/docker/docker-compose.yml up
 Running the command below starts a development server at
 `http://127.0.0.1:8000`.
 
-```
+```bash
 python manage.py runserver
 ```
 
@@ -63,15 +63,35 @@ at `http://127.0.0.1:8000`.
 
 Note: The `insecure` flag is used to allow the server to serve static files.
 
-```
+```bash
 python manage.py runserver --configuration=Prod --insecure
+```
+
+## Configuration
+
+Since this application is built using Django, you can configure the settings
+which will be loaded using the environment variables `DJANGO_SETTINGS_MODULE`
+(defaulting to `ninetofiver.settings`) and `DJANGO_CONFIGURATION` (defaulting
+to `Dev`).
+
+The application will also attempt to load a YAML configuration file from a
+location specified using the environment variable `CFG_FILE_PATH` (defaulting
+to `/etc/925r/config.yml`) and use the resulting data to override existing
+settings.
+
+For example, if you wanted to override the secret key used for production you
+could use the following configuration:
+
+```yaml
+# Use your own secret key!
+SECRET_KEY: mae3fo4dooJaiteth2emeaNga1biey9ia8FaiQuooYoac8phohee7r
 ```
 
 ## Testing
 
 Run the test suite:
 
-```
+```bash
 python manage.py testninetofiver
 ```
 
@@ -79,7 +99,7 @@ python manage.py testninetofiver
 
 Generate the docs:
 
-```
+```bash
 pip install sphinx
 sphinx-apidoc -e -f -a -d 2 -o docs ninetofiver ninetofiver/migrations
 cd docs && make html && cd ../
