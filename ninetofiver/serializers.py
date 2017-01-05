@@ -97,7 +97,7 @@ class LeaveSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Leave
         fields = BaseSerializer.Meta.fields + ('user', 'leave_type', 'status', 'description')
-
+        depth = 1
 
 class LeaveDateSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
