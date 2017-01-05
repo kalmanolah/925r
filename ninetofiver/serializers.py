@@ -100,14 +100,11 @@ class LeaveDateSerializer(BaseSerializer):
 
 
 class LeaveSerializer(BaseSerializer):
-    leavedate_set = LeaveDateSerializer(many=True)
-    user = UserSerializer()
-    leave_type = LeaveTypeSerializer()
+    leavedate_set = LeaveDateSerializer(many=True, read_only=True)
 
     class Meta(BaseSerializer.Meta):
         model = models.Leave
         fields = BaseSerializer.Meta.fields + ('user', 'leave_type', 'leavedate_set', 'status', 'description')
-        depth = 1
 
 
 class PerformanceTypeSerializer(BaseSerializer):
