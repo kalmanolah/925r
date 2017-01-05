@@ -85,6 +85,7 @@ class Base(Configuration):
         'crispy_forms',
         'django_gravatar',
         'django_countries',
+        'rangefilter',
     ] + NINETOFIVER_APPS
 
     MIDDLEWARE = [

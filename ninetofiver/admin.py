@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
 from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter
+from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
 from ninetofiver import models
 
 
@@ -53,7 +54,9 @@ class LeaveAdmin(admin.ModelAdmin):
         return format_html('<br>'.join(str(x) for x in list(obj.leavedate_set.all())))
 
     list_display = ('__str__', 'user', 'leave_type', 'leave_dates', 'status', 'description')
-    list_filter = ('status',)
+    list_filter = ('status', 'leave_type', 'user', ('leavedate__starts_at', DateTimeRangeFilter))
+    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name', 'leave_type__label',
+                     'status', 'leavedate__starts_at')
     inlines = [
         LeaveDateInline,
     ]
