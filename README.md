@@ -43,6 +43,9 @@ Running the command below starts linked docker containers
 running OpenLDAP and ninetofiver at `http://127.0.0.1:8888`.
 You may need to install docker and docker-compose first.
 
+Note: Running this application using Docker should only be done when
+developing locally, if at all.
+
 ```bash
 docker-compose -f ./scripts/docker/docker-compose.yml up
 ```
@@ -56,7 +59,7 @@ Running the command below starts a development server at
 python manage.py runserver
 ```
 
-## Running in production
+## Running (production)
 
 Running the command below starts a server using the production configuration
 at `http://127.0.0.1:8000`.
