@@ -74,6 +74,17 @@ class CompanyFilter(FilterSet):
         }
 
 
+class EmploymentContractTypeFilter(FilterSet):
+    order_fields = ('label',)
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
+    class Meta:
+        model = models.EmploymentContractType
+        fields = {
+            'label': ['exact', 'contains', 'icontains'],
+        }
+
+
 class EmploymentContractFilter(FilterSet):
     order_fields = ('started_at', 'ended_at')
     order_by = NullLastOrderingFilter(fields=order_fields)
