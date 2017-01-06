@@ -16,7 +16,7 @@ from ninetofiver.utils import merge_dicts
 # Monkey patch user model to serialize properly
 def user_str(self):
     if self.get_full_name():
-        return '%s [%s]' % (self.get_full_name(), self.username)
+        return '%s' % (self.get_full_name())
     return self.username
 auth_models.User.__str__ = user_str
 
