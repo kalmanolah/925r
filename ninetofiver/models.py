@@ -4,6 +4,7 @@ from django.core import validators
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext as _
 from django.contrib.auth import models as auth_models
+from django.urls import reverse
 from polymorphic.models import PolymorphicModel, PolymorphicManager
 from django_countries.fields import CountryField
 from model_utils import Choices
@@ -11,6 +12,8 @@ from datetime import datetime
 from calendar import monthrange
 from decimal import Decimal
 from ninetofiver.utils import merge_dicts
+import humanize
+import uuid
 
 
 # Monkey patch user model to serialize properly
@@ -310,6 +313,27 @@ class UserRelative(BaseModel):
         }
 
 
+class Attachment(BaseModel):
+
+    """Attachment model."""
+
+    label = models.CharField(max_length=255)
+    description = models.TextField(max_length=255, blank=True, null=True)
+    file = models.FileField()
+    user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
+    slug = models.SlugField(default=uuid.uuid4, editable=False)
+
+    def __str__(self):
+        """Return a string representation."""
+        if self.file:
+            return '%s (%s - %s) [%s]' % (self.label, self.file.name, humanize.naturalsize(self.file.size), self.user)
+        return '- [%s]' % self.user
+
+    def get_file_url(self):
+        """Get a URL to the file."""
+        return reverse('download_attachment_service', kwargs={'slug': self.slug})
+
+
 class Timesheet(BaseModel):
 
     """Timesheet model."""
@@ -402,6 +426,7 @@ class Leave(BaseModel):
     leave_type = models.ForeignKey(LeaveType, on_delete=models.PROTECT)
     status = models.CharField(max_length=16, choices=STATUS, default=STATUS.DRAFT)
     description = models.TextField(max_length=255, blank=True, null=True)
+    attachments = models.ManyToManyField(Attachment, blank=True)
 
     def __str__(self):
         """Return a string representation."""

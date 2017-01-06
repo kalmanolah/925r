@@ -6,6 +6,7 @@ from django.utils.timezone import utc
 from ninetofiver import factories
 from decimal import Decimal
 import datetime
+import tempfile
 
 
 now = datetime.date.today()
@@ -553,6 +554,43 @@ class StandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, tes
         return self.create_data
 
 
+class AttachmentAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'attachment'
+    factory_class = factories.AttachmentFactory
+    user_factory = factories.AdminFactory
+    create_data = {
+        'label': 'myfile',
+        'description': 'My file\'s description',
+    }
+    update_data = {
+        'label': 'yourfile',
+        'description': 'Your file\'s description',
+    }
+
+    def setUp(self):
+        self.tmp_file = tempfile.NamedTemporaryFile(suffix='.jpg')
+        self.tmp_file.write(bytes('foo', 'UTF-8'))
+        self.tmp_file.seek(0)
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(user=self.user)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'user': self.user.id,
+            'file': self.tmp_file,
+        })
+
+        return self.create_data
+
+    def get_create_response(self, data=None, **kwargs):
+        return super().get_create_response(data=data, format='multipart', **kwargs)
+
+    def get_update_response(self, data=None, results=None, use_patch=None, **kwargs):
+        return super().get_update_response(data=data, results=results, use_patch=True, format='multipart', **kwargs)
+
+
 class MyLeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'myleave'
     factory_class = factories.LeaveFactory
@@ -734,3 +772,39 @@ class MyStandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, t
         })
 
         return self.create_data
+
+
+class MyAttachmentAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'myattachment'
+    factory_class = factories.AttachmentFactory
+    user_factory = factories.AdminFactory
+    create_data = {
+        'label': 'myfile',
+        'description': 'My file\'s description',
+    }
+    update_data = {
+        'label': 'yourfile',
+        'description': 'Your file\'s description',
+    }
+
+    def setUp(self):
+        self.tmp_file = tempfile.NamedTemporaryFile(suffix='.jpg')
+        self.tmp_file.write(bytes('foo', 'UTF-8'))
+        self.tmp_file.seek(0)
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(user=self.user)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'file': self.tmp_file,
+        })
+
+        return self.create_data
+
+    def get_create_response(self, data=None, **kwargs):
+        return super().get_create_response(data=data, format='multipart', **kwargs)
+
+    def get_update_response(self, data=None, results=None, use_patch=None, **kwargs):
+        return super().get_update_response(data=data, results=results, use_patch=True, format='multipart', **kwargs)

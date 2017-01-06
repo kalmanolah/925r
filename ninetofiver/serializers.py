@@ -88,6 +88,18 @@ class UserRelativeSerializer(BaseSerializer):
         fields = BaseSerializer.Meta.fields + ('name', 'relation', 'birth_date', 'gender', 'user')
 
 
+class AttachmentSerializer(BaseSerializer):
+    file_url = serializers.SerializerMethodField()
+
+    class Meta(BaseSerializer.Meta):
+        model = models.Attachment
+        fields = BaseSerializer.Meta.fields + ('label', 'description', 'slug', 'user', 'file_url')
+        read_only_fields = BaseSerializer.Meta.read_only_fields + ('file_url',)
+
+    def get_file_url(self, obj):
+        return obj.get_file_url()
+
+
 class HolidaySerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Holiday
@@ -234,3 +246,12 @@ class MyActivityPerformanceSerializer(MyPerformanceSerializer, ActivityPerforman
 class MyStandbyPerformanceSerializer(MyPerformanceSerializer, StandbyPerformanceSerializer):
     class Meta(StandbyPerformanceSerializer.Meta):
         pass
+
+
+class MyAttachmentSerializer(AttachmentSerializer):
+    class Meta(AttachmentSerializer.Meta):
+        read_only_fields = AttachmentSerializer.Meta.read_only_fields + ('user',)
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)

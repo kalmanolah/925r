@@ -7,7 +7,8 @@ from rest_framework import routers
 # from rest_framework.urlpatterns import format_suffix_patterns
 from registration.backends.hmac import views as registration_views
 from oauth2_provider import views as oauth2_views
-from ninetofiver import views
+from django_downloadview import ObjectDownloadView
+from ninetofiver import views, models
 
 urlpatterns = [
     url(r'^api/$', views.schema_view, name='api_docs'),
@@ -36,12 +37,14 @@ router.register(r'timesheets', views.TimesheetViewSet)
 router.register(r'performances/activity', views.ActivityPerformanceViewSet)
 router.register(r'performances/standby', views.StandbyPerformanceViewSet)
 router.register(r'performances', views.PerformanceViewSet)
+router.register(r'attachments', views.AttachmentViewSet)
 router.register(r'my_leaves', views.MyLeaveViewSet, base_name='myleave')
 router.register(r'my_leave_dates', views.MyLeaveDateViewSet, base_name='myleavedate')
 router.register(r'my_timesheets', views.MyTimesheetViewSet, base_name='mytimesheet')
 router.register(r'my_performances/activity', views.MyActivityPerformanceViewSet, base_name='myactivityperformance')
 router.register(r'my_performances/standby', views.MyStandbyPerformanceViewSet, base_name='mystandbyperformance')
 router.register(r'my_performances', views.MyPerformanceViewSet, base_name='myperformance')
+router.register(r'my_attachments', views.MyAttachmentViewSet, base_name='myattachment')
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
@@ -49,6 +52,7 @@ urlpatterns += [
     url(r'^$', views.home_view, name='home'),
     url(r'^api/v1/', include(router.urls + [
         url(r'^services/my_user/$', views.MyUserServiceAPIView.as_view(), name='my_user_service'),
+        url(r'^services/download_attachment/(?P<slug>[A-Za-z0-9_-]+)/$', ObjectDownloadView.as_view(model=models.Attachment, file_field='file'), name='download_attachment_service'),
     ])),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 

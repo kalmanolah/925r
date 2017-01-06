@@ -38,6 +38,14 @@ class UserRelativeAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'user', 'relation', 'gender', 'birth_date')
 
 
+@admin.register(models.Attachment)
+class AttachmentAdmin(admin.ModelAdmin):
+    def link(self, obj):
+        return format_html('<a href="%s">%s</a>' % (obj.get_file_url(), str(obj)))
+
+    list_display = ('__str__', 'user', 'label', 'description', 'file', 'slug', 'link')
+
+
 @admin.register(models.Holiday)
 class HolidayAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'date', 'country')
@@ -65,7 +73,10 @@ class LeaveAdmin(admin.ModelAdmin):
     def leave_dates(self, obj):
         return format_html('<br>'.join(str(x) for x in list(obj.leavedate_set.all())))
 
-    list_display = ('__str__', 'user', 'leave_type', 'leave_dates', 'status', 'description')
+    def attachment(self, obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.attachments.all())))
+
+    list_display = ('__str__', 'user', 'leave_type', 'leave_dates', 'status', 'description', 'attachment')
     list_filter = ('status', ('leave_type', RelatedDropdownFilter), ('user', RelatedDropdownFilter),
                    ('leavedate__starts_at', DateTimeRangeFilter), ('leavedate__ends_at', DateTimeRangeFilter))
     search_fields = ('user__username', 'user__first_name', 'user__last_name', 'leave_type__label', 'status',

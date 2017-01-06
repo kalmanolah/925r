@@ -122,6 +122,18 @@ class UserRelativeFilter(FilterSet):
         }
 
 
+class AttachmentFilter(FilterSet):
+    order_fields = ('label', 'description')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
+    class Meta:
+        model = models.Attachment
+        fields = {
+            'label': ['exact', 'contains', 'icontains'],
+            'description': ['exact', 'contains', 'icontains'],
+        }
+
+
 class HolidayFilter(FilterSet):
     order_fields = ('name', 'date', 'country')
     order_by = NullLastOrderingFilter(fields=order_fields)

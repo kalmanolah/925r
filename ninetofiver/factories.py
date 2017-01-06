@@ -1,6 +1,7 @@
 import random
 import factory
 from faker import Faker
+from django.core.files.base import ContentFile
 from django.contrib.auth import models as auth_models
 from django.utils.timezone import utc
 from ninetofiver import models
@@ -77,6 +78,15 @@ class UserRelativeFactory(factory.DjangoModelFactory):
     birth_date = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True).date())
     gender = factory.LazyFunction(lambda: fake.simple_profile(sex=None)['sex'])
     relation = factory.LazyFunction(fake.word)
+
+
+class AttachmentFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.Attachment
+
+    label = factory.LazyFunction(fake.word)
+    description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
+    file = factory.LazyFunction(lambda: ContentFile(fake.text(max_nb_chars=200)))
 
 
 class HolidayFactory(factory.DjangoModelFactory):

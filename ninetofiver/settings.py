@@ -174,6 +174,9 @@ class Base(Configuration):
     STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
     STATIC_URL = '/static/'
 
+    # User-uploaded files
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
     # Caching
     CACHES = {
         'default': {

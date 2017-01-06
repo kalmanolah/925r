@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth import models as auth_models
 from django.contrib.auth.decorators import login_required
-from rest_framework import viewsets, permissions, response, schemas
+from rest_framework import viewsets, permissions, response, schemas, parsers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import CoreJSONRenderer
@@ -260,10 +260,20 @@ class StandbyPerformanceViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
+class AttachmentViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows attachments to be viewed or edited.
+    """
+    queryset = models.Attachment.objects.all()
+    serializer_class = serializers.AttachmentSerializer
+    filter_class = filters.AttachmentFilter
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+    parser_classes = (parsers.MultiPartParser, parsers.FileUploadParser, parsers.JSONParser)
+
+
 class MyUserServiceAPIView(APIView):
     """
     Get the currently authenticated user.
-
     """
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -353,3 +363,16 @@ class MyStandbyPerformanceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return models.StandbyPerformance.objects.filter(timesheet__user=user)
+
+
+class MyAttachmentViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows attachments for the currently authenticated user to be viewed or edited.
+    """
+    serializer_class = serializers.MyAttachmentSerializer
+    filter_class = filters.AttachmentFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return user.attachment_set.all()
