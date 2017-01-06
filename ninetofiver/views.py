@@ -61,6 +61,16 @@ class CompanyViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
+class EmploymentContractTypeViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows employment contract types to be viewed or edited.
+    """
+    queryset = models.EmploymentContractType.objects.all()
+    serializer_class = serializers.EmploymentContractTypeSerializer
+    filter_class = filters.EmploymentContractTypeFilter
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+
+
 class EmploymentContractViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows employment contracts to be viewed or edited.

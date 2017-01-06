@@ -62,10 +62,17 @@ class CompanySerializer(BaseSerializer):
         fields = BaseSerializer.Meta.fields + ('name', 'country', 'vat_identification_number', 'internal', 'address')
 
 
+class EmploymentContractTypeSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.EmploymentContractType
+        fields = BaseSerializer.Meta.fields + ('label',)
+
+
 class EmploymentContractSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.EmploymentContract
-        fields = BaseSerializer.Meta.fields + ('user', 'company', 'work_schedule', 'started_at', 'ended_at')
+        fields = BaseSerializer.Meta.fields + ('user', 'company', 'employment_contract_type', 'work_schedule',
+                                               'started_at', 'ended_at')
 
 
 class WorkScheduleSerializer(BaseSerializer):

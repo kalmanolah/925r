@@ -40,6 +40,13 @@ class InternalCompanyFactory(CompanyFactory):
     internal = True
 
 
+class EmploymentContractTypeFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.EmploymentContractType
+
+    label = factory.LazyFunction(fake.word)
+
+
 class EmploymentContractFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.EmploymentContract

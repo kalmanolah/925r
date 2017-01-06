@@ -80,6 +80,19 @@ class CompanyAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Base
     }
 
 
+class EmploymentContractTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase,
+                                        ModelTestMixin):
+    base_name = 'employmentcontracttype'
+    factory_class = factories.EmploymentContractTypeFactory
+    user_factory = factories.AdminFactory
+    create_data = {
+        'label': 'Temp',
+    }
+    update_data = {
+        'label': 'Perm',
+    }
+
+
 class EmploymentContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'employmentcontract'
     factory_class = factories.EmploymentContractFactory
@@ -95,16 +108,19 @@ class EmploymentContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, tes
     def setUp(self):
         self.company = factories.CompanyFactory.create()
         self.work_schedule = factories.WorkScheduleFactory.create()
+        self.employment_contract_type = factories.EmploymentContractTypeFactory.create()
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(user=self.user, company=self.company, work_schedule=self.work_schedule)
+        return factory.create(user=self.user, company=self.company, work_schedule=self.work_schedule,
+                              employment_contract_type=self.employment_contract_type)
 
     def get_create_data(self):
         self.create_data.update({
             'company': self.company.id,
             'user': self.user.id,
             'work_schedule': self.work_schedule.id,
+            'employment_contract_type': self.employment_contract_type.id,
         })
 
         return self.create_data

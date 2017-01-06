@@ -162,6 +162,17 @@ class WorkSchedule(BaseModel):
         return self.label
 
 
+class EmploymentContractType(BaseModel):
+
+    """Employment contract type model."""
+
+    label = models.CharField(unique=True, max_length=255)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s' % self.label
+
+
 class EmploymentContract(BaseModel):
 
     """Employment contract model."""
@@ -171,13 +182,14 @@ class EmploymentContract(BaseModel):
 
     user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
     company = models.ForeignKey(Company, on_delete=models.PROTECT, limit_choices_to=company_choices)
+    employment_contract_type = models.ForeignKey(EmploymentContractType, on_delete=models.PROTECT)
     work_schedule = models.ForeignKey(WorkSchedule, on_delete=models.PROTECT)
     started_at = models.DateField()
     ended_at = models.DateField(blank=True, null=True)
 
     def __str__(self):
         """Return a string representation."""
-        return '%s [%s]' % (self.user, self.company)
+        return '%s [%s, %s]' % (self.user, self.company, self.employment_contract_type)
 
     @classmethod
     def perform_additional_validation(cls, data, instance=None):

@@ -12,6 +12,11 @@ class CompanyAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'vat_identification_number', 'address', 'country', 'internal')
 
 
+@admin.register(models.EmploymentContractType)
+class EmploymentContractTypeAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'label')
+
+
 @admin.register(models.EmploymentContract)
 class EmploymentContractAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'company', 'started_at', 'ended_at')
