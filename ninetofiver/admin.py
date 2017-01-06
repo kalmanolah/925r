@@ -15,11 +15,17 @@ class CompanyAdmin(admin.ModelAdmin):
 @admin.register(models.EmploymentContractType)
 class EmploymentContractTypeAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'label')
+    search_fields = ('label',)
 
 
 @admin.register(models.EmploymentContract)
 class EmploymentContractAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'user', 'company', 'started_at', 'ended_at')
+    list_display = ('__str__', 'user', 'company', 'employment_contract_type', 'started_at', 'ended_at')
+    list_filter = (('user', RelatedDropdownFilter), ('company', RelatedDropdownFilter),
+                   ('employment_contract_type', RelatedDropdownFilter), ('started_at', DateRangeFilter),
+                   ('ended_at', DateRangeFilter))
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'employment_contract_type__label',
+                     'started_at', 'ended_at')
 
 
 @admin.register(models.WorkSchedule)
