@@ -1,13 +1,12 @@
 language: python
 python:
-  # - "3.4"
+  - "3.4"
   - "3.5"
 install:
   - pip install coveralls
   - pip install .
   - pip install -r requirements.txt
 script:
-  # - python manage.py testninetofiver
   - coverage run --source=ninetofiver manage.py testninetofiver
 after_success:
   - coveralls
