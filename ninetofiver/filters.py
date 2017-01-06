@@ -12,7 +12,11 @@ class IsNull(Func):
 
 
 class NullLastOrderingFilter(django_filters.OrderingFilter):
+
+    """An ordering filter which places records with fields containing null values last."""
+
     def filter(self, qs, value):
+        """Execute the filter."""
         if value in django_filters.filters.EMPTY_VALUES:
             return qs
 
@@ -56,6 +60,9 @@ class NullLastOrderingFilter(django_filters.OrderingFilter):
 
 
 class CompanyFilter(FilterSet):
+    order_fields = ('name', 'country', 'vat_identification_number', 'address', 'internal')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.Company
         fields = {
@@ -68,6 +75,9 @@ class CompanyFilter(FilterSet):
 
 
 class EmploymentContractFilter(FilterSet):
+    order_fields = ('started_at', 'ended_at')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.EmploymentContract
         fields = {
@@ -77,6 +87,9 @@ class EmploymentContractFilter(FilterSet):
 
 
 class WorkScheduleFilter(FilterSet):
+    order_fields = ('label',)
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.WorkSchedule
         fields = {
@@ -85,6 +98,9 @@ class WorkScheduleFilter(FilterSet):
 
 
 class UserRelativeFilter(FilterSet):
+    order_fields = ('name', 'relation', 'birth_date', 'gender')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.UserRelative
         fields = {
@@ -96,6 +112,9 @@ class UserRelativeFilter(FilterSet):
 
 
 class HolidayFilter(FilterSet):
+    order_fields = ('name', 'date', 'country')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.Holiday
         fields = {
@@ -106,6 +125,9 @@ class HolidayFilter(FilterSet):
 
 
 class LeaveTypeFilter(FilterSet):
+    order_fields = ('label',)
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.LeaveType
         fields = {
@@ -114,6 +136,9 @@ class LeaveTypeFilter(FilterSet):
 
 
 class LeaveFilter(FilterSet):
+    order_fields = ('status', 'description')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.Leave
         fields = {
@@ -123,6 +148,9 @@ class LeaveFilter(FilterSet):
 
 
 class LeaveDateFilter(FilterSet):
+    order_fields = ('starts_at', 'ends_at')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.LeaveDate
         fields = {
@@ -132,6 +160,9 @@ class LeaveDateFilter(FilterSet):
 
 
 class PerformanceTypeFilter(FilterSet):
+    order_fields = ('label', 'description', 'multiplier')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.PerformanceType
         fields = {
@@ -142,6 +173,9 @@ class PerformanceTypeFilter(FilterSet):
 
 
 class ContractFilter(FilterSet):
+    order_fields = ('label', 'description', 'active')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.Contract
         fields = {
@@ -158,6 +192,9 @@ class ProjectContractFilter(ContractFilter):
 
 
 class ConsultancyContractFilter(ContractFilter):
+    order_fields = ContractFilter.order_fields + ('day_rate', 'starts_at', 'ends_at', 'duration')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta(ContractFilter.Meta):
         model = models.ConsultancyContract
         fields = merge_dicts(ContractFilter.Meta.fields, {
@@ -169,6 +206,9 @@ class ConsultancyContractFilter(ContractFilter):
 
 
 class SupportContractFilter(ContractFilter):
+    order_fields = ContractFilter.order_fields + ('day_rate', 'starts_at', 'ends_at', 'fixed_fee', 'fixed_fee_period')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta(ContractFilter.Meta):
         model = models.SupportContract
         fields = merge_dicts(ContractFilter.Meta.fields, {
@@ -181,6 +221,9 @@ class SupportContractFilter(ContractFilter):
 
 
 class ContractRoleFilter(FilterSet):
+    order_fields = ('label', 'description')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.ContractRole
         fields = {
@@ -197,6 +240,9 @@ class ContractUserFilter(FilterSet):
 
 
 class TimesheetFilter(FilterSet):
+    order_fields = ('year', 'month', 'closed')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.Timesheet
         fields = {
@@ -207,6 +253,9 @@ class TimesheetFilter(FilterSet):
 
 
 class PerformanceFilter(FilterSet):
+    order_fields = ('day',)
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.Performance
         fields = {
@@ -215,6 +264,9 @@ class PerformanceFilter(FilterSet):
 
 
 class ActivityPerformanceFilter(PerformanceFilter):
+    order_fields = PerformanceFilter.order_fields + ('duration', 'description')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta(PerformanceFilter.Meta):
         model = models.ActivityPerformance
         fields = merge_dicts(PerformanceFilter.Meta.fields, {
@@ -224,6 +276,9 @@ class ActivityPerformanceFilter(PerformanceFilter):
 
 
 class StandbyPerformanceFilter(PerformanceFilter):
+    order_fields = PerformanceFilter.order_fields
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta(PerformanceFilter.Meta):
         model = models.StandbyPerformance
         fields = PerformanceFilter.Meta.fields
