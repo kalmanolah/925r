@@ -37,7 +37,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    queryset = auth_models.User.objects.distinct().order_by('-date_joined')
+    queryset = auth_models.User.objects.all().order_by('-date_joined')
     serializer_class = serializers.UserSerializer
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
@@ -46,7 +46,7 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
-    queryset = auth_models.Group.objects.distinct()
+    queryset = auth_models.Group.objects.all()
     serializer_class = serializers.GroupSerializer
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
@@ -55,7 +55,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows companies to be viewed or edited.
     """
-    queryset = models.Company.objects.distinct()
+    queryset = models.Company.objects.all()
     serializer_class = serializers.CompanySerializer
     filter_class = filters.CompanyFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -65,7 +65,7 @@ class EmploymentContractTypeViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows employment contract types to be viewed or edited.
     """
-    queryset = models.EmploymentContractType.objects.distinct()
+    queryset = models.EmploymentContractType.objects.all()
     serializer_class = serializers.EmploymentContractTypeSerializer
     filter_class = filters.EmploymentContractTypeFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -75,7 +75,7 @@ class EmploymentContractViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows employment contracts to be viewed or edited.
     """
-    queryset = models.EmploymentContract.objects.distinct()
+    queryset = models.EmploymentContract.objects.all()
     serializer_class = serializers.EmploymentContractSerializer
     filter_class = filters.EmploymentContractFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -85,7 +85,7 @@ class WorkScheduleViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows employment contracts to be viewed or edited.
     """
-    queryset = models.WorkSchedule.objects.distinct()
+    queryset = models.WorkSchedule.objects.all()
     serializer_class = serializers.WorkScheduleSerializer
     filter_class = filters.WorkScheduleFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -95,7 +95,7 @@ class UserRelativeViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows user relatives to be viewed or edited.
     """
-    queryset = models.UserRelative.objects.distinct()
+    queryset = models.UserRelative.objects.all()
     serializer_class = serializers.UserRelativeSerializer
     filter_class = filters.UserRelativeFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -105,7 +105,7 @@ class HolidayViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows holidays to be viewed or edited.
     """
-    queryset = models.Holiday.objects.distinct()
+    queryset = models.Holiday.objects.all()
     serializer_class = serializers.HolidaySerializer
     filter_class = filters.HolidayFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -115,7 +115,7 @@ class LeaveTypeViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows leave types to be viewed or edited.
     """
-    queryset = models.LeaveType.objects.distinct()
+    queryset = models.LeaveType.objects.all()
     serializer_class = serializers.LeaveTypeSerializer
     filter_class = filters.LeaveTypeFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -125,7 +125,7 @@ class LeaveViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows leaves to be viewed or edited.
     """
-    queryset = models.Leave.objects.distinct()
+    queryset = models.Leave.objects.all()
     serializer_class = serializers.LeaveSerializer
     filter_class = filters.LeaveFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -135,7 +135,7 @@ class LeaveDateViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows leave dates to be viewed or edited.
     """
-    queryset = models.LeaveDate.objects.distinct()
+    queryset = models.LeaveDate.objects.all()
     serializer_class = serializers.LeaveDateSerializer
     filter_class = filters.LeaveDateFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -145,7 +145,7 @@ class PerformanceTypeViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows performance types to be viewed or edited.
     """
-    queryset = models.PerformanceType.objects.distinct()
+    queryset = models.PerformanceType.objects.all()
     serializer_class = serializers.PerformanceTypeSerializer
     filter_class = filters.PerformanceTypeFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -155,7 +155,7 @@ class ContractViewSet(GenericHierarchicalReadOnlyViewSet):
     """
     API endpoint that allows contracts to be viewed or edited.
     """
-    queryset = models.Contract.objects.distinct()
+    queryset = models.Contract.objects.all()
     serializer_class = serializers.ContractSerializer
     serializer_classes = {
         models.ProjectContract: serializers.ProjectContractSerializer,
@@ -170,7 +170,7 @@ class ProjectContractViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows project contracts to be viewed or edited.
     """
-    queryset = models.ProjectContract.objects.distinct()
+    queryset = models.ProjectContract.objects.all()
     serializer_class = serializers.ProjectContractSerializer
     filter_class = filters.ProjectContractFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -180,7 +180,7 @@ class ConsultancyContractViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows consultancy contracts to be viewed or edited.
     """
-    queryset = models.ConsultancyContract.objects.distinct()
+    queryset = models.ConsultancyContract.objects.all()
     serializer_class = serializers.ConsultancyContractSerializer
     filter_class = filters.ConsultancyContractFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -190,7 +190,7 @@ class SupportContractViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows support contracts to be viewed or edited.
     """
-    queryset = models.SupportContract.objects.distinct()
+    queryset = models.SupportContract.objects.all()
     serializer_class = serializers.SupportContractSerializer
     filter_class = filters.SupportContractFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -200,7 +200,7 @@ class ContractRoleViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows contract roles to be viewed or edited.
     """
-    queryset = models.ContractRole.objects.distinct()
+    queryset = models.ContractRole.objects.all()
     serializer_class = serializers.ContractRoleSerializer
     filter_class = filters.ContractRoleFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -210,7 +210,7 @@ class ContractUserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows contract users to be viewed or edited.
     """
-    queryset = models.ContractUser.objects.distinct()
+    queryset = models.ContractUser.objects.all()
     serializer_class = serializers.ContractUserSerializer
     filter_class = filters.ContractUserFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -220,7 +220,7 @@ class TimesheetViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows timesheets to be viewed or edited.
     """
-    queryset = models.Timesheet.objects.distinct()
+    queryset = models.Timesheet.objects.all()
     serializer_class = serializers.TimesheetSerializer
     filter_class = filters.TimesheetFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -230,7 +230,7 @@ class PerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
     """
     API endpoint that allows performances to be viewed or edited.
     """
-    queryset = models.Performance.objects.distinct()
+    queryset = models.Performance.objects.all()
     serializer_class = serializers.PerformanceSerializer
     serializer_classes = {
         models.StandbyPerformance: serializers.StandbyPerformanceSerializer,
@@ -244,7 +244,7 @@ class ActivityPerformanceViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows activity performances to be viewed or edited.
     """
-    queryset = models.ActivityPerformance.objects.distinct()
+    queryset = models.ActivityPerformance.objects.all()
     serializer_class = serializers.ActivityPerformanceSerializer
     filter_class = filters.ActivityPerformanceFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -254,7 +254,7 @@ class StandbyPerformanceViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows standby performances to be viewed or edited.
     """
-    queryset = models.StandbyPerformance.objects.distinct()
+    queryset = models.StandbyPerformance.objects.all()
     serializer_class = serializers.StandbyPerformanceSerializer
     filter_class = filters.StandbyPerformanceFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -283,7 +283,7 @@ class MyLeaveViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return user.leave_set.distinct()
+        return user.leave_set.all()
 
 
 class MyLeaveDateViewSet(viewsets.ModelViewSet):
@@ -296,7 +296,7 @@ class MyLeaveDateViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return models.LeaveDate.objects.filter(leave__user=user).distinct()
+        return models.LeaveDate.objects.filter(leave__user=user)
 
 
 class MyTimesheetViewSet(viewsets.ModelViewSet):
@@ -309,7 +309,7 @@ class MyTimesheetViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return user.timesheet_set.exclude(closed=True).distinct()
+        return user.timesheet_set.exclude(closed=True)
 
 
 class MyPerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
@@ -326,7 +326,7 @@ class MyPerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return models.Performance.objects.filter(timesheet__user=user).distinct()
+        return models.Performance.objects.filter(timesheet__user=user)
 
 
 class MyActivityPerformanceViewSet(viewsets.ModelViewSet):
@@ -339,7 +339,7 @@ class MyActivityPerformanceViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return models.ActivityPerformance.objects.filter(timesheet__user=user).distinct()
+        return models.ActivityPerformance.objects.filter(timesheet__user=user)
 
 
 class MyStandbyPerformanceViewSet(viewsets.ModelViewSet):
@@ -352,4 +352,4 @@ class MyStandbyPerformanceViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return models.StandbyPerformance.objects.filter(timesheet__user=user).distinct()
+        return models.StandbyPerformance.objects.filter(timesheet__user=user)
