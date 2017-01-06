@@ -147,7 +147,7 @@ class LeaveTypeFilter(FilterSet):
 
 
 class LeaveFilter(FilterSet):
-    order_fields = ('status', 'description')
+    order_fields = ('status', 'description', 'leavedate__starts_at', 'leavedate__ends_at')
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:

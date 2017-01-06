@@ -67,9 +67,9 @@ class LeaveAdmin(admin.ModelAdmin):
 
     list_display = ('__str__', 'user', 'leave_type', 'leave_dates', 'status', 'description')
     list_filter = ('status', ('leave_type', RelatedDropdownFilter), ('user', RelatedDropdownFilter),
-                   ('leavedate__starts_at', DateTimeRangeFilter))
+                   ('leavedate__starts_at', DateTimeRangeFilter), ('leavedate__ends_at', DateTimeRangeFilter))
     search_fields = ('user__username', 'user__first_name', 'user__last_name', 'leave_type__label', 'status',
-                     'leavedate__starts_at', 'description')
+                     'leavedate__starts_at', 'leavedate__ends_at', 'description')
     inlines = [
         LeaveDateInline,
     ]
