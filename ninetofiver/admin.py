@@ -10,12 +10,14 @@ from ninetofiver import models
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'vat_identification_number', 'address', 'country', 'internal')
+    ordering = ('-internal', 'name')
 
 
 @admin.register(models.EmploymentContractType)
 class EmploymentContractTypeAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'label')
     search_fields = ('label',)
+    ordering = ('label',)
 
 
 @admin.register(models.EmploymentContract)
@@ -26,26 +28,31 @@ class EmploymentContractAdmin(admin.ModelAdmin):
                    ('ended_at', DateRangeFilter))
     search_fields = ('user__username', 'user__first_name', 'user__last_name', 'employment_contract_type__label',
                      'started_at', 'ended_at')
+    ordering = ('user__first_name', 'user__last_name')
 
 
 @admin.register(models.WorkSchedule)
 class WorkScheduleAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'label', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
+    ordering = ('label',)
 
 
 @admin.register(models.UserRelative)
 class UserRelativeAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'user', 'relation', 'gender', 'birth_date')
+    ordering = ('name',)
 
 
 @admin.register(models.Holiday)
 class HolidayAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'date', 'country')
+    ordering = ('-date',)
 
 
 @admin.register(models.LeaveType)
 class LeaveTypeAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'label')
+    ordering = ('label',)
 
 
 class LeaveDateInline(admin.TabularInline):
@@ -77,16 +84,19 @@ class LeaveAdmin(admin.ModelAdmin):
         'make_approved',
         'make_rejected',
     ]
+    ordering = ('-leavedate__starts_at',)
 
 
 @admin.register(models.LeaveDate)
 class LeaveDateAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'leave', 'starts_at', 'ends_at')
+    ordering = ('-starts_at',)
 
 
 @admin.register(models.PerformanceType)
 class PerformanceTypeAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'label', 'description', 'multiplier')
+    ordering = ('multiplier',)
 
 
 class ContractUserInline(admin.TabularInline):
@@ -132,16 +142,19 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
                    ('performance_types', RelatedDropdownFilter), 'active')
     search_fields = ('label', 'description', 'company__name', 'customer__name', 'contractuser__user__first_name',
                      'contractuser__user__last_name', 'contractuser__user__username', 'performance_types__label')
+    ordering = ('label', 'company', '-customer', 'contractuser__user__first_name', 'contractuser__user__last_name')
 
 
 @admin.register(models.ContractRole)
 class ContractRoleAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'label', 'description')
+    ordering = ('label',)
 
 
 @admin.register(models.ContractUser)
 class ContractUserAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'contract', 'contract_role')
+    ordering = ('user__first_name', 'user__last_name')
 
 
 @admin.register(models.Timesheet)
@@ -160,6 +173,7 @@ class TimesheetAdmin(admin.ModelAdmin):
         'make_closed',
         'make_opened',
     ]
+    ordering = ('-year', 'month', 'user__first_name', 'user__last_name')
 
 
 class PerformanceChildAdmin(PolymorphicChildModelAdmin):
