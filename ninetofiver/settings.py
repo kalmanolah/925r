@@ -86,6 +86,7 @@ class Base(Configuration):
         'django_gravatar',
         'django_countries',
         'rangefilter',
+        'django_admin_listfilter_dropdown',
     ] + NINETOFIVER_APPS
 
     MIDDLEWARE = [

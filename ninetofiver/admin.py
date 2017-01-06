@@ -3,6 +3,7 @@ from django.utils.html import format_html
 from django.utils.translation import ugettext as _
 from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter
 from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
+from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter
 from ninetofiver import models
 
 
@@ -54,9 +55,10 @@ class LeaveAdmin(admin.ModelAdmin):
         return format_html('<br>'.join(str(x) for x in list(obj.leavedate_set.all())))
 
     list_display = ('__str__', 'user', 'leave_type', 'leave_dates', 'status', 'description')
-    list_filter = ('status', 'leave_type', 'user', ('leavedate__starts_at', DateTimeRangeFilter))
-    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name', 'leave_type__label',
-                     'status', 'leavedate__starts_at')
+    list_filter = ('status', ('leave_type', RelatedDropdownFilter), ('user', RelatedDropdownFilter),
+                   ('leavedate__starts_at', DateTimeRangeFilter))
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'leave_type__label', 'status',
+                     'leavedate__starts_at', 'description')
     inlines = [
         LeaveDateInline,
     ]
@@ -104,18 +106,21 @@ class SupportContractChildAdmin(ContractChildAdmin):
 
 @admin.register(models.Contract)
 class ContractParentAdmin(PolymorphicParentModelAdmin):
-    base_model = models.Contract
-    child_models = (models.ProjectContract, models.ConsultancyContract, models.SupportContract)
-    list_filter = (PolymorphicChildModelFilter,)
-
     def contract_users(self, obj):
         return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
 
     def performance_types(obj):
         return format_html('<br>'.join(str(x) for x in list(obj.performance_types.all())))
 
+    base_model = models.Contract
+    child_models = (models.ProjectContract, models.ConsultancyContract, models.SupportContract)
     list_display = ('__str__', 'label', 'company', 'customer', 'contract_users',
                     performance_types, 'description', 'active')
+    list_filter = (PolymorphicChildModelFilter, ('company', RelatedDropdownFilter),
+                   ('customer', RelatedDropdownFilter), ('contractuser', RelatedDropdownFilter),
+                   ('performance_types', RelatedDropdownFilter), 'active')
+    search_fields = ('label', 'description', 'company__name', 'customer__name', 'contractuser__user__first_name',
+                     'contractuser__user__last_name', 'contractuser__user__username', 'performance_types__label')
 
 
 @admin.register(models.ContractRole)

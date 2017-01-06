@@ -23,3 +23,4 @@ PyYAML==3.12
 django-countries==4.0
 django-model-utils==2.6
 django-admin-rangefilter==0.2.1
+git+http://github.com/mrts/django-admin-list-filter-dropdown.git
