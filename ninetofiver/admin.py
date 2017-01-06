@@ -74,7 +74,8 @@ class LeaveAdmin(admin.ModelAdmin):
         return format_html('<br>'.join(str(x) for x in list(obj.leavedate_set.all())))
 
     def attachment(self, obj):
-        return format_html('<br>'.join(str(x) for x in list(obj.attachments.all())))
+        return format_html('<br>'.join('<a href="%s">%s</a>'
+                           % (x.get_file_url(), str(x)) for x in list(obj.attachments.all())))
 
     list_display = ('__str__', 'user', 'leave_type', 'leave_dates', 'status', 'description', 'attachment')
     list_filter = ('status', ('leave_type', RelatedDropdownFilter), ('user', RelatedDropdownFilter),
