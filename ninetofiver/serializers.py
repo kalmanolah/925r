@@ -123,7 +123,8 @@ class LeaveSerializer(BaseSerializer):
 
     class Meta(BaseSerializer.Meta):
         model = models.Leave
-        fields = BaseSerializer.Meta.fields + ('user', 'leave_type', 'leavedate_set', 'status', 'description')
+        fields = BaseSerializer.Meta.fields + ('user', 'leave_type', 'leavedate_set', 'status', 'attachments',
+                                               'description')
 
 
 class PerformanceTypeSerializer(BaseSerializer):
