@@ -141,6 +141,16 @@ class Base(Configuration):
         }
     }
 
+
+
+    # Usermodel extension
+    # http://www.b-list.org/weblog/2006/jun/06/django-tips-extending-user-model/
+
+    AUTH_PROFILE_MODULE = 'ninetofiver.UserInfo'
+
+
+
+
     # Password validation
     # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
 

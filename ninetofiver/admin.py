@@ -49,7 +49,10 @@ class UserRelativeAdmin(admin.ModelAdmin):
 
 @admin.register(models.UserInfo)
 class UserInfoAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'user', 'gender', 'birth_date', 'country')
+    def user_groups(obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.user_groups.all())))
+
+    list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country')
     ordering = ('user',)
 
 
@@ -57,21 +60,6 @@ class UserInfoAdmin(admin.ModelAdmin):
 class UserGroupAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'label')
     ordering = ('label',)
-
-
-@admin.register(models.UserGrouping)
-class UserGroupingAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'group', 'user')
-    list_filter = (
-        ('group', RelatedDropdownFilter),
-        ('user', RelatedDropdownFilter)
-    )
-    search_fields = (
-        'user__username',
-        'group__label'
-    )
-    ordering = ('group',)
-
 
 @admin.register(models.Attachment)
 class AttachmentAdmin(admin.ModelAdmin):
@@ -151,6 +139,11 @@ class LeaveDateAdmin(admin.ModelAdmin):
 class PerformanceTypeAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'label', 'description', 'multiplier')
     ordering = ('multiplier',)
+
+
+@admin.register(models.ContractGroup)
+class ContractGroupAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'label')
 
 
 class ContractUserInline(admin.TabularInline):

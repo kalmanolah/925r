@@ -300,6 +300,18 @@ class EmploymentContract(BaseModel):
 # USER
 ###########################################
 
+class UserGroup(BaseModel):
+# Holds the names for tags/groups that are linked to users
+
+    """User group model."""
+
+    label = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s' % (self.label)
+
+
 class UserRelative(BaseModel):
 # Defines the information for a relative and binds it to a user
 
@@ -363,6 +375,7 @@ class UserInfo(BaseModel):
     birth_date = models.DateField()
     gender = models.CharField(max_length=2, choices=GENDER)
     country = CountryField()
+    user_groups = models.ManyToManyField(UserGroup, blank=True)
 
     def __str__(self):
         """Return a string representation."""
@@ -392,35 +405,6 @@ class UserInfo(BaseModel):
         return {
             'birth_date': getattr(self, 'birth_date', None),
         }
-
-
-class UserGroup(BaseModel):
-# Holds the names for tags/groups that are linked to users
-
-    """User group model."""
-
-    label = models.CharField(max_length=255, unique=True)
-
-    def __str__(self):
-        """Return a string representation."""
-        return '%s' % (self.label)
-
-
-class UserGrouping(BaseModel):
-# Binds users to groups
-
-    """Usergrouping model."""
-
-    user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
-    group = models.ForeignKey(UserGroup, on_delete=models.PROTECT)
-
-        #Enforce combination of user & group as unique
-    class Meta(BaseModel.Meta):
-        unique_together = (('user', 'group'),)
-
-    def __str__(self):
-        """Return a string representation."""
-        return '[%s ← %s]' % (self.group, self.user)
 
 
 
@@ -655,8 +639,20 @@ class PerformanceType(BaseModel):
         return '%s [%s%%]' % (self.label, int(self.multiplier * 100))
 
 
+class ContractGroup(BaseModel):
+# Holds the names for tags/groups that are linked to contracts
+
+    """Project group model."""
+
+    label = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        """Return a string representation."""
+        return self.label
+
+
 class Contract(BaseModel):
-# Defines the basic Contract
+# Defines the basic Contract, Binds customer and company and performance_types and contract_groups
 
     """Contract model."""
 
@@ -669,6 +665,7 @@ class Contract(BaseModel):
     company = models.ForeignKey(Company, on_delete=models.PROTECT, limit_choices_to=company_choices)
     active = models.BooleanField(default=True)
     performance_types = models.ManyToManyField(PerformanceType, blank=True)
+    contract_groups = models.ManyToManyField(ContractGroup, blank=True)
 
     def __str__(self):
         """Return a string representation."""
@@ -874,35 +871,6 @@ class ContractUser(BaseModel):
     def __str__(self):
         """Return a string representation."""
         return '%s [%s]' % (self.user, self.contract_role)
-
-
-class ProjectGroup(BaseModel):
-# Holds the names for tags/groups that are linked to projects
-
-    """Project group model."""
-
-    label = models.CharField(max_length=255, unique=True)
-
-    def __str__(self):
-        """Return a string representation."""
-        return self.label
-
-
-class ProjectGrouping(BaseModel):
-# Binds projects to groups
-
-    """Projectgrouping model."""
-    
-    project = models.ForeignKey(ProjectContract, on_delete=models.PROTECT)
-    group = models.ForeignKey(ProjectGroup, on_delete=models.PROTECT)
-
-        #Enforce combination of project & group as unique
-    class Meta(BaseModel.Meta):
-        unique_together = (('project', 'group'),)
-
-    def __str__(self):
-        """Return a string representation."""
-        return '[%s ← %s]' % (self.group, self.project)
 
 
 class ProjectEstimate(BaseModel):
