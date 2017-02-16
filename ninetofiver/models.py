@@ -23,6 +23,9 @@ def user_str(self):
     return self.username
 auth_models.User.__str__ = user_str
 
+# Define ordering of the User
+auth_models.User._meta.ordering = ['first_name', 'last_name']
+
 
 class BaseManager(PolymorphicManager):
 
@@ -84,6 +87,7 @@ class Company(BaseModel):
 
     class Meta(BaseModel.Meta):
         verbose_name_plural = 'companies'
+        ordering = ['name']
 
     def __str__(self):
         """Return a string representation."""
@@ -170,6 +174,9 @@ class EmploymentContractType(BaseModel):
     """Employment contract type model."""
 
     label = models.CharField(unique=True, max_length=255)
+
+    class Meta(BaseModel.Meta):
+        ordering = ['label']
 
     def __str__(self):
         """Return a string representation."""

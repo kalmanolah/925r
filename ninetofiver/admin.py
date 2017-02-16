@@ -22,7 +22,7 @@ class EmploymentContractTypeAdmin(admin.ModelAdmin):
 
 @admin.register(models.EmploymentContract)
 class EmploymentContractAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'user', 'company', 'employment_contract_type', 'started_at', 'ended_at')
+    list_display = ('user', 'company', 'employment_contract_type', 'work_schedule', 'started_at', 'ended_at')
     list_filter = (('user', RelatedDropdownFilter), ('company', RelatedDropdownFilter),
                    ('employment_contract_type', RelatedDropdownFilter), ('started_at', DateRangeFilter),
                    ('ended_at', DateRangeFilter))
