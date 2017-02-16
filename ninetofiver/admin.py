@@ -1,16 +1,26 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
-from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter
-from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
-from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter
+from django_admin_listfilter_dropdown.filters import DropdownFilter
+from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
 from ninetofiver import models
+from polymorphic.admin import PolymorphicChildModelAdmin
+from polymorphic.admin import PolymorphicChildModelFilter
+from polymorphic.admin import PolymorphicParentModelAdmin
+from rangefilter.filter import DateRangeFilter
+from rangefilter.filter import DateTimeRangeFilter
 
 
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'vat_identification_number', 'address', 'country', 'internal')
     ordering = ('-internal', 'name')
+
+
+@admin.register(models.WorkSchedule)
+class WorkScheduleAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'label', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
+    ordering = ('label',)
 
 
 @admin.register(models.EmploymentContractType)
@@ -31,16 +41,36 @@ class EmploymentContractAdmin(admin.ModelAdmin):
     ordering = ('user__first_name', 'user__last_name')
 
 
-@admin.register(models.WorkSchedule)
-class WorkScheduleAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'label', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
+@admin.register(models.UserRelative)
+class UserRelativeAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'name', 'user', 'relation', 'gender', 'birth_date', 'country')
+    ordering = ('name',)
+
+
+@admin.register(models.UserInfo)
+class UserInfoAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'user', 'gender', 'birth_date', 'country')
+    ordering = ('user',)
+
+
+@admin.register(models.UserGroup)
+class UserGroupAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'label')
     ordering = ('label',)
 
 
-@admin.register(models.UserRelative)
-class UserRelativeAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'name', 'user', 'relation', 'gender', 'birth_date')
-    ordering = ('name',)
+@admin.register(models.UserGrouping)
+class UserGroupingAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'group', 'user')
+    list_filter = (
+        ('group', RelatedDropdownFilter),
+        ('user', RelatedDropdownFilter)
+    )
+    search_fields = (
+        'user__username',
+        'group__label'
+    )
+    ordering = ('group',)
 
 
 @admin.register(models.Attachment)
@@ -49,11 +79,17 @@ class AttachmentAdmin(admin.ModelAdmin):
         return format_html('<a href="%s">%s</a>' % (obj.get_file_url(), str(obj)))
 
     list_display = ('__str__', 'user', 'label', 'description', 'file', 'slug', 'link')
+    list_filter = (
+        ('user', RelatedDropdownFilter),
+    )
 
 
 @admin.register(models.Holiday)
 class HolidayAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'date', 'country')
+    list_filter = (
+        ('country', DropdownFilter),
+    )
     ordering = ('-date',)
 
 
@@ -69,6 +105,7 @@ class LeaveDateInline(admin.TabularInline):
 
 @admin.register(models.Leave)
 class LeaveAdmin(admin.ModelAdmin):
+
     def make_approved(self, request, queryset):
         queryset.update(status=models.Leave.STATUS.APPROVED)
     make_approved.short_description = _('Approve selected leaves')
@@ -102,6 +139,11 @@ class LeaveAdmin(admin.ModelAdmin):
 @admin.register(models.LeaveDate)
 class LeaveDateAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'leave', 'starts_at', 'ends_at')
+    search_fields = (
+        'leave__user__username',
+        'leave__leave_type__label',
+        'leave__status'
+    )
     ordering = ('-starts_at',)
 
 
@@ -147,11 +189,17 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
 
     base_model = models.Contract
     child_models = (models.ProjectContract, models.ConsultancyContract, models.SupportContract)
+
     list_display = ('__str__', 'label', 'company', 'customer', 'contract_users',
                     performance_types, 'description', 'active')
-    list_filter = (PolymorphicChildModelFilter, ('company', RelatedDropdownFilter),
-                   ('customer', RelatedDropdownFilter), ('contractuser', RelatedDropdownFilter),
-                   ('performance_types', RelatedDropdownFilter), 'active')
+    list_filter = (
+        PolymorphicChildModelFilter, 
+        ('company', RelatedDropdownFilter),
+        ('customer', RelatedDropdownFilter), 
+        ('contractuser', RelatedDropdownFilter),
+        ('performance_types', RelatedDropdownFilter), 
+        'active'
+    )
     search_fields = ('label', 'description', 'company__name', 'customer__name', 'contractuser__user__first_name',
                      'contractuser__user__last_name', 'contractuser__user__username', 'performance_types__label')
     ordering = ('label', 'company', '-customer', 'contractuser__user__first_name', 'contractuser__user__last_name')

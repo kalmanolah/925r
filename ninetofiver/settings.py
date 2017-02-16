@@ -9,11 +9,13 @@ https://docs.djangoproject.com/en/1.10/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.10/ref/settings/
 """
-import os
-from configurations import Configuration
 import ldap
-from django_auth_ldap.config import LDAPSearch, LDAPSearchUnion
+import os
 import yaml
+
+from configurations import Configuration
+from django_auth_ldap.config import LDAPSearch
+from django_auth_ldap.config import LDAPSearchUnion
 
 
 CFG_FILE_PATH = os.path.expanduser(os.environ.get('CFG_FILE_PATH', '/etc/925r/config.yml'))
@@ -87,6 +89,7 @@ class Base(Configuration):
         'django_countries',
         'rangefilter',
         'django_admin_listfilter_dropdown',
+#        'django_extensions'        
     ] + NINETOFIVER_APPS
 
     MIDDLEWARE = [
