@@ -1,10 +1,31 @@
 from django.contrib import admin
+from django.db.models import Q
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
 from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter
 from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter
+from datetime import date
 from ninetofiver import models
+
+class EmploymentContractStatusFilter(admin.SimpleListFilter):
+    title = 'Status'
+    parameter_name = 'Status'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('active', _('Active')),
+            ('ended', _('Ended')),
+            ('future', _('Future')),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'active':
+            return queryset.filter(Q(started_at__lte=date.today()) & ( Q(ended_at__gte=date.today()) | Q(ended_at__isnull=True)) )
+        elif self.value() == 'ended':
+            return queryset.filter(ended_at__lte=date.today())
+        elif self.value() == 'future':
+            return queryset.filter(started_at__gte=date.today())
 
 
 @admin.register(models.Company)
@@ -23,7 +44,7 @@ class EmploymentContractTypeAdmin(admin.ModelAdmin):
 @admin.register(models.EmploymentContract)
 class EmploymentContractAdmin(admin.ModelAdmin):
     list_display = ('user', 'company', 'employment_contract_type', 'work_schedule', 'started_at', 'ended_at')
-    list_filter = (('user', RelatedDropdownFilter), ('company', RelatedDropdownFilter),
+    list_filter = (EmploymentContractStatusFilter, ('user', RelatedDropdownFilter), ('company', RelatedDropdownFilter),
                    ('employment_contract_type', RelatedDropdownFilter), ('started_at', DateRangeFilter),
                    ('ended_at', DateRangeFilter))
     search_fields = ('user__username', 'user__first_name', 'user__last_name', 'employment_contract_type__label',
