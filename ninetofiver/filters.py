@@ -1,10 +1,11 @@
 import django_filters
-from django_filters.rest_framework import FilterSet
-from django.db.models import Func
+
 from collections import Counter
-from rest_framework import generics
+from django.db.models import Func
+from django_filters.rest_framework import FilterSet
 from ninetofiver import models
 from ninetofiver.utils import merge_dicts
+from rest_framework import generics
 
 
 class IsNull(Func):

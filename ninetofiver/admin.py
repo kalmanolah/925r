@@ -180,21 +180,53 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
     def performance_types(obj):
         return format_html('<br>'.join(str(x) for x in list(obj.performance_types.all())))
 
+    def get_children():
+        return { 
+            '1': 'projectcontract',
+            '2': 'supportcontract',
+            '3': 'consultancycontract',
+        }
+
+    def check_children(obj, param):
+        for i in len(get_children()):
+            if obj.get_children()[i].param:
+                return obj.get_children()[i].param
+        return '-'
+
+    def contract_types(obj):
+        check_children(obj, 'starts_at')
+
+"""
+    def contract_types(obj):
+        if obj.projectcontract.starts_at:
+            return obj.projectcontract.starts_at
+        elif obj.supportcontract.starts_at:
+            return obj.projectcontract.starts_at
+        elif obj.consultancycontract.starts_at:
+            return obj.consultancycontract.starts_at
+        else:
+           return '-'
+"""
+ 
+
     base_model = models.Contract
     child_models = (models.ProjectContract, models.ConsultancyContract, models.SupportContract)
 
     list_display = ('__str__', 'label', 'company', 'customer', 'contract_users',
-                    performance_types, 'description', 'active')
+                    performance_types, 'description', 'active', contract_types )
+
     list_filter = (
         PolymorphicChildModelFilter, 
         ('company', RelatedDropdownFilter),
         ('customer', RelatedDropdownFilter), 
-        ('contractuser', RelatedDropdownFilter),
+        ('contractuser', RelatedDropdownFilter), 
         ('performance_types', RelatedDropdownFilter), 
-        'active'
+        ('active')
     )
+
     search_fields = ('label', 'description', 'company__name', 'customer__name', 'contractuser__user__first_name',
                      'contractuser__user__last_name', 'contractuser__user__username', 'performance_types__label')
+    
     ordering = ('label', 'company', '-customer', 'contractuser__user__first_name', 'contractuser__user__last_name')
 
 
@@ -209,6 +241,23 @@ class ContractUserAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'contract', 'contract_role')
     ordering = ('user__first_name', 'user__last_name')
 
+
+@admin.register(models.ProjectEstimate)
+class ProjectEstimateAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'project', 'hours_estimated', 'hours_actual', 'role')
+    search_fields = ('role__label', 'project__label', 'project__customer')
+    ordering = ('project', 'hours_estimated')
+
+
+@admin.register(models.ProjectExtension)
+class ProjectExtensionAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'starts_at', 'ends_at', 'extension', 'project')
+    list_filter = (
+        ('project', RelatedDropdownFilter),
+        ('starts_at', DateRangeFilter),
+        ('ends_at', DateRangeFilter),
+    )
+    search_fields = ('project__label', 'starts_at__year', 'starts_at__month', 'ends_at__year', 'ends_at__month', 'extension')
 
 @admin.register(models.Timesheet)
 class TimesheetAdmin(admin.ModelAdmin):

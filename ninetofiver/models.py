@@ -688,6 +688,10 @@ class ProjectContract(Contract):
     starts_at = models.DateField()
     ends_at = models.DateField()
 
+    def __str__(self):
+        """Return a string representation."""
+        return 'Project: %s' % (Contract)
+
     @classmethod
     def perform_additional_validation(cls, data, instance=None):
         """Perform additional validation on the object."""
@@ -881,8 +885,6 @@ class ProjectEstimate(BaseModel):
     role = models.ForeignKey(ContractRole, on_delete=models.PROTECT)
     project = models.ForeignKey(ProjectContract, on_delete=models.PROTECT)
     hours_estimated = models.DecimalField(
-        blank=True,
-        null=True,
         max_digits=9,
         decimal_places=2,
         validators=[
@@ -903,10 +905,11 @@ class ProjectEstimate(BaseModel):
 
     def __str__(self):
         """Return a string representation"""
-        return '%s [%s - %s]' % (self.project, self.hours_estimated, self.hours_actual)
+        return '%s [Est: %s - Act: %s]' % (self.project.label, self.hours_estimated, self.hours_actual)
+
 
 class ProjectExtension(BaseModel):
-# Provides extensions op projects both in time & fee
+# Provides extensions on projects both in time & fee
 
     """Project extension model."""
 
@@ -925,14 +928,53 @@ class ProjectExtension(BaseModel):
 
     def __str__(self):
         """Return a string representation."""
-        return '%s [%s → %s]' % (self.extension, self.starts_at, self.ends_at)
+        return '%s [%s → %s]' % (self.project.label, self.starts_at, self.ends_at)
+
+
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object."""
+
+        instance_id = instance.id if instance else None # noqa
+        project = data.get('project', getattr(instance, 'project', None))
+        starts_at = data.get('starts_at', getattr(instance, 'starts_at', None))
+        ends_at = data.get('ends_at', getattr(instance, 'ends_at', None))
+        extension = data.get('extension', getattr(instance, 'extension', None))
+
+        if starts_at and ends_at:
+
+            # Verify whether start of extension happens before end
+            if starts_at >= ends_at:
+                raise ValidationError(
+                    _('The start date should be set before the end date.')
+                )
+
+            # Verify whether start of extension happens before end of project
+            if starts_at < project.ends_at:
+                raise ValidationError(
+                    _('The start date of the extension should be set after the end date of the original project.')
+                )
+
+        # Verify whether the extension actually contains something
+        if extension < 0:
+            raise ValidationError(
+                _('The extension should be > 0.')
+            )
+
+    def get_validation_args(self):
+        """Get a dict used for validation based on this instance."""
+
+        return {
+            'project': getattr(self, 'project', None),
+            'starts_at': getattr(self, 'starts_at', None),
+            'ends_at': getattr(self, 'ends_at', None),
+        }
 
 
 
 ###########################################
 # PERFORMANCE
 ###########################################
-
 
 class Performance(BaseModel):
 # Binds a day to a timesheet
