@@ -1,0 +1,27 @@
+extends ninetofiver/account/page.jade
+- load crispy_forms_tags
+
+block title
+  | Editing application: {{ application.name }}
+
+block content_main
+  form(
+    action='{% url "oauth2_provider:update" pk=application.pk %}'
+    method='POST'
+    role='form'
+  )
+    {% csrf_token %}
+    {{ form | crispy }}
+    div(class='btn-group')
+      button(
+        type='submit'
+        class='btn btn-primary'
+      )
+        i(class='fa fa-check')
+        | Save
+      a(
+        href='{% url "oauth2_provider:detail" pk=application.pk %}'
+        class='btn btn-secondary'
+      )
+        i(class='fa fa-times')
+        | Cancel

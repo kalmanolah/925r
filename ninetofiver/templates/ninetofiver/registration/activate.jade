@@ -1,0 +1,10 @@
+extends ninetofiver/authentication/page.jade
+
+block title
+  | Unable to activate account
+
+block content
+  p We were unable to activate your account.
+  p If you copy-pasted the link into your browser, please ensure that you copied the entire activation link.
+  p Please note that activation links can and will expire if they are not used within a few days after account registration.
+  a(class='btn btn-outline-primary' href='{% url "home" %}') Continue
