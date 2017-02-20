@@ -194,9 +194,14 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
     child_models = (models.ProjectContract, models.ConsultancyContract, models.SupportContract)
     list_display = ('__str__', 'label', 'company', 'customer', 'contract_users',
                     performance_types, 'description', 'active')
-    list_filter = (PolymorphicChildModelFilter, ('company', RelatedDropdownFilter),
-                   ('customer', RelatedDropdownFilter), ('contractuser', RelatedDropdownFilter),
-                   ('performance_types', RelatedDropdownFilter), 'active')
+    list_filter = (
+        PolymorphicChildModelFilter, 
+        ('company', RelatedDropdownFilter),
+        ('customer', RelatedDropdownFilter), 
+        ('contractuser', RelatedDropdownFilter),
+        ('performance_types', RelatedDropdownFilter), 
+        'active'
+    )
     search_fields = ('label', 'description', 'company__name', 'customer__name', 'contractuser__user__first_name',
                      'contractuser__user__last_name', 'contractuser__user__username', 'performance_types__label')
     ordering = ('label', 'company', '-customer', 'contractuser__user__first_name', 'contractuser__user__last_name')
