@@ -204,7 +204,7 @@ class ConsultancyContract(admin.ModelAdmin):
 
     list_display = ('label', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'duration')
     list_filter = (ConsultancyContractStatusFilter, ('company', RelatedDropdownFilter),
-                   ('customer', RelatedDropdownFilter))
+                   ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
 
     inlines = [
         ContractUserInline,
