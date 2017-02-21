@@ -1,11 +1,34 @@
 import django_filters
 
+from datetime import datetime
+
+from django_filters import BooleanFilter
+from django_filters import CharFilter
+
 from collections import Counter
 from django.db.models import Func
 from django_filters.rest_framework import FilterSet
 from ninetofiver import models
 from ninetofiver.utils import merge_dicts
 from rest_framework import generics
+
+from django.contrib.auth import models as auth_models
+
+
+# Custom filter to see if user is active currently
+def filter_active_user(queryset, name, value):
+    if value:
+        return queryset.filter(employmentcontract__ended_at__gt = datetime.today())
+    else:
+        return queryset.filter(employmentcontract__ended_at__lte = datetime.today())
+
+
+# Custom filter to see if user is active on specific day
+def filter_active_day(queryset, name, value):
+    fl = 'gt' if value else 'lte'
+
+    lookup = '__'.join(['employmentcontract', 'work_schedule', name, fl])
+    return queryset.filter(**{lookup: 0})
 
 
 class IsNull(Func):
@@ -58,6 +81,68 @@ class NullLastOrderingFilter(django_filters.OrderingFilter):
         qs = qs.order_by(*final_ordering)
 
         return qs
+
+
+class UserFilter(FilterSet):
+
+    active_user = BooleanFilter(name='active_user', method=filter_active_user)
+    active_monday = BooleanFilter(name='monday', method=filter_active_day)
+    active_tuesday = BooleanFilter(name='tuesday', method=filter_active_day)
+    active_wednesday = BooleanFilter(name='wednesday', method=filter_active_day)
+    active_thursday = BooleanFilter(name='thursday', method=filter_active_day)
+    active_friday = BooleanFilter(name='friday', method=filter_active_day)
+    active_saturday = BooleanFilter(name='saturday', method=filter_active_day)
+    active_sunday = BooleanFilter(name='sunday', method=filter_active_day)
+
+    order_fields = ('username', 'first_name')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
+    class Meta:
+
+        model = auth_models.User
+        
+        fields = {
+
+            # Basic user fields
+            'username': ['exact', ],
+            'email': ['exact', ],
+            'first_name': ['exact', 'contains', 'icontains', ],
+            'last_name': ['exact', 'contains', 'icontains', ],
+
+            # AuthGroups fields
+            'groups': ['exact', 'contains', 'icontains', ],
+
+            # Userrelative fields
+            'userrelative__name': ['exact', 'contains', 'icontains', ],
+
+            # Userinfo fields
+            'userinfo__gender': ['iexact', ],
+            'userinfo__country': ['iexact', ],
+            'userinfo__birth_date': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
+
+            # Employmentcontract fields
+            'employmentcontract__started_at': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
+            'employmentcontract__ended_at': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte'],
+            'employmentcontract__company__name': ['exact', 'contains', 'icontains', ],
+
+            # Workschedule fields
+            'employmentcontract__work_schedule__label': ['exact', 'contains', 'icontains', ],
+
+
+            # Customer & Company fields, linked through contract
+            'contractuser__contract__customer__name': ['exact', 'contains', 'icontains', ],
+            'contractuser__contract__company__name': ['exact', 'contains', 'icontains', ],
+            'contractuser__contract__customer__internal': ['exact', ],
+            'contractuser__contract__company__internal': ['exact', ],
+            'contractuser__contract__customer__country': ['exact', ],
+            'contractuser__contract__company__country': ['exact', ],
+
+            # EmploymentContract Type fields
+            'employmentcontract__employment_contract_type__label': ['exact', ],
+
+            # Check if user is on leave
+            'leave__leavedate__starts_at': ['range']
+        }
 
 
 class CompanyFilter(FilterSet):
@@ -120,6 +205,9 @@ class UserRelativeFilter(FilterSet):
             'relation': ['exact', 'contains', 'icontains'],
             'birth_date': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'gender': ['exact'],
+            'user__username': ['exact', ],
+            'user__first_name': ['exact', 'contains', 'icontains', ],
+            'user__last_name': ['exact', 'contains', 'icontains', ],
         }
 
 
@@ -206,6 +294,7 @@ class ContractFilter(FilterSet):
             'label': ['exact', 'contains', 'icontains'],
             'description': ['exact', 'contains', 'icontains'],
             'active': ['exact'],
+
         }
 
 

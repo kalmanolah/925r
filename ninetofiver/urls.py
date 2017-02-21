@@ -1,14 +1,16 @@
 """ninetofiver URL Configuration"""
-from django.conf.urls import url, include
-from django.contrib.auth import views as auth_views
+from django.conf.urls import include
+from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.views.generic.base import TemplateView
 from rest_framework import routers
 # from rest_framework.urlpatterns import format_suffix_patterns
-from registration.backends.hmac import views as registration_views
-from oauth2_provider import views as oauth2_views
 from django_downloadview import ObjectDownloadView
-from ninetofiver import views, models
+from ninetofiver import models
+from ninetofiver import views
+from oauth2_provider import views as oauth2_views
+from registration.backends.hmac import views as registration_views
 
 urlpatterns = [
     url(r'^api/$', views.schema_view, name='api_docs'),

@@ -1,14 +1,24 @@
-from django.shortcuts import render, get_object_or_404
 from django.contrib.auth import models as auth_models
 from django.contrib.auth.decorators import login_required
-from rest_framework import viewsets, permissions, response, schemas, parsers
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.renderers import CoreJSONRenderer
-from rest_framework.decorators import api_view, renderer_classes, permission_classes
-from rest_framework_swagger.renderers import OpenAPIRenderer, SwaggerUIRenderer
-from ninetofiver import models, serializers, filters
+from django.shortcuts import get_object_or_404
+from django.shortcuts import render
+from ninetofiver import filters
+from ninetofiver import models
+from ninetofiver import serializers
 from ninetofiver.viewsets import GenericHierarchicalReadOnlyViewSet
+from rest_framework import parsers
+from rest_framework import permissions
+from rest_framework import response
+from rest_framework import schemas
+from rest_framework import viewsets
+from rest_framework.decorators import api_view
+from rest_framework.decorators import permission_classes
+from rest_framework.decorators import renderer_classes
+from rest_framework.renderers import CoreJSONRenderer
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_swagger.renderers import OpenAPIRenderer
+from rest_framework_swagger.renderers import SwaggerUIRenderer
 
 
 def home_view(request):
@@ -39,6 +49,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = auth_models.User.objects.all().order_by('-date_joined')
     serializer_class = serializers.UserSerializer
+    filter_class = filters.UserFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
