@@ -40,9 +40,9 @@ class ConsultancyContractStatusFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'active':
-            return queryset.filter(Q(starts_at__lte=date.today()) & ( Q(ends_at__gte=date.today()) | Q(ends_at__isnull=True)) )
+            return queryset.filter(Q(starts_at__lte=date.today()) & ( Q(ends_at__gte=date.today()) | Q(ends_at__isnull=True)) & Q(active=True) )
         elif self.value() == 'ended':
-            return queryset.filter(ends_at__lte=date.today())
+            return queryset.filter(Q(ends_at__lte=date.today()) | Q(active=False))
         elif self.value() == 'future':
             return queryset.filter(starts_at__gte=date.today())
 
