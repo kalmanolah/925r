@@ -1,19 +1,21 @@
 """ninetofiver models."""
-from django.db import models
-from django.core import validators
-from django.core.exceptions import ValidationError
-from django.utils.translation import ugettext as _
-from django.contrib.auth import models as auth_models
-from django.urls import reverse
-from polymorphic.models import PolymorphicModel, PolymorphicManager
-from django_countries.fields import CountryField
-from model_utils import Choices
-from datetime import datetime
-from calendar import monthrange
-from decimal import Decimal
-from ninetofiver.utils import merge_dicts
 import humanize
 import uuid
+
+from calendar import monthrange
+from datetime import datetime
+from decimal import Decimal
+from django.contrib.auth import models as auth_models
+from django.core import validators
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.urls import reverse
+from django.utils.translation import ugettext as _
+from django_countries.fields import CountryField
+from model_utils import Choices
+from ninetofiver.utils import merge_dicts
+from polymorphic.models import PolymorphicManager
+from polymorphic.models import PolymorphicModel
 
 
 # Monkey patch user model to serialize properly
@@ -66,11 +68,16 @@ class BaseModel(PolymorphicModel):
         abstract = True
 
 
+
+###########################################
+# COMPANY
+###########################################
+
 class Company(BaseModel):
+# Defines the information used for internal and external companies, between whom contracts are made
 
     """Company model."""
 
-    name = models.CharField(unique=True, max_length=255)
     vat_identification_number = models.CharField(
         max_length=15,
         unique=True,
@@ -81,9 +88,10 @@ class Company(BaseModel):
             ),
         ]
     )
+    name = models.CharField(unique=True, max_length=255)
     address = models.TextField(max_length=255)
-    internal = models.BooleanField(default=False)
     country = CountryField()
+    internal = models.BooleanField(default=False)
 
     class Meta(BaseModel.Meta):
         verbose_name_plural = 'companies'
@@ -95,7 +103,13 @@ class Company(BaseModel):
         return self.name
 
 
+
+###########################################
+# WORKSCHEDULE
+###########################################
+
 class WorkSchedule(BaseModel):
+# Defines the workschedule for a user
 
     """Work schedule model."""
 
@@ -169,7 +183,13 @@ class WorkSchedule(BaseModel):
         return self.label
 
 
+
+###########################################
+# EMPLOYMENTCONTRACT
+###########################################
+
 class EmploymentContractType(BaseModel):
+# Defines the type of employmentContract (PM, HR etc.)
 
     """Employment contract type model."""
 
@@ -184,6 +204,7 @@ class EmploymentContractType(BaseModel):
 
 
 class EmploymentContract(BaseModel):
+# Defines an internal contract and binds a user, contractType and workschedule
 
     """Employment contract model."""
 
@@ -210,17 +231,15 @@ class EmploymentContract(BaseModel):
         started_at = data.get('started_at', getattr(instance, 'started_at', None))
         ended_at = data.get('ended_at', getattr(instance, 'ended_at', None))
 
-        # Verify whether the end date of the employment contract
-        # comes after the start date
         if ended_at:
+            """Verify whether the end date of the employment contract comes after the start date"""
             if ended_at < started_at:
                 raise ValidationError(
                     _('The end date of an employment contract should always come before the start date'),
                 )
 
-        # Verify whether user has an active employment contract for the same
-        # company/period
         if user and company:
+            """Verify whether user has an active employment contract for the same company/period"""
             existing = None
             if ended_at:
                 existing = cls.objects.filter(
@@ -281,7 +300,13 @@ class EmploymentContract(BaseModel):
         }
 
 
+
+###########################################
+# USER
+###########################################
+
 class UserRelative(BaseModel):
+# Defines the information for a relative and binds it to a user
 
     """User relative model."""
 
@@ -313,6 +338,11 @@ class UserRelative(BaseModel):
                     _('A birth date should not be set in the future'),
                 )
 
+            if birth_date.year < (datetime.now().year - 110):
+                raise ValidationError(
+                    _('There are only a handful of people over the age of 110 in the world, you are not one of them.'),
+                )
+
     def get_validation_args(self):
         """Get a dict used for validation based on this instance."""
         return {
@@ -320,14 +350,100 @@ class UserRelative(BaseModel):
         }
 
 
+class UserInfo(BaseModel):
+# Defines the extra user information
+
+    """User info model."""
+
+    # Only 2 genders?! it's the current year guys
+    GENDER = Choices(
+        ('m', _('Male')),
+        ('f', _('Female')),
+    )
+
+    user = models.OneToOneField(auth_models.User, on_delete=models.CASCADE)        
+    birth_date = models.DateField()
+    gender = models.CharField(max_length=2, choices=GENDER)
+    country = CountryField()
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s [%s]' % (self.user, self.birth_date)
+
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object."""
+        instance_id = instance.id if instance else None # noqa
+        birth_date = data.get('birth_date', getattr(instance, 'birth_date', None))
+
+        if birth_date:
+            if birth_date > datetime.now().date():
+                """Verify whether the birth date of user comes before 'now'"""
+                raise ValidationError(
+                    _('A birth date should not be set in the future'),
+                )
+
+            if birth_date.year < (datetime.now().year - 100):
+                """Verify whether age of user would be > 100 """
+                raise ValidationError(
+                    _('There are only a handful of people over the age of 100 in the world, you are not one of them.'),
+                )
+
+    def get_validation_args(self):
+        """Get a dict used for validation based on this instance."""
+        return {
+            'birth_date': getattr(self, 'birth_date', None),
+        }
+
+
+
+###########################################
+# TIMESHEET
+###########################################
+
+class Timesheet(BaseModel):
+# Defines a month, year and activated status for a user
+
+    """Timesheet model."""
+
+    user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
+    month = models.PositiveSmallIntegerField(
+        validators=[
+            validators.MinValueValidator(1),
+            validators.MaxValueValidator(12),
+        ]
+    )
+    # Urgent update in 2999
+    year = models.PositiveSmallIntegerField(
+        validators=[
+            validators.MinValueValidator(2000),
+            validators.MaxValueValidator(3000),
+        ]
+    )
+    closed = models.BooleanField(default=False)
+
+    class Meta(BaseModel.Meta):
+        unique_together = (('user', 'year', 'month'),)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%02d-%04d [%s]' % (self.month, self.year, self.user)
+
+
+
+###########################################
+# LEAVE
+###########################################
+
 class Attachment(BaseModel):
+# Defines the class that holds attachments and binds them to a user
 
     """Attachment model."""
 
+    user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
     label = models.CharField(max_length=255)
     description = models.TextField(max_length=255, blank=True, null=True)
     file = models.FileField()
-    user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
     slug = models.SlugField(default=uuid.uuid4, editable=False)
 
     def __str__(self):
@@ -341,57 +457,8 @@ class Attachment(BaseModel):
         return reverse('download_attachment_service', kwargs={'slug': self.slug})
 
 
-class Timesheet(BaseModel):
-
-    """Timesheet model."""
-
-    user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
-    year = models.PositiveSmallIntegerField(
-        validators=[
-            validators.MinValueValidator(2000),
-            validators.MaxValueValidator(3000),
-        ]
-    )
-    month = models.PositiveSmallIntegerField(
-        validators=[
-            validators.MinValueValidator(1),
-            validators.MaxValueValidator(12),
-        ]
-    )
-    closed = models.BooleanField(default=False)
-
-    class Meta(BaseModel.Meta):
-        unique_together = (('user', 'year', 'month'),)
-
-    def __str__(self):
-        """Return a string representation."""
-        return '%02d-%04d [%s]' % (self.month, self.year, self.user)
-
-    # @classmethod
-    # def perform_additional_validation(cls, data, instance=None):
-    #     """Perform additional validation on the object."""
-    #     instance_id = instance.id if instance else None # noqa
-    #     year = data.get('year', getattr(instance, 'year', None))
-    #     month = data.get('month', getattr(instance, 'month', None))
-    #
-    #     if year and month:
-    #         # Ensure no timesheet can be created for the future
-    #         today = datetime.now().date()
-    #
-    #         if (year > today.year) or ((year == today.year) and (month > today.month)):
-    #             raise ValidationError(
-    #                 _('Timesheets cannot be created for future months'),
-    #             )
-    #
-    # def get_validation_args(self):
-    #     """Get a dict used for validation based on this instance."""
-    #     return {
-    #         'year': getattr(self, 'year', None),
-    #         'month': getattr(self, 'month', None),
-    #     }
-
-
 class Holiday(BaseModel):
+# Defines the national holidays per country
 
     """Holiday model."""
 
@@ -408,6 +475,7 @@ class Holiday(BaseModel):
 
 
 class LeaveType(BaseModel):
+# Defines the type of leave (vacation, sickness etc.)
 
     """Leave type model."""
 
@@ -419,6 +487,7 @@ class LeaveType(BaseModel):
 
 
 class Leave(BaseModel):
+# Defines the information for the leave and binds to the user and type of leave
 
     """Leave model."""
 
@@ -431,8 +500,8 @@ class Leave(BaseModel):
 
     user = models.ForeignKey(auth_models.User, on_delete=models.CASCADE)
     leave_type = models.ForeignKey(LeaveType, on_delete=models.PROTECT)
-    status = models.CharField(max_length=16, choices=STATUS, default=STATUS.DRAFT)
     description = models.TextField(max_length=255, blank=True, null=True)
+    status = models.CharField(max_length=16, choices=STATUS, default=STATUS.DRAFT)
     attachments = models.ManyToManyField(Attachment, blank=True)
 
     def __str__(self):
@@ -441,6 +510,7 @@ class Leave(BaseModel):
 
 
 class LeaveDate(BaseModel):
+# Binds the leave, the time and the timesheet 
 
     """Leave date model."""
 
@@ -531,7 +601,13 @@ class LeaveDate(BaseModel):
         }
 
 
+
+###########################################
+# CONTRACTS
+###########################################
+
 class PerformanceType(BaseModel):
+# Defines the type of Performance, how the activity hours should be calculated
 
     """Performance type model."""
 
@@ -552,19 +628,33 @@ class PerformanceType(BaseModel):
         return '%s [%s%%]' % (self.label, int(self.multiplier * 100))
 
 
+class ContractGroup(BaseModel):
+# Holds the names for tags/groups that are linked to contracts
+
+    """Project group model."""
+
+    label = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        """Return a string representation."""
+        return self.label
+
+
 class Contract(BaseModel):
+# Defines the basic Contract, Binds customer and company and performance_types and contract_groups
 
     """Contract model."""
 
     def company_choices():
-        return {'internal': True}
+        return { 'internal': True }
 
     label = models.CharField(max_length=255)
     description = models.TextField(max_length=255, blank=True, null=True)
-    company = models.ForeignKey(Company, on_delete=models.PROTECT, limit_choices_to=company_choices)
     customer = models.ForeignKey(Company, on_delete=models.PROTECT, related_name='customercontact_set')
+    company = models.ForeignKey(Company, on_delete=models.PROTECT, limit_choices_to=company_choices)
     active = models.BooleanField(default=True)
     performance_types = models.ManyToManyField(PerformanceType, blank=True)
+    contract_groups = models.ManyToManyField(ContractGroup, blank=True)
 
     def __str__(self):
         """Return a string representation."""
@@ -572,23 +662,57 @@ class Contract(BaseModel):
 
 
 class ProjectContract(Contract):
+# Defines the contract for Project
 
     """Project contract model."""
 
+    fixed_fee = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(9999999),
+        ]
+    )
+    starts_at = models.DateField()
+    ends_at = models.DateField()
+
+    #To get the contractlabel as a var, doesn't save in model
+    label = Contract.label
+
+    def __str__(self):
+        """Return a string representation."""
+        return 'Project: %s' % (self.label)
+
+
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object."""
+        instance_id = instance.id if instance else None # noqa
+
+        starts_at = data.get('starts_at', getattr(instance, 'starts_at', None))
+        ends_at = data.get('ends_at', getattr(instance, 'ends_at', None))
+
+        if starts_at and ends_at:
+            # Verify whether the start date of the contract comes before the end date
+            if starts_at >= ends_at:
+                raise ValidationError(
+                    _('The start date should be set before the end date'),
+                )
+
+    def get_validation_args(self):
+        """Get a dict used for validation based on this instance."""
+        return {
+            'starts_at': getattr(self, 'starts_at', None),
+            'ends_at': getattr(self, 'ends_at', None),
+        }
+
 
 class ConsultancyContract(Contract):
+# Defines the contract for Consultancy
 
     """Consultancy contract model."""
 
-    day_rate = models.DecimalField(
-        max_digits=6,
-        decimal_places=2,
-        default=0.00,
-        validators=[
-            validators.MinValueValidator(0),
-            validators.MaxValueValidator(9999),
-        ]
-    )
     starts_at = models.DateField()
     ends_at = models.DateField(blank=True, null=True)
     duration = models.DecimalField(
@@ -598,9 +722,25 @@ class ConsultancyContract(Contract):
         decimal_places=2,
         validators=[
             validators.MinValueValidator(0),
+            validators.MaxValueValidator(9999),     
+        ]
+    )
+    day_rate = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
             validators.MaxValueValidator(9999),
         ]
     )
+
+    #To get the contractlabel as a var
+    label = Contract.label
+
+    def __str__(self):
+        """Return a string representation."""
+        return 'Consultancy: %s' % (self.label)
 
     @classmethod
     def perform_additional_validation(cls, data, instance=None):
@@ -626,6 +766,7 @@ class ConsultancyContract(Contract):
 
 
 class SupportContract(Contract):
+# Defines the contract for Support
 
     """Support contract model."""
 
@@ -661,6 +802,13 @@ class SupportContract(Contract):
     fixed_fee_period = models.CharField(blank=True, null=True, max_length=10, choices=FIXED_FEE_PERIOD)
     starts_at = models.DateField()
     ends_at = models.DateField(blank=True, null=True)
+
+    #To get the contractlabel as a var
+    label = Contract.label
+
+    def __str__(self):
+        """Return a string representation."""
+        return 'Support: %s' % (self.label)
 
     @classmethod
     def perform_additional_validation(cls, data, instance=None):
@@ -707,8 +855,9 @@ class SupportContract(Contract):
 
 
 class ContractRole(BaseModel):
+# Defines the roles per contract
 
-    """Contract role model (no pun intended)."""
+    """Contract role model (!no pun intended)."""
 
     label = models.CharField(unique=True, max_length=255)
     description = models.TextField(max_length=255, blank=True, null=True)
@@ -719,6 +868,7 @@ class ContractRole(BaseModel):
 
 
 class ContractUser(BaseModel):
+# Binds the user to a contract and role
 
     """Contract user model."""
 
@@ -734,7 +884,34 @@ class ContractUser(BaseModel):
         return '%s [%s]' % (self.user, self.contract_role)
 
 
+class ProjectEstimate(BaseModel):
+# Binds Role and Project to an estimation and actual
+
+    """Project estimate model."""
+
+    role = models.ForeignKey(ContractRole, on_delete=models.PROTECT)
+    project = models.ForeignKey(ProjectContract, on_delete=models.PROTECT)
+    hours_estimated = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(9999999),
+        ]
+    )
+
+    def __str__(self):
+        """Return a string representation"""
+        return '%s [Est: %s]' % (self.role.label, self.hours_estimated)
+
+
+
+###########################################
+# PERFORMANCE
+###########################################
+
 class Performance(BaseModel):
+# Binds a day to a timesheet
 
     """Performance model."""
 
@@ -782,6 +959,7 @@ class Performance(BaseModel):
 
 
 class ActivityPerformance(Performance):
+# Uses basic Performance to bind a duration & description to a contract
 
     """Activity performance model."""
 
@@ -808,6 +986,7 @@ class ActivityPerformance(Performance):
         super().perform_additional_validation(data, instance=instance)
 
         instance_id = instance.id if instance else None # noqa
+
         contract = data.get('contract', getattr(instance, 'contract', None))
         performance_type = data.get('performance_type', getattr(instance, 'performance_type', None))
 
@@ -829,6 +1008,7 @@ class ActivityPerformance(Performance):
 
 
 class StandbyPerformance(Performance):
+# Uses basic Performance to note the user was on standby
 
     """Standby (oncall) performance model."""
 

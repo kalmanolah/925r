@@ -1,12 +1,16 @@
+from datetime import date
 from django.contrib import admin
 from django.db.models import Q
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
-from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter
-from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
-from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter
-from datetime import date
+from django_admin_listfilter_dropdown.filters import DropdownFilter
+from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
 from ninetofiver import models
+from polymorphic.admin import PolymorphicChildModelAdmin
+from polymorphic.admin import PolymorphicChildModelFilter
+from polymorphic.admin import PolymorphicParentModelAdmin
+from rangefilter.filter import DateRangeFilter
+from rangefilter.filter import DateTimeRangeFilter
 
 class EmploymentContractStatusFilter(admin.SimpleListFilter):
     title = 'Status'
@@ -63,9 +67,14 @@ class EmploymentContractTypeAdmin(admin.ModelAdmin):
 @admin.register(models.EmploymentContract)
 class EmploymentContractAdmin(admin.ModelAdmin):
     list_display = ('user', 'company', 'employment_contract_type', 'work_schedule', 'started_at', 'ended_at')
-    list_filter = (EmploymentContractStatusFilter, ('user', RelatedDropdownFilter), ('company', RelatedDropdownFilter),
-                   ('employment_contract_type', RelatedDropdownFilter), ('started_at', DateRangeFilter),
-                   ('ended_at', DateRangeFilter))
+    list_filter = (
+        EmploymentContractStatusFilter, 
+        ('user', RelatedDropdownFilter), 
+        ('company', RelatedDropdownFilter),
+        ('employment_contract_type', RelatedDropdownFilter), 
+        ('started_at', DateRangeFilter),
+        ('ended_at', DateRangeFilter)
+    )
     search_fields = ('user__username', 'user__first_name', 'user__last_name', 'employment_contract_type__label',
                      'started_at', 'ended_at')
     ordering = ('user__first_name', 'user__last_name')
@@ -79,8 +88,17 @@ class WorkScheduleAdmin(admin.ModelAdmin):
 
 @admin.register(models.UserRelative)
 class UserRelativeAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'name', 'user', 'relation', 'gender', 'birth_date')
+    list_display = ('__str__', 'name', 'user', 'relation', 'gender', 'birth_date', )
     ordering = ('name',)
+
+
+@admin.register(models.UserInfo)
+class UserInfoAdmin(admin.ModelAdmin):
+    def user_groups(obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.user.groups.all())))
+
+    list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country')
+    ordering = ('user',)
 
 
 @admin.register(models.Attachment)
@@ -109,6 +127,7 @@ class LeaveDateInline(admin.TabularInline):
 
 @admin.register(models.Leave)
 class LeaveAdmin(admin.ModelAdmin):
+
     def make_approved(self, request, queryset):
         queryset.update(status=models.Leave.STATUS.APPROVED)
     make_approved.short_description = _('Approve selected leaves')
@@ -125,8 +144,13 @@ class LeaveAdmin(admin.ModelAdmin):
                            % (x.get_file_url(), str(x)) for x in list(obj.attachments.all())))
 
     list_display = ('__str__', 'user', 'leave_type', 'leave_dates', 'status', 'description', 'attachment')
-    list_filter = ('status', ('leave_type', RelatedDropdownFilter), ('user', RelatedDropdownFilter),
-                   ('leavedate__starts_at', DateTimeRangeFilter), ('leavedate__ends_at', DateTimeRangeFilter))
+    list_filter = (
+        'status', 
+        ('leave_type', RelatedDropdownFilter), 
+        ('user', RelatedDropdownFilter),
+        ('leavedate__starts_at', DateTimeRangeFilter), 
+        ('leavedate__ends_at', DateTimeRangeFilter)
+    )
     search_fields = ('user__username', 'user__first_name', 'user__last_name', 'leave_type__label', 'status',
                      'leavedate__starts_at', 'leavedate__ends_at', 'description')
     inlines = [
@@ -153,6 +177,12 @@ class PerformanceTypeAdmin(admin.ModelAdmin):
 
 class ContractUserInline(admin.TabularInline):
     model = models.ContractUser
+
+
+@admin.register(models.ContractGroup)
+class ContractGroupAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'label', )
+    ordering = ('label', )
 
 
 class ContractChildAdmin(PolymorphicChildModelAdmin):
@@ -189,9 +219,14 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
     child_models = (models.ProjectContract, models.ConsultancyContract, models.SupportContract)
     list_display = ('__str__', 'label', 'company', 'customer', 'contract_users',
                     performance_types, 'description', 'active')
-    list_filter = (PolymorphicChildModelFilter, ('company', RelatedDropdownFilter),
-                   ('customer', RelatedDropdownFilter), ('contractuser', RelatedDropdownFilter),
-                   ('performance_types', RelatedDropdownFilter), 'active')
+    list_filter = (
+        PolymorphicChildModelFilter, 
+        ('company', RelatedDropdownFilter),
+        ('customer', RelatedDropdownFilter), 
+        ('contractuser', RelatedDropdownFilter),
+        ('performance_types', RelatedDropdownFilter), 
+        'active'
+    )
     search_fields = ('label', 'description', 'company__name', 'customer__name', 'contractuser__user__first_name',
                      'contractuser__user__last_name', 'contractuser__user__username', 'performance_types__label')
     ordering = ('label', 'company', '-customer', 'contractuser__user__first_name', 'contractuser__user__last_name')
@@ -222,8 +257,16 @@ class ContractUserAdmin(admin.ModelAdmin):
     ordering = ('user__first_name', 'user__last_name')
 
 
+@admin.register(models.ProjectEstimate)
+class ProjectEstimateAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'project', 'role', 'hours_estimated', )
+    search_fields = ('role__label', 'project__label', 'project__customer')
+    ordering = ('project', 'hours_estimated')
+
+
 @admin.register(models.Timesheet)
 class TimesheetAdmin(admin.ModelAdmin):
+
     def make_closed(self, request, queryset):
         queryset.update(closed=True)
     make_closed.short_description = _('Close selected timesheets')

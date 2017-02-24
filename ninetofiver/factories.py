@@ -17,6 +17,7 @@ class UserFactory(factory.DjangoModelFactory):
     first_name = factory.LazyFunction(fake.first_name)
     last_name = factory.LazyFunction(fake.last_name)
     username = factory.LazyFunction(fake.name)
+    email = factory.LazyFunction(fake.name)
     is_staff = False
     is_superuser = False
 
@@ -30,11 +31,13 @@ class CompanyFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.Company
 
+    vat_identification_number = factory.LazyFunction(
+        lambda: '%s%s' % (fake.language_code(), fake.md5()[:10])
+    )
     name = factory.LazyFunction(fake.company)
-    country = factory.LazyFunction(fake.country_code)
-    vat_identification_number = factory.LazyFunction(lambda: '%s%s' % (fake.language_code(), fake.md5()[:10]))
-    internal = factory.LazyFunction(fake.boolean)
     address = factory.LazyFunction(fake.address)
+    country = factory.LazyFunction(fake.country_code)
+    internal = factory.LazyFunction(fake.boolean)
 
 
 class InternalCompanyFactory(CompanyFactory):
@@ -129,6 +132,13 @@ class PerformanceTypeFactory(factory.DjangoModelFactory):
     multiplier = factory.LazyFunction(lambda: random.randint(0, 3))
 
 
+class ContractGroupFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.ContractGroup
+
+    label = factory.LazyFunction(fake.word)
+
+
 class ContractFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.Contract
@@ -141,6 +151,17 @@ class ContractFactory(factory.DjangoModelFactory):
 class ProjectContractFactory(ContractFactory):
     class Meta:
         model = models.ProjectContract
+
+    fixed_fee = factory.LazyFunction(lambda: random.randint(0, 9999))
+    starts_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
+    ends_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=False, after_now=True))
+
+
+class ProjectEstimateFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.ProjectEstimate
+
+    hours_estimated = factory.LazyFunction(lambda: random.randint(0, 9999))
 
 
 class ConsultancyContractFactory(ContractFactory):
@@ -179,8 +200,8 @@ class TimesheetFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.Timesheet
 
-    year = factory.LazyFunction(lambda: random.randint(2000, 3000))
     month = factory.LazyFunction(lambda: random.randint(1, 12))
+    year = factory.LazyFunction(lambda: random.randint(2000, 3000))
     closed = factory.LazyFunction(fake.boolean)
 
 

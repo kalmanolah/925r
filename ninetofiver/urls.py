@@ -1,14 +1,16 @@
 """ninetofiver URL Configuration"""
-from django.conf.urls import url, include
-from django.contrib.auth import views as auth_views
+from django.conf.urls import include
+from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.views.generic.base import TemplateView
 from rest_framework import routers
 # from rest_framework.urlpatterns import format_suffix_patterns
-from registration.backends.hmac import views as registration_views
-from oauth2_provider import views as oauth2_views
 from django_downloadview import ObjectDownloadView
-from ninetofiver import views, models
+from ninetofiver import models
+from ninetofiver import views
+from oauth2_provider import views as oauth2_views
+from registration.backends.hmac import views as registration_views
 
 urlpatterns = [
     url(r'^api/$', views.schema_view, name='api_docs'),
@@ -33,10 +35,12 @@ router.register(r'contracts/support', views.SupportContractViewSet)
 router.register(r'contracts', views.ContractViewSet)
 router.register(r'contract_roles', views.ContractRoleViewSet)
 router.register(r'contract_users', views.ContractUserViewSet)
+router.register(r'contract_groups', views.ContractGroupViewSet)
 router.register(r'timesheets', views.TimesheetViewSet)
 router.register(r'performances/activity', views.ActivityPerformanceViewSet)
 router.register(r'performances/standby', views.StandbyPerformanceViewSet)
 router.register(r'performances', views.PerformanceViewSet)
+router.register(r'project_estimates', views.ProjectEstimateViewSet)
 router.register(r'attachments', views.AttachmentViewSet)
 router.register(r'my_leaves', views.MyLeaveViewSet, base_name='myleave')
 router.register(r'my_leave_dates', views.MyLeaveDateViewSet, base_name='myleavedate')

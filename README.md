@@ -108,6 +108,10 @@ sphinx-apidoc -e -f -a -d 2 -o docs ninetofiver ninetofiver/migrations
 cd docs && make html && cd ../
 ```
 
+## Database Structure  
+
+![Database ERD](http://i.imgur.com/T11pQN3.png)
+
 ## License
 
 See [LICENSE](LICENSE)

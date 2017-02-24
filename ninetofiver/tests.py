@@ -5,6 +5,7 @@ from rest_assured import testcases
 from django.utils.timezone import utc
 from ninetofiver import factories
 from decimal import Decimal
+from datetime import timedelta
 import datetime
 import tempfile
 
@@ -177,7 +178,6 @@ class UserRelativeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
         self.create_data.update({
             'user': self.user.id,
         })
-
         return self.create_data
 
 
@@ -294,6 +294,18 @@ class PerformanceTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
     }
 
 
+class ContractGroupAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'contractgroup'
+    factory_class = factories.ContractGroupFactory
+    user_factory = factories.AdminFactory
+    create_data = {
+        'label': 'Cool contract',
+    }
+    update_data = {
+        'label': 'Lame contract',
+    }
+
+
 class ContractAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'contract'
     factory_class = factories.ContractFactory
@@ -315,10 +327,18 @@ class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
     create_data = {
         'label': 'Projects & Stuff',
         'active': True,
+
+        'fixed_fee': 600.25,
+        'starts_at': datetime.date.today(),
+        'ends_at': datetime.date.today() + timedelta(days=365),
     }
     update_data = {
         'label': 'More Projects & Stuff',
         'active': True,
+
+        'fixed_fee': 300.25,
+        'starts_at': datetime.date.today() - timedelta(days=20),
+        'ends_at': datetime.date.today() + timedelta(days=730),
     }
 
     def setUp(self):
@@ -333,6 +353,37 @@ class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
         self.create_data.update({
             'company': self.company.id,
             'customer': self.customer.id,
+        })
+
+        return self.create_data
+
+
+class ProjectEstimateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'projectestimate'
+    factory_class = factories.ProjectEstimateFactory
+    user_factory = factories.AdminFactory
+    create_data = {
+        'hours_estimated': 725
+    }
+    update_data = {
+        'hours_estimated': 625
+    }
+
+    def setUp(self):
+        self.role = factories.ContractRoleFactory.create()
+        self.project = factories.ProjectContractFactory.create(
+            company=factories.InternalCompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(role=self.role, project=self.project)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'role': self.role.id,
+            'project': self.project.id,
         })
 
         return self.create_data
