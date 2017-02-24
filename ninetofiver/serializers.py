@@ -1,7 +1,7 @@
 """ninetofiver serializers."""
 from django.contrib.auth import models as auth_models
-from rest_framework import serializers
 from ninetofiver import models
+from rest_framework import serializers
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -9,7 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = auth_models.User
-        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label')
+        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active')
         read_only_fields = ('id',)
 
     def get_display_label(self, obj):
@@ -59,7 +59,7 @@ class BaseSerializer(serializers.ModelSerializer):
 class CompanySerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Company
-        fields = BaseSerializer.Meta.fields + ('name', 'country', 'vat_identification_number', 'internal', 'address')
+        fields = BaseSerializer.Meta.fields + ('vat_identification_number', 'name', 'address', 'country', 'internal', )
 
 
 class EmploymentContractTypeSerializer(BaseSerializer):
@@ -137,14 +137,19 @@ class ContractSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Contract
         fields = BaseSerializer.Meta.fields + ('label', 'description', 'company', 'customer', 'performance_types',
-                                               'active')
+                                               'active', 'contract_groups')
 
 
 class ProjectContractSerializer(ContractSerializer):
+    hours_estimated = serializers.SerializerMethodField()
+
+    def get_hours_estimated(self, obj):
+        return obj.projectestimate_set.values_list('hours_estimated', flat=True)
+
     class Meta(ContractSerializer.Meta):
         model = models.ProjectContract
-        fields = ContractSerializer.Meta.fields
-
+        fields = ContractSerializer.Meta.fields + ('starts_at', 'ends_at', 'fixed_fee', 'hours_estimated')
+        
 
 class ConsultancyContractSerializer(ContractSerializer):
     class Meta(ContractSerializer.Meta):
@@ -170,6 +175,18 @@ class ContractUserSerializer(BaseSerializer):
         fields = BaseSerializer.Meta.fields + ('user', 'contract', 'contract_role')
 
 
+class ContractGroupSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.ContractGroup
+        fields = BaseSerializer.Meta.fields + ('label', )
+
+
+class ProjectEstimateSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.ProjectEstimate
+        fields = BaseSerializer.Meta.fields + ('role', 'project', 'hours_estimated')
+
+
 class TimesheetSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Timesheet
@@ -192,6 +209,8 @@ class StandbyPerformanceSerializer(PerformanceSerializer):
     class Meta(PerformanceSerializer.Meta):
         model = models.StandbyPerformance
         fields = PerformanceSerializer.Meta.fields
+
+
 
 
 class MyUserSerializer(UserSerializer):

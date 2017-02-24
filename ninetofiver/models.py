@@ -78,7 +78,6 @@ class Company(BaseModel):
 
     """Company model."""
 
-    name = models.CharField(unique=True, max_length=255)
     vat_identification_number = models.CharField(
         max_length=15,
         unique=True,
@@ -89,6 +88,7 @@ class Company(BaseModel):
             ),
         ]
     )
+    name = models.CharField(unique=True, max_length=255)
     address = models.TextField(max_length=255)
     country = CountryField()
     internal = models.BooleanField(default=False)
@@ -231,17 +231,15 @@ class EmploymentContract(BaseModel):
         started_at = data.get('started_at', getattr(instance, 'started_at', None))
         ended_at = data.get('ended_at', getattr(instance, 'ended_at', None))
 
-        # Verify whether the end date of the employment contract
-        # comes after the start date
         if ended_at:
+            """Verify whether the end date of the employment contract comes after the start date"""
             if ended_at < started_at:
                 raise ValidationError(
                     _('The end date of an employment contract should always come before the start date'),
                 )
 
-        # Verify whether user has an active employment contract for the same
-        # company/period
         if user and company:
+            """Verify whether user has an active employment contract for the same company/period"""
             existing = None
             if ended_at:
                 existing = cls.objects.filter(
@@ -379,14 +377,14 @@ class UserInfo(BaseModel):
         birth_date = data.get('birth_date', getattr(instance, 'birth_date', None))
 
         if birth_date:
-            # Verify whether the birth date of user comes before "now"
             if birth_date > datetime.now().date():
+                """Verify whether the birth date of user comes before 'now'"""
                 raise ValidationError(
                     _('A birth date should not be set in the future'),
                 )
 
-            #Verify whether age of user would be > 100
             if birth_date.year < (datetime.now().year - 100):
+                """Verify whether age of user would be > 100 """
                 raise ValidationError(
                     _('There are only a handful of people over the age of 100 in the world, you are not one of them.'),
                 )
@@ -679,7 +677,7 @@ class ProjectContract(Contract):
     starts_at = models.DateField()
     ends_at = models.DateField()
 
-    #To get the contractlabel as a var
+    #To get the contractlabel as a var, doesn't save in model
     label = Contract.label
 
     def __str__(self):

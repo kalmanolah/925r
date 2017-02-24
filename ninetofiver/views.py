@@ -227,6 +227,26 @@ class ContractUserViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
+class ContractGroupViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows contract groups to be viewed or edited.
+    """
+    queryset = models.ContractGroup.objects.all()
+    serializer_class = serializers.ContractGroupSerializer
+    filter_class = filters.ContractGroupFilter
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+
+
+class ProjectEstimateViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows project estimates to be viewed or edited.
+    """
+    queryset = models.ProjectEstimate.objects.all()
+    serializer_class = serializers.ProjectEstimateSerializer
+    filter_class = filters.ProjectEstimateFilter
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+
+
 class TimesheetViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows timesheets to be viewed or edited.

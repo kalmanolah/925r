@@ -1,9 +1,7 @@
 import django_filters
 
 from datetime import datetime
-
-from django_filters import BooleanFilter
-from django_filters import CharFilter
+from django.db.models import Q
 
 from collections import Counter
 from django.db.models import Func
@@ -14,21 +12,6 @@ from rest_framework import generics
 
 from django.contrib.auth import models as auth_models
 
-
-# Custom filter to see if user is active currently
-def filter_active_user(queryset, name, value):
-    if value:
-        return queryset.filter(employmentcontract__ended_at__gt = datetime.today())
-    else:
-        return queryset.filter(employmentcontract__ended_at__lte = datetime.today())
-
-
-# Custom filter to see if user is active on specific day
-def filter_active_day(queryset, name, value):
-    fl = 'gt' if value else 'lte'
-
-    lookup = '__'.join(['employmentcontract', 'work_schedule', name, fl])
-    return queryset.filter(**{lookup: 0})
 
 
 class IsNull(Func):
@@ -83,31 +66,42 @@ class NullLastOrderingFilter(django_filters.OrderingFilter):
         return qs
 
 
-class UserFilter(FilterSet):
+class UserFilter(FilterSet):    
+    
+    # Custom method to see if user is active on specific day
+    def filter_active_day(self, queryset, name, value):
+        fl = 'gt' if value else 'lte'
+    
+        lookup = '__'.join(['employmentcontract', 'work_schedule', name, fl])
+        return queryset.filter(**{lookup: 0})
 
-    active_user = BooleanFilter(name='active_user', method=filter_active_user)
-    active_monday = BooleanFilter(name='monday', method=filter_active_day)
-    active_tuesday = BooleanFilter(name='tuesday', method=filter_active_day)
-    active_wednesday = BooleanFilter(name='wednesday', method=filter_active_day)
-    active_thursday = BooleanFilter(name='thursday', method=filter_active_day)
-    active_friday = BooleanFilter(name='friday', method=filter_active_day)
-    active_saturday = BooleanFilter(name='saturday', method=filter_active_day)
-    active_sunday = BooleanFilter(name='sunday', method=filter_active_day)
 
-    order_fields = ('username', 'first_name')
+    active_monday = django_filters.BooleanFilter(name='monday', method='filter_active_day')
+    active_tuesday = django_filters.BooleanFilter(name='tuesday', method='filter_active_day')
+    active_wednesday = django_filters.BooleanFilter(name='wednesday', method='filter_active_day')
+    active_thursday = django_filters.BooleanFilter(name='thursday', method='filter_active_day')
+    active_friday = django_filters.BooleanFilter(name='friday', method='filter_active_day')
+    active_saturday = django_filters.BooleanFilter(name='saturday', method='filter_active_day')
+    active_sunday = django_filters.BooleanFilter(name='sunday', method='filter_active_day')
+
+    order_fields = ('username', 'email', 'first_name', 'last_name', 'groups', 'userrelative__name', 
+        'userinfo__gender', 'userinfo__country', 'userinfo__birth_date', 'employmentcontract__started_at',
+        'employmentcontract__ended_at', 'employmentcontract__company__name', 'employmentcontract__work_schedule__label',
+        'employmentcontract__employment_contract_type__label', 'leave__leavedate__starts_at',
+        'active_monday', 'active_tuesday', 'active_wednesday', 'active_thursday', 'active_friday',
+        'active_saturday', 'active_sunday')
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
 
         model = auth_models.User
-        
         fields = {
-
             # Basic user fields
             'username': ['exact', ],
             'email': ['exact', ],
             'first_name': ['exact', 'contains', 'icontains', ],
             'last_name': ['exact', 'contains', 'icontains', ],
+            'is_active': ['exact', ],
 
             # AuthGroups fields
             'groups': ['exact', 'contains', 'icontains', ],
@@ -127,15 +121,6 @@ class UserFilter(FilterSet):
 
             # Workschedule fields
             'employmentcontract__work_schedule__label': ['exact', 'contains', 'icontains', ],
-
-
-            # Customer & Company fields, linked through contract
-            'contractuser__contract__customer__name': ['exact', 'contains', 'icontains', ],
-            'contractuser__contract__company__name': ['exact', 'contains', 'icontains', ],
-            'contractuser__contract__customer__internal': ['exact', ],
-            'contractuser__contract__company__internal': ['exact', ],
-            'contractuser__contract__customer__country': ['exact', ],
-            'contractuser__contract__company__country': ['exact', ],
 
             # EmploymentContract Type fields
             'employmentcontract__employment_contract_type__label': ['exact', ],
@@ -285,23 +270,60 @@ class PerformanceTypeFilter(FilterSet):
 
 
 class ContractFilter(FilterSet):
-    order_fields = ('label', 'description', 'active')
+    
+    order_fields = ('label', 'description', 'active', 'contractuser__user__username', 'contractuser__user__first_name',
+        'contractuser__user__last_name', 'contractuser__user__groups', 'company__vat_identification_number', 'customer__vat_identification_number',
+        'company__name', 'customer__name', 'company__country', 'customer_country', 'company__internal', 'customer__internal',
+        'contract_groups__label', 'performance_types__label')
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
+
         model = models.Contract
         fields = {
+
+            # Basic contract fields
             'label': ['exact', 'contains', 'icontains'],
             'description': ['exact', 'contains', 'icontains'],
-            'active': ['exact'],
+            'active': ['exact', ],
 
+            # User related fields
+            'contractuser__user__username': ['exact', 'contains', 'icontains', ],
+            'contractuser__user__first_name': ['exact', 'contains', 'icontains', ],
+            'contractuser__user__last_name': ['exact', 'contains', 'icontains', ],
+            'contractuser__user__groups': ['exact', 'contains', 'icontains', ],
+
+            # Companies & Customer fields
+            'company__vat_identification_number': ['exact', ],
+            'customer__vat_identification_number': ['exact', ],
+            'company__name': ['exact', 'contains', 'icontains', ],
+            'customer__name': ['exact', 'contains', 'icontains', ],
+            'company__country': ['exact', ],
+            'customer__country': ['exact', ],
+            'company__internal': ['exact', ],
+            'customer__internal': ['exact', ],
+
+            # Contractgroup fields
+            'contract_groups__label': ['exact', 'contains', 'icontains', ],
+
+            # Performancetype fields
+            'performance_types__label': ['exact', 'contains', 'icontains', ],
         }
 
 
 class ProjectContractFilter(ContractFilter):
+    order_fields = ContractFilter.order_fields + ('fixed_fee', 'starts_at', 'ends_at')
+    order_by = NullLastOrderingFilter(fields = order_fields)
+    
     class Meta(ContractFilter.Meta):
         model = models.ProjectContract
-        fields = ContractFilter.Meta.fields
+        fields = merge_dicts(ContractFilter.Meta.fields, {
+
+            # Basic ProjectContract fields
+            'fixed_fee': ['exact', 'contains', ],
+            'starts_at': ['exact', 'gt', 'gte', 'lt', 'lte', ],
+            'ends_at': ['exact', 'gt', 'gte', 'lt', 'lte', ],
+        })
 
 
 class ConsultancyContractFilter(ContractFilter):
@@ -333,6 +355,18 @@ class SupportContractFilter(ContractFilter):
         })
 
 
+class ContractGroupFilter(FilterSet):
+    order_fields = ('label', )
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
+    class Meta:
+        model = models.ContractGroup
+        fields = {
+            'label': ['exact', 'contains', 'icontains'],
+            'contract__label': ['exact', 'contains', 'icontains', ],
+        }
+
+
 class ContractRoleFilter(FilterSet):
     order_fields = ('label', 'description')
     order_by = NullLastOrderingFilter(fields=order_fields)
@@ -349,6 +383,20 @@ class ContractUserFilter(FilterSet):
     class Meta:
         model = models.ContractUser
         fields = {
+        }
+
+
+class ProjectEstimateFilter(FilterSet):
+    order_fields = ( 'hours_estimated', 'role__label', 'project__label', 'project__description', )
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
+    class Meta:
+        model = models.ProjectEstimate
+        fields = {            
+            'hours_estimated': ['exact', 'gt', 'gte', 'lt', 'lte', ],
+            'role__label': ['exact', 'contains', 'icontains', ],
+            'project__label': ['exact', 'contains', 'icontains', ],
+            'project__description': ['contains', 'icontains', ],
         }
 
 
