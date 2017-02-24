@@ -110,7 +110,7 @@ cd docs && make html && cd ../
 
 ## Database Structure  
 
-![Database ERD](http://imgur.com/T11pQN3)
+![Database ERD](http://i.imgur.com/T11pQN3.png)
 
 ## License
 
