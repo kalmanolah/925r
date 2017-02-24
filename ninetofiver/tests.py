@@ -5,6 +5,7 @@ from rest_assured import testcases
 from django.utils.timezone import utc
 from ninetofiver import factories
 from decimal import Decimal
+from datetime import timedelta
 import datetime
 import tempfile
 
@@ -177,7 +178,6 @@ class UserRelativeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
         self.create_data.update({
             'user': self.user.id,
         })
-
         return self.create_data
 
 
@@ -315,10 +315,18 @@ class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
     create_data = {
         'label': 'Projects & Stuff',
         'active': True,
+
+        'fixed_fee': 600.25,
+        'starts_at': datetime.date.today(),
+        'ends_at': datetime.date.today() + timedelta(days=365),
     }
     update_data = {
         'label': 'More Projects & Stuff',
         'active': True,
+
+        'fixed_fee': 300.25,
+        'starts_at': datetime.date.today() - timedelta(days=20),
+        'ends_at': datetime.date.today() + timedelta(days=730),
     }
 
     def setUp(self):

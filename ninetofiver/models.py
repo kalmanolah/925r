@@ -713,15 +713,6 @@ class ConsultancyContract(Contract):
 
     """Consultancy contract model."""
 
-    day_rate = models.DecimalField(
-        max_digits=6,
-        decimal_places=2,
-        default=0.00,
-        validators=[
-            validators.MinValueValidator(0),
-            validators.MaxValueValidator(9999),
-        ]
-    )
     starts_at = models.DateField()
     ends_at = models.DateField(blank=True, null=True)
     duration = models.DecimalField(
@@ -732,6 +723,15 @@ class ConsultancyContract(Contract):
         validators=[
             validators.MinValueValidator(0),
             validators.MaxValueValidator(9999),     
+        ]
+    )
+    day_rate = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(9999),
         ]
     )
 
