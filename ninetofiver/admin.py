@@ -179,6 +179,12 @@ class ContractUserInline(admin.TabularInline):
     model = models.ContractUser
 
 
+@admin.register(models.ContractGroup)
+class ContractGroupAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'label', )
+    ordering = ('label', )
+
+
 class ContractChildAdmin(PolymorphicChildModelAdmin):
     base_model = models.Contract
     inlines = [
