@@ -157,6 +157,13 @@ class ProjectContractFactory(ContractFactory):
     ends_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=False, after_now=True))
 
 
+class ProjectEstimateFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.ProjectEstimate
+
+    hours_estimated = factory.LazyFunction(lambda: random.randint(0, 9999))
+
+
 class ConsultancyContractFactory(ContractFactory):
     class Meta:
         model = models.ConsultancyContract

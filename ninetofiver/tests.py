@@ -294,6 +294,18 @@ class PerformanceTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
     }
 
 
+class ContractGroupAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'contractgroup'
+    factory_class = factories.ContractGroupFactory
+    user_factory = factories.AdminFactory
+    create_data = {
+        'label': 'Cool contract',
+    }
+    update_data = {
+        'label': 'Lame contract',
+    }
+
+
 class ContractAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'contract'
     factory_class = factories.ContractFactory
@@ -341,6 +353,37 @@ class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
         self.create_data.update({
             'company': self.company.id,
             'customer': self.customer.id,
+        })
+
+        return self.create_data
+
+
+class ProjectEstimateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'projectestimate'
+    factory_class = factories.ProjectEstimateFactory
+    user_factory = factories.AdminFactory
+    create_data = {
+        'hours_estimated': 725
+    }
+    update_data = {
+        'hours_estimated': 625
+    }
+
+    def setUp(self):
+        self.role = factories.ContractRoleFactory.create()
+        self.project = factories.ProjectContractFactory.create(
+            company=factories.InternalCompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(role=self.role, project=self.project)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'role': self.role.id,
+            'project': self.project.id,
         })
 
         return self.create_data
