@@ -31,6 +31,25 @@ class EmploymentContractStatusFilter(admin.SimpleListFilter):
         elif self.value() == 'future':
             return queryset.filter(started_at__gte=date.today())
 
+class ConsultancyContractStatusFilter(admin.SimpleListFilter):
+    title = 'Status'
+    parameter_name = 'status'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('active', _('Active')),
+            ('ended', _('Ended')),
+            ('future', _('Future')),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'active':
+            return queryset.filter(Q(starts_at__lte=date.today()) & ( Q(ends_at__gte=date.today()) | Q(ends_at__isnull=True)) & Q(active=True) )
+        elif self.value() == 'ended':
+            return queryset.filter(Q(ends_at__lte=date.today()) | Q(active=False))
+        elif self.value() == 'future':
+            return queryset.filter(starts_at__gte=date.today())
+
 
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
@@ -172,7 +191,7 @@ class ProjectContractChildAdmin(ContractChildAdmin):
     base_model = models.ProjectContract
 
 
-@admin.register(models.ConsultancyContract)
+#@admin.register(models.ConsultancyContract)
 class ConsultancyContractChildAdmin(ContractChildAdmin):
     base_model = models.ConsultancyContract
 
@@ -206,6 +225,19 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
                      'contractuser__user__last_name', 'contractuser__user__username', 'performance_types__label')
     ordering = ('label', 'company', '-customer', 'contractuser__user__first_name', 'contractuser__user__last_name')
 
+
+@admin.register(models.ConsultancyContract)
+class ConsultancyContract(admin.ModelAdmin):
+    def contract_users(self, obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
+
+    list_display = ('label', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'duration')
+    list_filter = (ConsultancyContractStatusFilter, ('company', RelatedDropdownFilter),
+                   ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
+
+    inlines = [
+        ContractUserInline,
+    ]
 
 @admin.register(models.ContractRole)
 class ContractRoleAdmin(admin.ModelAdmin):
