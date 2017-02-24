@@ -76,6 +76,11 @@ class UserFilter(FilterSet):
         return queryset.filter(**{lookup: 0})
 
 
+    employmentcontract_type = django_filters.CharFilter(name='employmentcontract__employment_contract_type__label')
+    workschedule_label = django_filters.CharFilter(name='employmentcontract__work_schedule__label')
+    workschedule_label__contains = django_filters.CharFilter(name='employmentcontract__work_schedule__label', lookup_expr='contains')
+    workschedule_label__icontains = django_filters.CharFilter(name='employmentcontract__work_schedule__label', lookup_expr='icontains')
+
     active_monday = django_filters.BooleanFilter(name='monday', method='filter_active_day')
     active_tuesday = django_filters.BooleanFilter(name='tuesday', method='filter_active_day')
     active_wednesday = django_filters.BooleanFilter(name='wednesday', method='filter_active_day')
@@ -118,12 +123,6 @@ class UserFilter(FilterSet):
             'employmentcontract__started_at': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
             'employmentcontract__ended_at': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte'],
             'employmentcontract__company__name': ['exact', 'contains', 'icontains', ],
-
-            # Workschedule fields
-            'employmentcontract__work_schedule__label': ['exact', 'contains', 'icontains', ],
-
-            # EmploymentContract Type fields
-            'employmentcontract__employment_contract_type__label': ['exact', ],
 
             # Check if user is on leave
             'leave__leavedate__starts_at': ['range']
