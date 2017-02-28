@@ -737,7 +737,6 @@ class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
 class MyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'mycontract'
     factory_class = factories.ContractFactory
-    user_factory = factories.AdminFactory
     create_data = {
         'label': 'Cool contract',
         'description': 'This is a very cool contract. B-)',
@@ -755,10 +754,13 @@ class MyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.B
 
         self.company = factories.InternalCompanyFactory.create()
         self.customer = factories.CompanyFactory.create()
+
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(company=self.company, customer=self.customer)
+        contract = factory.create(company=self.company, customer=self.customer)
+        factories.ContractUserFactory.create(user=self.user, contract=contract, contract_role=factories.ContractRoleFactory.create())
+        return contract
 
     def get_create_data(self):
         self.create_data.update({

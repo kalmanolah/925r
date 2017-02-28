@@ -363,8 +363,8 @@ class MyContractViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return models.Contract.objects.all()
-        
+        return models.Contract.objects.filter(contractuser__user=user)
+
 
 class MyPerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
     """
