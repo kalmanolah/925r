@@ -734,6 +734,41 @@ class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
         return factory.create(user=self.user)
 
 
+class MyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'mycontract'
+    factory_class = factories.ContractFactory
+    user_factory = factories.AdminFactory
+    create_data = {
+        'label': 'Cool contract',
+        'description': 'This is a very cool contract. B-)',
+        'active': True,
+    }
+    update_data = {
+        'label': 'Stupid contract',
+        'description': 'This is a very stupid contract. :(',
+        'active': True,
+    }
+
+    def setUp(self):
+        self.user = factories.AdminFactory.create()
+        self.client.force_authenticate(self.user)
+
+        self.company = factories.InternalCompanyFactory.create()
+        self.customer = factories.CompanyFactory.create()
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(company=self.company, customer=self.customer)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'company': self.company.id,
+            'customer': self.customer.id,
+        })
+
+        return self.create_data
+
+
 class MyPerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'myperformance'
     factory_class = factories.PerformanceFactory

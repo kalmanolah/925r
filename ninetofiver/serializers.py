@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = auth_models.User
         fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active')
-        read_only_fields = ('id',)
+        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active')
 
     def get_display_label(self, obj):
         return str(obj)
@@ -248,6 +248,11 @@ class MyTimesheetSerializer(TimesheetSerializer):
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
+
+
+class MyContractSerializer(ContractSerializer):
+    class Meta(ContractSerializer.Meta):
+        read_only_fields = ContractSerializer.Meta.read_only_fields + ('user',)
 
 
 class MyPerformanceSerializer(PerformanceSerializer):

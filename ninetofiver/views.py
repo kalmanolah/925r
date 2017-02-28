@@ -353,6 +353,19 @@ class MyTimesheetViewSet(viewsets.ModelViewSet):
         return user.timesheet_set.exclude(closed=True)
 
 
+class MyContractViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows contracts for the currently authenticated user to be viewed or edited.
+    """
+    serializer_class = serializers.MyContractSerializer
+    filter_class = filters.ContractFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return models.Contract.objects.all()
+        
+
 class MyPerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
     """
     API endpoint that allows performances for the currently authenticated user to be viewed or edited.
