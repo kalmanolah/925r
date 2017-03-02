@@ -385,6 +385,23 @@ class ContractUserFilter(FilterSet):
         }
 
 
+class ContractDurationFilter(FilterSet):
+    order_fields = ('performance_types__label', 'activityperformance__timesheet__month', 'activityperformance__timesheet__year',
+     'active', 'contractuser_set__user', 'contractuser__user__username', 'contractuser__contract_role', 'contractuser__contract_role__label', )
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
+    class Meta:
+        model = models.Contract
+        fields = {
+            'active': ['exact', ],
+            'performance_types__label': ['exact', 'contains', 'icontains', ],
+            'contractuser__user__username': ['exact', 'contains', 'icontains', ],
+            'contractuser__contract_role__label': ['exact', 'contains', 'icontains', ],
+            'activityperformance__timesheet__month': ['exact', 'gte', 'lte', ],
+            'activityperformance__timesheet__year': ['exact', 'gte', 'lte', ],
+        }
+
+
 class ProjectEstimateFilter(FilterSet):
     order_fields = ( 'hours_estimated', 'role__label', 'project__label', 'project__description', )
     order_by = NullLastOrderingFilter(fields=order_fields)

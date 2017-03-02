@@ -469,6 +469,33 @@ class ContractRoleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
     }
 
 
+class ContractDurationAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'contractduration'
+    factory_class = factories.ContractFactory
+    user_factory = factories.AdminFactory
+
+    def setUp(self):
+        self.company = factories.InternalCompanyFactory.create()
+        self.customer = factories.CompanyFactory.create()
+
+        self.timesheet = factories.OpenTimesheetFactory.create(
+            user=factories.AdminFactory.create(),
+        )
+        self.performance_type = factories.PerformanceTypeFactory.create()
+        self.contract = factories.ContractFactory.create(
+            company=factories.InternalCompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+
+        super().setUp()
+
+    def get_object(self, factory):
+        contract = factory.create(company=self.company, customer=self.customer)
+        factories.ActivityPerformanceFactory.create(timesheet=self.timesheet, performance_type=self.performance_type, contract=self.contract)
+        return contract
+
+
+
 class ContractUserAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'contractuser'
     factory_class = factories.ContractUserFactory

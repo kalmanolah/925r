@@ -181,6 +181,20 @@ class ContractGroupSerializer(BaseSerializer):
         fields = BaseSerializer.Meta.fields + ('label', )
 
 
+class ContractDurationSerializer(BaseSerializer):
+    total_duration = serializers.SerializerMethodField()
+
+    class Meta(BaseSerializer.Meta):
+        model = models.Contract
+        fields = BaseSerializer.Meta.fields + ('label', 'description', 'customer', 'company', 'total_duration')
+
+    def get_total_duration(self, obj):
+        total = 0
+        for hours in models.ActivityPerformance.objects.filter(contract=obj.id):
+            total += hours.duration
+        return total
+
+
 class ProjectEstimateSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.ProjectEstimate
