@@ -376,6 +376,19 @@ class MyContractViewSet(viewsets.ModelViewSet):
         return models.Contract.objects.filter(contractuser__user=user)
 
 
+class MyContractDurationViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows contract durations for the currently authenticated user to be viewed.
+    """
+    serializer_class = serializers.MyContractDurationSerializer
+    filter_class = filters.MyContractDurationFilter
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get_queryset(self):
+        user = self.request.user
+        return models.Contract.objects.filter(contractuser__user=user)
+
+
 class MyPerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
     """
     API endpoint that allows performances for the currently authenticated user to be viewed or edited.

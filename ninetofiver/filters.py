@@ -386,8 +386,18 @@ class ContractUserFilter(FilterSet):
 
 
 class ContractDurationFilter(FilterSet):
-    order_fields = ('performance_types__label', 'activityperformance__timesheet__month', 'activityperformance__timesheet__year',
-     'active', 'contractuser_set__user', 'contractuser__user__username', 'contractuser__contract_role', 'contractuser__contract_role__label', )
+
+    timesheet__month = django_filters.NumberFilter(name='activityperformance__timesheet__month')
+    timesheet__month__gte = django_filters.NumberFilter(name='activityperformance__timesheet__month', lookup_expr='gte')
+    timesheet__month__lte = django_filters.NumberFilter(name='activityperformance__timesheet__month', lookup_expr='lte')
+    timesheet__year = django_filters.NumberFilter(name='activityperformance__timesheet__year', )
+    timesheet__year__gte = django_filters.NumberFilter(name='activityperformance__timesheet__year', lookup_expr='gte')
+    timesheet__year__lte = django_filters.NumberFilter(name='activityperformance__timesheet__year', lookup_expr='lte')
+    timesheet__closed = django_filters.BooleanFilter(name='activityperformance__timesheet__closed')
+
+
+    order_fields = ('performance_types__label', 'timesheet__month', 'timesheet__month__gte', 'timesheet__month__lte', 'timesheet__year', 'timesheet__year__gte', 'timesheet__year__lte', 'active',
+        'contractuser_set__user', 'contractuser__user__username', 'contractuser__contract_role', 'contractuser__contract_role__label', )
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
@@ -395,10 +405,32 @@ class ContractDurationFilter(FilterSet):
         fields = {
             'active': ['exact', ],
             'performance_types__label': ['exact', 'contains', 'icontains', ],
-            'contractuser__user__username': ['exact', 'contains', 'icontains', ],
+            'contractuser__user__username': ['exact', ],
             'contractuser__contract_role__label': ['exact', 'contains', 'icontains', ],
-            'activityperformance__timesheet__month': ['exact', 'gte', 'lte', ],
-            'activityperformance__timesheet__year': ['exact', 'gte', 'lte', ],
+        }
+
+
+class MyContractDurationFilter(FilterSet):
+
+    timesheet__month = django_filters.NumberFilter(name='activityperformance__timesheet__month')
+    timesheet__month__gte = django_filters.NumberFilter(name='activityperformance__timesheet__month', lookup_expr='gte')
+    timesheet__month__lte = django_filters.NumberFilter(name='activityperformance__timesheet__month', lookup_expr='lte')
+    timesheet__year = django_filters.NumberFilter(name='activityperformance__timesheet__year', )
+    timesheet__year__gte = django_filters.NumberFilter(name='activityperformance__timesheet__year', lookup_expr='gte')
+    timesheet__year__lte = django_filters.NumberFilter(name='activityperformance__timesheet__year', lookup_expr='lte')
+    timesheet__closed = django_filters.BooleanFilter(name='activityperformance__timesheet__closed')
+
+
+    order_fields = ('performance_types__label', 'timesheet__month', 'timesheet__month__gte', 'timesheet__month__lte', 'timesheet__year', 'timesheet__year__gte', 
+        'timesheet__year__lte', 'active', 'contractuser__contract_role', 'contractuser__contract_role__label', )
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
+    class Meta:
+        model = models.Contract
+        fields = {
+            'active': ['exact', ],
+            'performance_types__label': ['exact', 'contains', 'icontains', ],
+            'contractuser__contract_role__label': ['exact', 'contains', 'icontains', ],
         }
 
 

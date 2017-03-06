@@ -186,7 +186,7 @@ class ContractDurationSerializer(BaseSerializer):
 
     class Meta(BaseSerializer.Meta):
         model = models.Contract
-        fields = BaseSerializer.Meta.fields + ('label', 'description', 'customer', 'company', 'total_duration')
+        fields = BaseSerializer.Meta.fields + ('label', 'description', 'customer', 'company', 'total_duration',)
 
     def get_total_duration(self, obj):
         total = 0
@@ -257,7 +257,7 @@ class MyLeaveDateSerializer(LeaveDateSerializer):
 
 class MyTimesheetSerializer(TimesheetSerializer):
     class Meta(TimesheetSerializer.Meta):
-        read_only_fields = TimesheetSerializer.Meta.read_only_fields + ('user',)
+        read_only_fields = TimesheetSerializer.Meta.read_only_fields + ('user', )
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
@@ -266,7 +266,12 @@ class MyTimesheetSerializer(TimesheetSerializer):
 
 class MyContractSerializer(ContractSerializer):
     class Meta(ContractSerializer.Meta):
-        read_only_fields = ContractSerializer.Meta.read_only_fields + ('user',)
+        read_only_fields = ContractSerializer.Meta.read_only_fields + ('user', )
+
+
+class MyContractDurationSerializer(ContractDurationSerializer):
+    class Meta(ContractDurationSerializer.Meta):
+        read_only_fields = ContractDurationSerializer.Meta.read_only_fields + ('user', )
 
 
 class MyPerformanceSerializer(PerformanceSerializer):
