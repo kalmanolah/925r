@@ -92,7 +92,7 @@ class UserFilter(FilterSet):
     order_fields = ('username', 'email', 'first_name', 'last_name', 'groups', 'userrelative__name', 
         'userinfo__gender', 'userinfo__country', 'userinfo__birth_date', 'employmentcontract__started_at',
         'employmentcontract__ended_at', 'employmentcontract__company__name', 'employmentcontract__work_schedule__label',
-        'employmentcontract__employment_contract_type__label', 'leave__leavedate__starts_at',
+        'employmentcontract__employment_contract_type__label', 'leave__leavedate__starts_at', 'leave__leavedate__ends_at',
         'active_monday', 'active_tuesday', 'active_wednesday', 'active_thursday', 'active_friday',
         'active_saturday', 'active_sunday')
     order_by = NullLastOrderingFilter(fields=order_fields)
@@ -125,7 +125,8 @@ class UserFilter(FilterSet):
             'employmentcontract__company__name': ['exact', 'contains', 'icontains', ],
 
             # Check if user is on leave
-            'leave__leavedate__starts_at': ['range']
+            'leave__leavedate__starts_at': ['lte'],
+            'leave__leavedate__ends_at': ['gte'],
         }
 
 
@@ -462,13 +463,13 @@ class TimesheetFilter(FilterSet):
 
 
 class PerformanceFilter(FilterSet):
-    order_fields = ('day',)
+    order_fields = ('day', 'timesheet__month', )
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
         model = models.Performance
         fields = {
-            'day': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'day': ['exact', 'gt', 'gte', 'lt', 'lte', ],
             'timesheet__month': ['exact', 'gte', 'lte', ],
         }
 
