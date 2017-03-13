@@ -463,7 +463,7 @@ class TimesheetFilter(FilterSet):
 
 
 class PerformanceFilter(FilterSet):
-    order_fields = ('day', 'timesheet__month', )
+    order_fields = ('day', 'timesheet__month', 'timesheet__year', )
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
@@ -471,6 +471,7 @@ class PerformanceFilter(FilterSet):
         fields = {
             'day': ['exact', 'gt', 'gte', 'lt', 'lte', ],
             'timesheet__month': ['exact', 'gte', 'lte', ],
+            'timesheet__year': ['exact', 'gte', 'lte', ],
         }
 
 
