@@ -469,6 +469,7 @@ class PerformanceFilter(FilterSet):
         model = models.Performance
         fields = {
             'day': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'timesheet__month': ['exact', 'gte', 'lte', ],
         }
 
 
