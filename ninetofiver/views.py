@@ -343,72 +343,78 @@ class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
     def get_queryset(self):
          return models.LeaveDate.objects.all()
 
-    def post(self, request, *args, **kwargs):
+    def tessst(self, dink, request):
         leavedates = request.data
-        user = request.user
 
         start = datetime.strptime(leavedates['starts_at'], "%Y-%m-%dT%H:%M:%SZ")
         end = datetime.strptime(leavedates['ends_at'], "%Y-%m-%dT%H:%M:%SZ")
         leave = int(leavedates['leave'])
         timesheet = int(leavedates['timesheet'])
 
-        #If leavedates already exist for this leave object, we need patch/put instead of post
-        if(models.LeaveDate.objects.filter(leave=leave)):
-            return Response('Leavedates are already assigned to this leave object', status = status.HTTP_400_BAD_REQUEST)
+        #If the leave spans across one day only
+        if start.date() == end.date():
+            #Create leavedate
+            ld = models.LeaveDate.objects.create(
+                leave = models.Leave.objects.get(pk=leave),
+                timesheet = models.Timesheet.objects.get(pk=timesheet),
+                starts_at = start,
+                ends_at = end
+            )
+            return Response( [leavedates], status = status.HTTP_201_CREATED )
+        #If leave spans across several days
         else:
-            #If the leave spans across one day only
-            if start.date() == end.date():
-                #Create leavedate
-                ld = models.LeaveDate.objects.create(
+            days = (end-start).days + 1
+            new_start = start
+            new_end = end.replace(day=(start.day), hour=(23), minute=(59), second=(59))
+
+            # Create all leavedates ranging from the start to the end
+            for x in range(0, days):
+                models.LeaveDate.objects.create(
                     leave = models.Leave.objects.get(pk=leave),
                     timesheet = models.Timesheet.objects.get(pk=timesheet),
-                    starts_at = start,
-                    ends_at = end
+                    starts_at = new_start,
+                    ends_at = new_end
                 )
-                return Response( [leavedates], status = status.HTTP_201_CREATED )
-            #If leave spans across several days
-            else:
-                days = (end-start).days + 1
-                new_start = start
-                new_end = end.replace(day=(start.day), hour=(23), minute=(59))
 
-                # Create all leavedates ranging from the start to the end
-                for x in range(0, days):
-                    models.LeaveDate.objects.create(
-                        leave = models.Leave.objects.get(pk=leave),
-                        timesheet = models.Timesheet.objects.get(pk=timesheet),
-                        starts_at = new_start,
-                        ends_at = new_end
-                    )
+                new_start += timedelta(days=1)
+                new_end += timedelta(days=1)
+                #After initial run, set start time on begin of day
+                if x < 1:
+                    new_start = new_start.replace(hour=(0), minute=(0), second=(0))
+                #Set time to original end when second to last has run
+                if x == days - 2:
+                    new_end = new_end.replace(hour=(end.hour), minute=(end.minute), second=(end.second))
 
-                    new_start += timedelta(days=1)
-                    new_end += timedelta(days=1)
-                    #After initial run, set start time on begin of day
-                    if x < 1:
-                        new_start = new_start.replace(hour=(0), minute=(0))
-                    #Set time to original end when second to last has run
-                    if x == days - 2:
-                        new_end = new_end.replace(hour=(end.hour), minute=(end.minute))
+            my_list = list()
+            for obj in models.LeaveDate.objects.filter(leave=leave):
+                my_list.append({
+                    'id': obj.id, 
+                    'created_at': obj.created_at,
+                    'updated_at': obj.updated_at,
+                    'leave': obj.leave_id, 
+                    'timesheet': obj.timesheet_id, 
+                    'starts_at': obj.starts_at,
+                    'ends_at': obj.ends_at
+                })
 
-                my_list = list()
-                for obj in models.LeaveDate.objects.filter(leave=leave):
-                    my_list.append({
-                        'id': obj.id, 
-                        'created_at': obj.created_at,
-                        'updated_at': obj.updated_at,
-                        'leave': obj.leave_id, 
-                        'timesheet': obj.timesheet_id, 
-                        'starts_at': obj.starts_at,
-                        'ends_at': obj.ends_at
-                    })
+            serializer = dink.get_serializer(
+                data = my_list, 
+                many = True
+            )
+            serializer.is_valid(raise_exception=True)
+            return Response(serializer, status = status.HTTP_201_CREATED)
 
-                serializer = self.get_serializer(
-                    data = my_list, 
-                    many = True
-                )
-                serializer.is_valid(raise_exception=True)
-                return Response(serializer, status = status.HTTP_201_CREATED)
+    def patch(self, request, format=None):
+        data = request.data
+        models.LeaveDate.objects.filter(leave=int(data['leave'])).delete()
+        return self.tessst(self, self.request)
 
+    def post(self, request, format=None):
+        #Return an error saying leavedates already exist for the leave object, or return the created objects
+        if models.LeaveDate.objects.filter(leave=int(request.data['leave'])):
+            return Response('Leavedates are already assigned to this leave object', status = status.HTTP_400_BAD_REQUEST)
+        else:
+            return self.tessst(self, request)
 
 class MyLeaveViewSet(viewsets.ModelViewSet):
     """
