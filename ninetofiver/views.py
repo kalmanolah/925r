@@ -2,6 +2,10 @@ from django.contrib.auth import models as auth_models
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
+
+import logging
+from datetime import datetime, timedelta
+
 from ninetofiver import filters
 from ninetofiver import models
 from ninetofiver import serializers
@@ -9,8 +13,10 @@ from ninetofiver.viewsets import GenericHierarchicalReadOnlyViewSet
 from rest_framework import parsers
 from rest_framework import permissions
 from rest_framework import response
+from rest_framework import status
 from rest_framework import schemas
 from rest_framework import viewsets
+from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.decorators import permission_classes
 from rest_framework.decorators import renderer_classes
@@ -39,7 +45,7 @@ def account_view(request):
 @permission_classes((permissions.IsAuthenticated,))
 def schema_view(request):
     """API documentation."""
-    generator = schemas.SchemaGenerator(title='ninetofiver API')
+    generator = schemas.SchemaGenerator(title='Ninetofiver API')
     return response.Response(generator.get_schema(request=request))
 
 
@@ -322,6 +328,86 @@ class MyUserServiceAPIView(APIView):
         entity = request.user
         data = serializers.MyUserSerializer(entity, context={'request': request}).data
         return Response(data)
+
+
+class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
+    """
+    Set the leavedates for the corresponding leave.
+    """
+    queryset = models.LeaveDate.objects.none()
+    serializer_class = serializers.LeaveDateSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    logging.basicConfig(filename='example.log',level=logging.DEBUG)
+
+    def get_queryset(self):
+         return models.LeaveDate.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        leavedates = request.data
+        user = request.user
+
+        start = datetime.strptime(leavedates['starts_at'], "%Y-%m-%dT%H:%M:%SZ")
+        end = datetime.strptime(leavedates['ends_at'], "%Y-%m-%dT%H:%M:%SZ")
+        leave = int(leavedates['leave'])
+        timesheet = int(leavedates['timesheet'])
+
+        #If leavedates already exist for this leave object, we need patch/put instead of post
+        if(models.LeaveDate.objects.filter(leave=leave)):
+            return Response('Leavedates are already assigned to this leave object', status = status.HTTP_400_BAD_REQUEST)
+        else:
+            #If the leave spans across one day only
+            if start.date() == end.date():
+                #Create leavedate
+                ld = models.LeaveDate.objects.create(
+                    leave = models.Leave.objects.get(pk=leave),
+                    timesheet = models.Timesheet.objects.get(pk=timesheet),
+                    starts_at = start,
+                    ends_at = end
+                )
+                return Response( [leavedates], status = status.HTTP_201_CREATED )
+            #If leave spans across several days
+            else:
+                days = (end-start).days + 1
+                new_start = start
+                new_end = end.replace(day=(start.day), hour=(23), minute=(59))
+
+                # Create all leavedates ranging from the start to the end
+                for x in range(0, days):
+                    models.LeaveDate.objects.create(
+                        leave = models.Leave.objects.get(pk=leave),
+                        timesheet = models.Timesheet.objects.get(pk=timesheet),
+                        starts_at = new_start,
+                        ends_at = new_end
+                    )
+
+                    new_start += timedelta(days=1)
+                    new_end += timedelta(days=1)
+                    #After initial run, set start time on begin of day
+                    if x < 1:
+                        new_start = new_start.replace(hour=(0), minute=(0))
+                    #Set time to original end when second to last has run
+                    if x == days - 2:
+                        new_end = new_end.replace(hour=(end.hour), minute=(end.minute))
+
+                my_list = list()
+                for obj in models.LeaveDate.objects.filter(leave=leave):
+                    my_list.append({
+                        'id': obj.id, 
+                        'created_at': obj.created_at,
+                        'updated_at': obj.updated_at,
+                        'leave': obj.leave_id, 
+                        'timesheet': obj.timesheet_id, 
+                        'starts_at': obj.starts_at,
+                        'ends_at': obj.ends_at
+                    })
+
+                serializer = self.get_serializer(
+                    data = my_list, 
+                    many = True
+                )
+                serializer.is_valid(raise_exception=True)
+                return Response(serializer, status = status.HTTP_201_CREATED)
 
 
 class MyLeaveViewSet(viewsets.ModelViewSet):
