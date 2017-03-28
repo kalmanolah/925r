@@ -56,6 +56,26 @@ class BaseSerializer(serializers.ModelSerializer):
 #         return serializer(value, context={'request': None}).data
 
 
+class LeaveRequestSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.LeaveDate
+        fields = BaseSerializer.Meta.fields + ('leave', 'timesheet', 'starts_at', 'ends_at')
+        
+    def validate(self, data):
+        """ Does nothing (rip) because validation is handled before this gets called
+        The view handles a .full_clean() to force validation BEFORE save, instead of after
+        Save after (here) would generate ridiculous duplicate-errors """
+        return data
+
+    def get_type(self, obj):
+        """ Object is an ordered list, only way to get the class name 'relatively clean' """
+        return self.Meta.model.__name__
+
+    def get_display_label(self, obj):
+        """ Repeats the __str__ method from models.LeaveDate, because the obj is an orderedlist & can't reach it """
+        return '%s - %s' % (dict(obj)['starts_at'].strftime('%Y-%m-%d %H:%M:%S'), dict(obj)['ends_at'].strftime('%Y-%m-%d %H:%M:%S'))
+
+
 class CompanySerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Company

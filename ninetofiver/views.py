@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 
-import logging
 from datetime import datetime, timedelta
+from django.utils import timezone
 
 from ninetofiver import filters
 from ninetofiver import models
@@ -334,22 +334,27 @@ class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
     """
     Set the leavedates for the corresponding leave.
     """
-    queryset = models.LeaveDate.objects.none()
-    serializer_class = serializers.LeaveDateSerializer
+    queryset = models.LeaveDate.objects.all()
+    serializer_class = serializers.LeaveRequestSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    logging.basicConfig(filename='example.log',level=logging.DEBUG)
+    def create_leavedates(self, this, request):
+        """ Used to handle logic and return the correct response. """
 
-    def get_queryset(self):
-         return models.LeaveDate.objects.all()
-
-    def tessst(self, dink, request):
+        user = request.user
         leavedates = request.data
 
-        start = datetime.strptime(leavedates['starts_at'], "%Y-%m-%dT%H:%M:%SZ")
-        end = datetime.strptime(leavedates['ends_at'], "%Y-%m-%dT%H:%M:%SZ")
+        # Make the datetimes aware of the timezone
+        start = timezone.make_aware( 
+            (datetime.strptime(leavedates['starts_at'], "%Y-%m-%dT%H:%M:%SZ")), 
+            timezone.get_current_timezone()
+        )
+        end = timezone.make_aware(
+            (datetime.strptime(leavedates['ends_at'], "%Y-%m-%dT%H:%M:%SZ")),
+            timezone.get_current_timezone()
+        )
         leave = int(leavedates['leave'])
-        timesheet = int(leavedates['timesheet'])
+        # timesheet = int(leavedates['timesheet'])    
 
         #If the leave spans across one day only
         if start.date() == end.date():
@@ -361,23 +366,51 @@ class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
                 ends_at = end
             )
             return Response( [leavedates], status = status.HTTP_201_CREATED )
+
         #If leave spans across several days
         else:
             days = (end-start).days + 1
             new_start = start
-            new_end = end.replace(day=(start.day), hour=(23), minute=(59), second=(59))
+            new_end = end.replace(year=(start.year), month=(start.month), day=(start.day), hour=(23), minute=(59), second=(59))
+            
+            my_list = list()
 
             # Create all leavedates ranging from the start to the end
             for x in range(0, days):
-                models.LeaveDate.objects.create(
-                    leave = models.Leave.objects.get(pk=leave),
-                    timesheet = models.Timesheet.objects.get(pk=timesheet),
-                    starts_at = new_start,
-                    ends_at = new_end
+                # Get timesheet, or create it
+                timesheet, created = models.Timesheet.objects.get_or_create(
+                    user=user,
+                    year=new_start.year,
+                    month=new_start.month
+                ) 
+
+                temp = models.LeaveDate(
+                    leave=models.Leave.objects.get(pk=leave),
+                    timesheet=timesheet,
+                    starts_at=new_start,
+                    ends_at=new_end
                 )
+
+                # Call validation on the object
+                temp.full_clean()
+
+                # Save the object
+                temp.save()
+
+                # Convert object into a list because serializer needs a list
+                my_list.append({
+                    'id': temp.id, 
+                    'created_at': temp.created_at,
+                    'updated_at': temp.updated_at,
+                    'leave': temp.leave_id, 
+                    'timesheet': temp.timesheet_id, 
+                    'starts_at': temp.starts_at,
+                    'ends_at': temp.ends_at
+                })
 
                 new_start += timedelta(days=1)
                 new_end += timedelta(days=1)
+
                 #After initial run, set start time on begin of day
                 if x < 1:
                     new_start = new_start.replace(hour=(0), minute=(0), second=(0))
@@ -385,36 +418,23 @@ class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
                 if x == days - 2:
                     new_end = new_end.replace(hour=(end.hour), minute=(end.minute), second=(end.second))
 
-            my_list = list()
-            for obj in models.LeaveDate.objects.filter(leave=leave):
-                my_list.append({
-                    'id': obj.id, 
-                    'created_at': obj.created_at,
-                    'updated_at': obj.updated_at,
-                    'leave': obj.leave_id, 
-                    'timesheet': obj.timesheet_id, 
-                    'starts_at': obj.starts_at,
-                    'ends_at': obj.ends_at
-                })
 
-            serializer = dink.get_serializer(
-                data = my_list, 
-                many = True
-            )
+            serializer = this.get_serializer(data=my_list, many=True)
+            #Empty call, does nothing (rip)
             serializer.is_valid(raise_exception=True)
-            return Response(serializer, status = status.HTTP_201_CREATED)
+
+            return Response(serializer.data, status = status.HTTP_201_CREATED)
 
     def patch(self, request, format=None):
-        data = request.data
-        models.LeaveDate.objects.filter(leave=int(data['leave'])).delete()
-        return self.tessst(self, self.request)
+        models.LeaveDate.objects.filter(leave=int(request.data['leave'])).delete()
+        return self.create_leavedates(self, request)
 
     def post(self, request, format=None):
         #Return an error saying leavedates already exist for the leave object, or return the created objects
         if models.LeaveDate.objects.filter(leave=int(request.data['leave'])):
             return Response('Leavedates are already assigned to this leave object', status = status.HTTP_400_BAD_REQUEST)
         else:
-            return self.tessst(self, request)
+            return self.create_leavedates(self, request)
 
 class MyLeaveViewSet(viewsets.ModelViewSet):
     """
