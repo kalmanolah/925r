@@ -6,9 +6,9 @@ from django.utils.timezone import utc
 from ninetofiver import factories
 from decimal import Decimal
 from datetime import timedelta
-import datetime
 import tempfile
 
+import datetime
 
 now = datetime.date.today()
 
@@ -740,6 +740,50 @@ class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
         })
 
         return self.create_data
+
+
+class MyLeaveRequestsServiceAPITestcase(APITestCase):
+    def test_create_leave_dates(self):
+        """
+        Ensure we can create the leave dates for a leave object
+        """
+        user = factories.AdminFactory.create()
+        self.client.force_authenticate(user)
+
+        leave = factories.LeaveFactory.create(
+            user = user,
+            leave_type = factories.LeaveTypeFactory.create() 
+        )
+
+        timesheet = factories.OpenTimesheetFactory.create(
+            user = user,
+            year = now.year,
+            month = now.month
+        )
+
+
+        create_data = {
+            'leave': leave.id,
+            'timesheet': timesheet.id,
+            'starts_at': datetime.datetime(now.year, now.month, 12, 7, 34, 34, tzinfo=utc),
+            'ends_at': datetime.datetime(now.year, now.month, 14, 8, 34, 34, tzinfo=utc)
+        }
+
+        update_data = {
+            'leave': leave.id,
+            'timesheet': timesheet.id,
+            'starts_at': datetime.datetime(now.year, now.month, 10, 7, 34, 34, tzinfo=utc),
+            'ends_at': datetime.datetime(now.year, now.month, 16, 8, 34, 34, tzinfo=utc)
+        }
+
+        url = reverse('my_leave_request_service')
+
+        postResponse = self.client.post(url, create_data, format='json')
+        self.assertEqual(postResponse.status_code, status.HTTP_201_CREATED)
+
+        patchResponse = self.client.patch(url, update_data, format='json')
+        self.assertEqual(patchResponse.status_code, status.HTTP_201_CREATED)
+
 
 
 class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
