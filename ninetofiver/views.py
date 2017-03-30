@@ -5,6 +5,7 @@ from django.shortcuts import render
 
 from datetime import datetime, timedelta
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 from ninetofiver import filters
 from ninetofiver import models
@@ -392,7 +393,10 @@ class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
                 )
 
                 # Call validation on the object
-                temp.full_clean()
+                try:
+                    temp.full_clean()
+                except ValidationError as e:
+                    return Response(e, status = status.HTTP_400_BAD_REQUEST)
 
                 # Save the object
                 temp.save()
