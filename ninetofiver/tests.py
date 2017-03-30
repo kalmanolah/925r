@@ -781,8 +781,20 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         postResponse = self.client.post(url, create_data, format='json')
         self.assertEqual(postResponse.status_code, status.HTTP_201_CREATED)
 
+        postDuplicateLeaveResponse = self.client.post(url, update_data, format='json')
+        self.assertEqual(postDuplicateLeaveResponse.status_code, status.HTTP_400_BAD_REQUEST)
+
         patchResponse = self.client.patch(url, update_data, format='json')
         self.assertEqual(patchResponse.status_code, status.HTTP_201_CREATED)
+
+        newLeave = factories.LeaveFactory.create(
+            user = user,
+            leave_type = factories.LeaveTypeFactory.create() 
+        )
+        update_data['leave'] = newLeave.id
+
+        patchDuplicateDateResponse = self.client.patch(url, update_data, format='json')
+        self.assertEqual(patchDuplicateDateResponse.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 
