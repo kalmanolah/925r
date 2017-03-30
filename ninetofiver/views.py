@@ -346,11 +346,11 @@ class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
 
         # Make the datetimes aware of the timezone
         start = timezone.make_aware( 
-            (datetime.strptime(leavedates['starts_at'], "%Y-%m-%dT%H:%M:%SZ")), 
+            (datetime.strptime(leavedates['starts_at'], "%Y-%m-%dT%H:%M:%S")), 
             timezone.get_current_timezone()
         )
         end = timezone.make_aware(
-            (datetime.strptime(leavedates['ends_at'], "%Y-%m-%dT%H:%M:%SZ")),
+            (datetime.strptime(leavedates['ends_at'], "%Y-%m-%dT%H:%M:%S")),
             timezone.get_current_timezone()
         )
         leave = int(leavedates['leave'])

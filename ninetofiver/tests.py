@@ -765,15 +765,15 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         create_data = {
             'leave': leave.id,
             'timesheet': timesheet.id,
-            'starts_at': datetime.datetime(now.year, now.month, 12, 7, 34, 34, tzinfo=utc),
-            'ends_at': datetime.datetime(now.year, now.month, 14, 8, 34, 34, tzinfo=utc)
+            'starts_at': datetime.datetime(now.year, now.month, 12, 7, 34, 34),
+            'ends_at': datetime.datetime(now.year, now.month, 14, 8, 34, 34)
         }
 
         update_data = {
             'leave': leave.id,
             'timesheet': timesheet.id,
-            'starts_at': datetime.datetime(now.year, now.month, 10, 7, 34, 34, tzinfo=utc),
-            'ends_at': datetime.datetime(now.year, now.month, 16, 8, 34, 34, tzinfo=utc)
+            'starts_at': datetime.datetime(now.year, now.month, 10, 7, 34, 34),
+            'ends_at': datetime.datetime(now.year, now.month, 16, 8, 34, 34)
         }
 
         url = reverse('my_leave_request_service')
