@@ -396,6 +396,7 @@ class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
                 try:
                     temp.full_clean()
                 except ValidationError as e:
+                    models.Leave.objects.filter(pk=leave).delete()
                     return Response(e, status = status.HTTP_400_BAD_REQUEST)
 
                 # Save the object
