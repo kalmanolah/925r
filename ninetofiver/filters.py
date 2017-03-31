@@ -165,6 +165,7 @@ class EmploymentContractFilter(FilterSet):
         fields = {
             'started_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'ended_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'user': ['exact']
         }
 
 
