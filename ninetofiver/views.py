@@ -490,7 +490,7 @@ class MyContractViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return models.Contract.objects.filter(contractuser__user=user)
+        return models.Contract.objects.filter(contractuser__user=user).distinct()
 
 
 class MyContractDurationViewSet(viewsets.ReadOnlyModelViewSet):
@@ -503,7 +503,7 @@ class MyContractDurationViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return models.Contract.objects.filter(contractuser__user=user)
+        return models.Contract.objects.filter(contractuser__user=user).distinct()
 
 
 class MyPerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
