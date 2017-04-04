@@ -2,6 +2,11 @@ from django.contrib.auth import models as auth_models
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
+
+from datetime import datetime, timedelta
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+
 from ninetofiver import filters
 from ninetofiver import models
 from ninetofiver import serializers
@@ -9,8 +14,10 @@ from ninetofiver.viewsets import GenericHierarchicalReadOnlyViewSet
 from rest_framework import parsers
 from rest_framework import permissions
 from rest_framework import response
+from rest_framework import status
 from rest_framework import schemas
 from rest_framework import viewsets
+from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.decorators import permission_classes
 from rest_framework.decorators import renderer_classes
@@ -39,7 +46,7 @@ def account_view(request):
 @permission_classes((permissions.IsAuthenticated,))
 def schema_view(request):
     """API documentation."""
-    generator = schemas.SchemaGenerator(title='ninetofiver API')
+    generator = schemas.SchemaGenerator(title='Ninetofiver API')
     return response.Response(generator.get_schema(request=request))
 
 
@@ -237,6 +244,16 @@ class ContractGroupViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
+class ContractDurationViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows contract durations to be viewed.
+    """
+    queryset = models.Contract.objects.all()
+    serializer_class = serializers.ContractDurationSerializer
+    filter_class = filters.ContractDurationFilter
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+
+
 class ProjectEstimateViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows project estimates to be viewed or edited.
@@ -314,6 +331,116 @@ class MyUserServiceAPIView(APIView):
         return Response(data)
 
 
+class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
+    """
+    Set the leavedates for the corresponding leave.
+    """
+    queryset = models.LeaveDate.objects.all()
+    serializer_class = serializers.LeaveRequestSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def create_leavedates(self, this, request):
+        """ Used to handle logic and return the correct response. """
+
+        user = request.user
+        leavedates = request.data
+
+        # Make the datetimes aware of the timezone
+        start = timezone.make_aware( 
+            (datetime.strptime(leavedates['starts_at'], "%Y-%m-%dT%H:%M:%S")), 
+            timezone.get_current_timezone()
+        )
+        end = timezone.make_aware(
+            (datetime.strptime(leavedates['ends_at'], "%Y-%m-%dT%H:%M:%S")),
+            timezone.get_current_timezone()
+        )
+        leave = int(leavedates['leave'])
+        # timesheet = int(leavedates['timesheet'])    
+
+        #If the leave spans across one day only
+        if start.date() == end.date():
+            #Create leavedate
+            ld = models.LeaveDate.objects.create(
+                leave = models.Leave.objects.get(pk=leave),
+                timesheet = models.Timesheet.objects.get(pk=timesheet),
+                starts_at = start,
+                ends_at = end
+            )
+            return Response( [leavedates], status = status.HTTP_201_CREATED )
+
+        #If leave spans across several days
+        else:
+            days = (end-start).days + 1
+            new_start = start
+            new_end = end.replace(year=(start.year), month=(start.month), day=(start.day), hour=(23), minute=(59), second=(59))
+            
+            my_list = list()
+
+            # Create all leavedates ranging from the start to the end
+            for x in range(0, days):
+                # Get timesheet, or create it
+                timesheet, created = models.Timesheet.objects.get_or_create(
+                    user=user,
+                    year=new_start.year,
+                    month=new_start.month
+                ) 
+
+                temp = models.LeaveDate(
+                    leave=models.Leave.objects.get(pk=leave),
+                    timesheet=timesheet,
+                    starts_at=new_start,
+                    ends_at=new_end
+                )
+
+                # Call validation on the object
+                try:
+                    temp.full_clean()
+                except ValidationError as e:
+                    models.Leave.objects.filter(pk=leave).delete()
+                    return Response(e, status = status.HTTP_400_BAD_REQUEST)
+
+                # Save the object
+                temp.save()
+
+                # Convert object into a list because serializer needs a list
+                my_list.append({
+                    'id': temp.id, 
+                    'created_at': temp.created_at,
+                    'updated_at': temp.updated_at,
+                    'leave': temp.leave_id, 
+                    'timesheet': temp.timesheet_id, 
+                    'starts_at': temp.starts_at,
+                    'ends_at': temp.ends_at
+                })
+
+                new_start += timedelta(days=1)
+                new_end += timedelta(days=1)
+
+                #After initial run, set start time on begin of day
+                if x < 1:
+                    new_start = new_start.replace(hour=(0), minute=(0), second=(0))
+                #Set time to original end when second to last has run
+                if x == days - 2:
+                    new_end = new_end.replace(hour=(end.hour), minute=(end.minute), second=(end.second))
+
+
+            serializer = this.get_serializer(data=my_list, many=True)
+            #Empty call, does nothing (rip)
+            serializer.is_valid(raise_exception=True)
+
+            return Response(serializer.data, status = status.HTTP_201_CREATED)
+
+    def patch(self, request, format=None):
+        models.LeaveDate.objects.filter(leave=int(request.data['leave'])).delete()
+        return self.create_leavedates(self, request)
+
+    def post(self, request, format=None):
+        #Return an error saying leavedates already exist for the leave object, or return the created objects
+        if models.LeaveDate.objects.filter(leave=int(request.data['leave'])):
+            return Response('Leavedates are already assigned to this leave object', status = status.HTTP_400_BAD_REQUEST)
+        else:
+            return self.create_leavedates(self, request)
+
 class MyLeaveViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows leaves for the currently authenticated user to be viewed or edited.
@@ -351,6 +478,32 @@ class MyTimesheetViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return user.timesheet_set.exclude(closed=True)
+
+
+class MyContractViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows contracts for the currently authenticated user to be viewed or edited.
+    """
+    serializer_class = serializers.MyContractSerializer
+    filter_class = filters.ContractFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return models.Contract.objects.filter(contractuser__user=user)
+
+
+class MyContractDurationViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows contract durations for the currently authenticated user to be viewed.
+    """
+    serializer_class = serializers.MyContractDurationSerializer
+    filter_class = filters.MyContractDurationFilter
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get_queryset(self):
+        user = self.request.user
+        return models.Contract.objects.filter(contractuser__user=user)
 
 
 class MyPerformanceViewSet(GenericHierarchicalReadOnlyViewSet):

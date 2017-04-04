@@ -556,7 +556,7 @@ class LeaveDate(BaseModel):
                         ends_at__gte=starts_at,
                     )
                 )
-
+                
                 if instance_id:
                     existing = existing.exclude(id=instance_id)
 

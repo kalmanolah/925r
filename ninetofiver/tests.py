@@ -6,9 +6,9 @@ from django.utils.timezone import utc
 from ninetofiver import factories
 from decimal import Decimal
 from datetime import timedelta
-import datetime
 import tempfile
 
+import datetime
 
 now = datetime.date.today()
 
@@ -469,6 +469,33 @@ class ContractRoleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
     }
 
 
+class ContractDurationAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'contractduration'
+    factory_class = factories.ContractFactory
+    user_factory = factories.AdminFactory
+
+    def setUp(self):
+        self.company = factories.InternalCompanyFactory.create()
+        self.customer = factories.CompanyFactory.create()
+
+        self.timesheet = factories.OpenTimesheetFactory.create(
+            user=factories.AdminFactory.create(),
+        )
+        self.performance_type = factories.PerformanceTypeFactory.create()
+        self.contract = factories.ContractFactory.create(
+            company=factories.InternalCompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+
+        super().setUp()
+
+    def get_object(self, factory):
+        contract = factory.create(company=self.company, customer=self.customer)
+        factories.ActivityPerformanceFactory.create(timesheet=self.timesheet, performance_type=self.performance_type, contract=self.contract)
+        return contract
+
+
+
 class ContractUserAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'contractuser'
     factory_class = factories.ContractUserFactory
@@ -715,6 +742,62 @@ class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
         return self.create_data
 
 
+class MyLeaveRequestsServiceAPITestcase(APITestCase):
+    def test_create_leave_dates(self):
+        """
+        Ensure we can create the leave dates for a leave object
+        """
+        user = factories.AdminFactory.create()
+        self.client.force_authenticate(user)
+
+        leave = factories.LeaveFactory.create(
+            user = user,
+            leave_type = factories.LeaveTypeFactory.create() 
+        )
+
+        timesheet = factories.OpenTimesheetFactory.create(
+            user = user,
+            year = now.year,
+            month = now.month
+        )
+
+
+        create_data = {
+            'leave': leave.id,
+            'timesheet': timesheet.id,
+            'starts_at': datetime.datetime(now.year, now.month, 12, 7, 34, 34),
+            'ends_at': datetime.datetime(now.year, now.month, 14, 8, 34, 34)
+        }
+
+        update_data = {
+            'leave': leave.id,
+            'timesheet': timesheet.id,
+            'starts_at': datetime.datetime(now.year, now.month, 10, 7, 34, 34),
+            'ends_at': datetime.datetime(now.year, now.month, 16, 8, 34, 34)
+        }
+
+        url = reverse('my_leave_request_service')
+
+        postResponse = self.client.post(url, create_data, format='json')
+        self.assertEqual(postResponse.status_code, status.HTTP_201_CREATED)
+
+        postDuplicateLeaveResponse = self.client.post(url, update_data, format='json')
+        self.assertEqual(postDuplicateLeaveResponse.status_code, status.HTTP_400_BAD_REQUEST)
+
+        patchResponse = self.client.patch(url, update_data, format='json')
+        self.assertEqual(patchResponse.status_code, status.HTTP_201_CREATED)
+
+        newLeave = factories.LeaveFactory.create(
+            user = user,
+            leave_type = factories.LeaveTypeFactory.create() 
+        )
+        update_data['leave'] = newLeave.id
+
+        patchDuplicateDateResponse = self.client.patch(url, update_data, format='json')
+        self.assertEqual(patchDuplicateDateResponse.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+
 class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'mytimesheet'
     factory_class = factories.OpenTimesheetFactory
@@ -732,6 +815,71 @@ class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
 
     def get_object(self, factory):
         return factory.create(user=self.user)
+
+
+class MyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'mycontract'
+    factory_class = factories.ContractFactory
+    create_data = {
+        'label': 'Cool contract',
+        'description': 'This is a very cool contract. B-)',
+        'active': True,
+    }
+    update_data = {
+        'label': 'Stupid contract',
+        'description': 'This is a very stupid contract. :(',
+        'active': True,
+    }
+
+    def setUp(self):
+        self.user = factories.AdminFactory.create()
+        self.client.force_authenticate(self.user)
+
+        self.company = factories.InternalCompanyFactory.create()
+        self.customer = factories.CompanyFactory.create()
+
+        super().setUp()
+
+    def get_object(self, factory):
+        contract = factory.create(company=self.company, customer=self.customer)
+        factories.ContractUserFactory.create(user=self.user, contract=contract, contract_role=factories.ContractRoleFactory.create())
+        return contract
+
+    def get_create_data(self):
+        self.create_data.update({
+            'company': self.company.id,
+            'customer': self.customer.id,
+        })
+
+        return self.create_data
+
+
+class MyContractDurationAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'mycontractduration'
+    factory_class = factories.ContractFactory
+
+    def setUp(self):
+        self.user = factories.AdminFactory.create()
+        self.client.force_authenticate(self.user)
+
+        self.company = factories.InternalCompanyFactory.create()
+        self.customer = factories.CompanyFactory.create()
+
+        self.timesheet = factories.OpenTimesheetFactory.create(
+            user=self.user,
+        )
+        self.performance_type = factories.PerformanceTypeFactory.create()
+        self.contract = factories.ContractFactory.create(
+            company=factories.InternalCompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        super().setUp()
+
+    def get_object(self, factory):
+        contract = self.contract
+        factories.ContractUserFactory.create(user=self.user, contract=contract, contract_role=factories.ContractRoleFactory.create())
+        factories.ActivityPerformanceFactory.create(timesheet=self.timesheet, performance_type=self.performance_type, contract=self.contract)
+        return contract
 
 
 class MyPerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):

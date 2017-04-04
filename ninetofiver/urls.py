@@ -36,6 +36,7 @@ router.register(r'contracts', views.ContractViewSet)
 router.register(r'contract_roles', views.ContractRoleViewSet)
 router.register(r'contract_users', views.ContractUserViewSet)
 router.register(r'contract_groups', views.ContractGroupViewSet)
+router.register(r'contract_durations', views.ContractDurationViewSet, base_name='contractduration')
 router.register(r'timesheets', views.TimesheetViewSet)
 router.register(r'performances/activity', views.ActivityPerformanceViewSet)
 router.register(r'performances/standby', views.StandbyPerformanceViewSet)
@@ -45,6 +46,8 @@ router.register(r'attachments', views.AttachmentViewSet)
 router.register(r'my_leaves', views.MyLeaveViewSet, base_name='myleave')
 router.register(r'my_leave_dates', views.MyLeaveDateViewSet, base_name='myleavedate')
 router.register(r'my_timesheets', views.MyTimesheetViewSet, base_name='mytimesheet')
+router.register(r'my_contracts', views.MyContractViewSet, base_name='mycontract')
+router.register(r'my_contract_durations', views.MyContractDurationViewSet, base_name='mycontractduration')
 router.register(r'my_performances/activity', views.MyActivityPerformanceViewSet, base_name='myactivityperformance')
 router.register(r'my_performances/standby', views.MyStandbyPerformanceViewSet, base_name='mystandbyperformance')
 router.register(r'my_performances', views.MyPerformanceViewSet, base_name='myperformance')
@@ -56,6 +59,7 @@ urlpatterns += [
     url(r'^$', views.home_view, name='home'),
     url(r'^api/v1/', include(router.urls + [
         url(r'^services/my_user/$', views.MyUserServiceAPIView.as_view(), name='my_user_service'),
+        url(r'^services/my_leave_request/$', views.MyLeaveRequestServiceAPIView.as_view(), name='my_leave_request_service'),
         url(r'^services/download_attachment/(?P<slug>[A-Za-z0-9_-]+)/$', ObjectDownloadView.as_view(model=models.Attachment, file_field='file'), name='download_attachment_service'),
     ])),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
