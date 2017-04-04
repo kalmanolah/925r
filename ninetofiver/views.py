@@ -331,7 +331,7 @@ class MyUserServiceAPIView(APIView):
         return Response(data)
 
 
-class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
+class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
     """
     Set the leavedates for the corresponding leave.
     """
