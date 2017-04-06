@@ -101,7 +101,7 @@ class EmploymentContractViewSet(viewsets.ModelViewSet):
 
 class WorkScheduleViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows employment contracts to be viewed or edited.
+    API endpoint that allows workschedules to be viewed or edited.
     """
     queryset = models.WorkSchedule.objects.all()
     serializer_class = serializers.WorkScheduleSerializer
@@ -560,3 +560,16 @@ class MyAttachmentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return user.attachment_set.all()
+
+
+class MyWorkScheduleViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows workschedules for the currently authenticated user to be viewed or edited.
+    """
+    serializer_class = serializers.MyWorkScheduleSerializer
+    filter_class = filters.WorkScheduleFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return models.WorkSchedule.objects.filter(employmentcontract__user=user)
