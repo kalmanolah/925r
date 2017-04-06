@@ -214,7 +214,7 @@ class EmploymentContract(BaseModel):
     user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
     company = models.ForeignKey(Company, on_delete=models.PROTECT, limit_choices_to=company_choices)
     employment_contract_type = models.ForeignKey(EmploymentContractType, on_delete=models.PROTECT)
-    work_schedule = models.ForeignKey(WorkSchedule, on_delete=models.PROTECT)
+    work_schedule = models.ForeignKey(WorkSchedule, on_delete=models.CASCADE)
     started_at = models.DateField()
     ended_at = models.DateField(blank=True, null=True)
 
