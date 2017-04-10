@@ -6,8 +6,9 @@ from django.utils.timezone import utc
 from ninetofiver import factories
 from decimal import Decimal
 from datetime import timedelta
-import tempfile
+from django.core.exceptions import ValidationError
 
+import tempfile
 import datetime
 
 now = datetime.date.today()
@@ -791,7 +792,11 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         self.assertEqual(patch_response.status_code, status.HTTP_201_CREATED)
 
         # Check for update error
-        update_data['leave'] = 99999999
+        new_leave = factories.LeaveFactory.create(
+            user = user,
+            leave_type = factories.LeaveTypeFactory.create()
+        )
+        update_data['leave'] = new_leave.id
 
         patch_duplicate_date_response = self.client.patch(url, update_data, format='json')
         self.assertEqual(patch_duplicate_date_response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -809,6 +814,7 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         }
 
         post_invalid_date_response = self.client.post(url, invalid_data, format='json')
+        self.assertRaises(ValidationError)
         self.assertEqual(post_invalid_date_response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
