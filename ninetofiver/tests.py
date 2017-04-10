@@ -765,14 +765,14 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         create_data = {
             'leave': leave.id,
             'timesheet': timesheet.id,
-            'starts_at': datetime.datetime(now.year, now.month, 12, 7, 34, 34),
-            'ends_at': datetime.datetime(now.year, now.month, 14, 8, 34, 34)
+            'starts_at': datetime.datetime(now.year, 4, 28, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, 4, 30, 0, 0, 0)
         }
 
         update_data = {
             'leave': leave.id,
             'timesheet': timesheet.id,
-            'starts_at': datetime.datetime(now.year, now.month, 10, 7, 34, 34),
+            'starts_at': datetime.datetime(now.year, now.month, 16, 7, 34, 34),
             'ends_at': datetime.datetime(now.year, now.month, 16, 8, 34, 34)
         }
 
@@ -787,11 +787,7 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         patchResponse = self.client.patch(url, update_data, format='json')
         self.assertEqual(patchResponse.status_code, status.HTTP_201_CREATED)
 
-        newLeave = factories.LeaveFactory.create(
-            user = user,
-            leave_type = factories.LeaveTypeFactory.create() 
-        )
-        update_data['leave'] = newLeave.id
+        update_data['leave'] = 99999999
 
         patchDuplicateDateResponse = self.client.patch(url, update_data, format='json')
         self.assertEqual(patchDuplicateDateResponse.status_code, status.HTTP_400_BAD_REQUEST)

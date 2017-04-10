@@ -5,7 +5,7 @@ from django.shortcuts import render
 
 from datetime import datetime, timedelta
 from django.utils import timezone
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from ninetofiver import filters
 from ninetofiver import models
@@ -359,17 +359,31 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
 
         #If the leave spans across one day only
         if start.date() == end.date():
-            #Create leavedate
-            ld = models.LeaveDate.objects.create(
-                leave = models.Leave.objects.get(pk=leave),
-                timesheet = models.Timesheet.objects.get(pk=timesheet),
-                starts_at = start,
-                ends_at = end
+            timesheet, created = models.Timesheet.objects.get_or_create(
+                user=user,
+                year=start.year,
+                month=start.month
             )
+
+            try:
+                #Create leavedate
+                ld = models.LeaveDate.objects.create(
+                    leave = models.Leave.objects.get(pk=leave),
+                    timesheet = timesheet,
+                    starts_at = start,
+                    ends_at = end
+                )
+
+            except ObjectDoesNotExist as e:
+                return Response('LEAVE -> ObjectDoesNotExist', status = status.HTTP_400_BAD_REQUEST)
+
             return Response( [leavedates], status = status.HTTP_201_CREATED )
 
         #If leave spans across several days
         else:
+            if(end.hour == 0 and end.minute == 0 and end.second == 0):
+                end = end - timedelta(seconds=1)
+
             days = (end-start).days + 1
             new_start = start
             new_end = end.replace(year=(start.year), month=(start.month), day=(start.day), hour=(23), minute=(59), second=(59))
@@ -383,8 +397,7 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
                     user=user,
                     year=new_start.year,
                     month=new_start.month
-                ) 
-
+                )
                 temp = models.LeaveDate(
                     leave=models.Leave.objects.get(pk=leave),
                     timesheet=timesheet,
@@ -412,7 +425,6 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
                     'starts_at': temp.starts_at,
                     'ends_at': temp.ends_at
                 })
-
                 new_start += timedelta(days=1)
                 new_end += timedelta(days=1)
 
@@ -422,7 +434,6 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
                 #Set time to original end when second to last has run
                 if x == days - 2:
                     new_end = new_end.replace(hour=(end.hour), minute=(end.minute), second=(end.second))
-
 
             serializer = this.get_serializer(data=my_list, many=True)
             #Empty call, does nothing (rip)
