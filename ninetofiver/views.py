@@ -367,14 +367,22 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
 
             try:
                 #Create leavedate
-                ld = models.LeaveDate.objects.create(
+                ld = models.LeaveDate(
                     leave = models.Leave.objects.get(pk=leave),
                     timesheet = timesheet,
                     starts_at = start,
                     ends_at = end
                 )
 
-            except ObjectDoesNotExist as e:
+                try:
+                    #Validate & save
+                    ld.full_clean()
+                except ValidationError as ve:
+                    return Response('LEAVEDATE -> ValidationError', status = status.HTTP_400_BAD_REQUEST)
+
+                ld.save()
+
+            except ObjectDoesNotExist as oe:
                 return Response('LEAVE -> ObjectDoesNotExist', status = status.HTTP_400_BAD_REQUEST)
 
             return Response( [leavedates], status = status.HTTP_201_CREATED )
@@ -385,6 +393,10 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
                 end = end - timedelta(seconds=1)
 
             days = (end-start).days + 1
+
+            if days < 0:
+                return Response('END DATE SHOULD COME AFTER START DATE', status = status.HTTP_400_BAD_REQUEST)
+
             new_start = start
             new_end = end.replace(year=(start.year), month=(start.month), day=(start.day), hour=(23), minute=(59), second=(59))
             
