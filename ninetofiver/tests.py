@@ -6,7 +6,7 @@ from django.utils.timezone import utc
 from ninetofiver import factories
 from decimal import Decimal
 from datetime import timedelta
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 import tempfile
 import datetime
@@ -787,6 +787,21 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         post_duplicate_leave_response = self.client.post(url, update_data, format='json')
         self.assertEqual(post_duplicate_leave_response.status_code, status.HTTP_400_BAD_REQUEST)
 
+        #Check for overlapping leavedates
+        overlap_leave = factories.LeaveFactory.create(
+            user = user,
+            leave_type = factories.LeaveTypeFactory.create()
+        )
+        overlap_data = {
+            'leave': overlap_leave.id,
+            'timesheet': timesheet.id,
+            'starts_at': create_data['starts_at'],
+            'ends_at': create_data['ends_at']
+        }
+        post_overlapping_leave_response = self.client.post(url, overlap_data, format='json')
+        self.assertRaises(ValidationError)
+        self.assertEqual(post_overlapping_leave_response.status_code, status.HTTP_400_BAD_REQUEST)
+
         # Check for update success
         patch_response = self.client.patch(url, update_data, format='json')
         self.assertEqual(patch_response.status_code, status.HTTP_201_CREATED)
@@ -799,6 +814,7 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         update_data['leave'] = new_leave.id
 
         patch_duplicate_date_response = self.client.patch(url, update_data, format='json')
+        self.assertRaises(ObjectDoesNotExist)
         self.assertEqual(patch_duplicate_date_response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # Check for validationerror
