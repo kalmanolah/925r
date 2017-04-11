@@ -52,6 +52,7 @@ router.register(r'my_performances/activity', views.MyActivityPerformanceViewSet,
 router.register(r'my_performances/standby', views.MyStandbyPerformanceViewSet, base_name='mystandbyperformance')
 router.register(r'my_performances', views.MyPerformanceViewSet, base_name='myperformance')
 router.register(r'my_attachments', views.MyAttachmentViewSet, base_name='myattachment')
+router.register(r'my_workschedules', views.MyWorkScheduleViewSet, base_name='myworkschedule')
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.

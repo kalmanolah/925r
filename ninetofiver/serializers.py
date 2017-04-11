@@ -319,3 +319,8 @@ class MyAttachmentSerializer(AttachmentSerializer):
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
+
+
+class MyWorkScheduleSerializer(WorkScheduleSerializer):
+    class Meta(WorkScheduleSerializer.Meta):
+        read_only_fields = WorkScheduleSerializer.Meta.read_only_fields + ('user',)

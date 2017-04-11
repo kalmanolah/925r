@@ -477,7 +477,7 @@ class PerformanceFilter(FilterSet):
 
 
 class ActivityPerformanceFilter(PerformanceFilter):
-    order_fields = PerformanceFilter.order_fields + ('duration', 'description')
+    order_fields = PerformanceFilter.order_fields + ('duration', 'description', 'contract')
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta(PerformanceFilter.Meta):
@@ -485,6 +485,7 @@ class ActivityPerformanceFilter(PerformanceFilter):
         fields = merge_dicts(PerformanceFilter.Meta.fields, {
             'duration': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'description': ['exact', 'contains', 'icontains'],
+            'contract': ['exact'],
         })
 
 

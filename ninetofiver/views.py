@@ -5,7 +5,7 @@ from django.shortcuts import render
 
 from datetime import datetime, timedelta
 from django.utils import timezone
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from ninetofiver import filters
 from ninetofiver import models
@@ -101,7 +101,7 @@ class EmploymentContractViewSet(viewsets.ModelViewSet):
 
 class WorkScheduleViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows employment contracts to be viewed or edited.
+    API endpoint that allows workschedules to be viewed or edited.
     """
     queryset = models.WorkSchedule.objects.all()
     serializer_class = serializers.WorkScheduleSerializer
@@ -331,7 +331,7 @@ class MyUserServiceAPIView(APIView):
         return Response(data)
 
 
-class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
+class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
     """
     Set the leavedates for the corresponding leave.
     """
@@ -359,18 +359,44 @@ class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
 
         #If the leave spans across one day only
         if start.date() == end.date():
-            #Create leavedate
-            ld = models.LeaveDate.objects.create(
-                leave = models.Leave.objects.get(pk=leave),
-                timesheet = models.Timesheet.objects.get(pk=timesheet),
-                starts_at = start,
-                ends_at = end
+            timesheet, created = models.Timesheet.objects.get_or_create(
+                user=user,
+                year=start.year,
+                month=start.month
             )
+
+            try:
+                #Create leavedate
+                ld = models.LeaveDate(
+                    leave = models.Leave.objects.get(pk=leave),
+                    timesheet = timesheet,
+                    starts_at = start,
+                    ends_at = end
+                )
+
+                try:
+                    #Validate & save
+                    ld.full_clean()
+                except ValidationError as ve:
+                    return Response('LEAVEDATE -> ValidationError', status = status.HTTP_400_BAD_REQUEST)
+
+                ld.save()
+
+            except ObjectDoesNotExist as oe:
+                return Response('LEAVE -> ObjectDoesNotExist', status = status.HTTP_400_BAD_REQUEST)
+
             return Response( [leavedates], status = status.HTTP_201_CREATED )
 
         #If leave spans across several days
         else:
+            if(end.hour == 0 and end.minute == 0 and end.second == 0):
+                end = end - timedelta(seconds=1)
+
             days = (end-start).days + 1
+
+            if days < 0:
+                return Response('END DATE SHOULD COME AFTER START DATE', status = status.HTTP_400_BAD_REQUEST)
+
             new_start = start
             new_end = end.replace(year=(start.year), month=(start.month), day=(start.day), hour=(23), minute=(59), second=(59))
             
@@ -383,8 +409,7 @@ class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
                     user=user,
                     year=new_start.year,
                     month=new_start.month
-                ) 
-
+                )
                 temp = models.LeaveDate(
                     leave=models.Leave.objects.get(pk=leave),
                     timesheet=timesheet,
@@ -412,7 +437,6 @@ class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
                     'starts_at': temp.starts_at,
                     'ends_at': temp.ends_at
                 })
-
                 new_start += timedelta(days=1)
                 new_end += timedelta(days=1)
 
@@ -422,7 +446,6 @@ class MyLeaveRequestServiceAPIView(generics.ListCreateAPIView):
                 #Set time to original end when second to last has run
                 if x == days - 2:
                     new_end = new_end.replace(hour=(end.hour), minute=(end.minute), second=(end.second))
-
 
             serializer = this.get_serializer(data=my_list, many=True)
             #Empty call, does nothing (rip)
@@ -490,7 +513,7 @@ class MyContractViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return models.Contract.objects.filter(contractuser__user=user)
+        return models.Contract.objects.filter(contractuser__user=user).distinct()
 
 
 class MyContractDurationViewSet(viewsets.ReadOnlyModelViewSet):
@@ -503,7 +526,7 @@ class MyContractDurationViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return models.Contract.objects.filter(contractuser__user=user)
+        return models.Contract.objects.filter(contractuser__user=user).distinct()
 
 
 class MyPerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
@@ -560,3 +583,16 @@ class MyAttachmentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return user.attachment_set.all()
+
+
+class MyWorkScheduleViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows workschedules for the currently authenticated user to be viewed or edited.
+    """
+    serializer_class = serializers.MyWorkScheduleSerializer
+    filter_class = filters.WorkScheduleFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return models.WorkSchedule.objects.filter(employmentcontract__user=user)

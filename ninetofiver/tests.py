@@ -6,8 +6,9 @@ from django.utils.timezone import utc
 from ninetofiver import factories
 from decimal import Decimal
 from datetime import timedelta
-import tempfile
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
+import tempfile
 import datetime
 
 now = datetime.date.today()
@@ -765,37 +766,72 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         create_data = {
             'leave': leave.id,
             'timesheet': timesheet.id,
-            'starts_at': datetime.datetime(now.year, now.month, 12, 7, 34, 34),
-            'ends_at': datetime.datetime(now.year, now.month, 14, 8, 34, 34)
+            'starts_at': datetime.datetime(now.year, 4, 28, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, 4, 30, 0, 0, 0)
         }
 
         update_data = {
             'leave': leave.id,
             'timesheet': timesheet.id,
-            'starts_at': datetime.datetime(now.year, now.month, 10, 7, 34, 34),
+            'starts_at': datetime.datetime(now.year, now.month, 16, 7, 34, 34),
             'ends_at': datetime.datetime(now.year, now.month, 16, 8, 34, 34)
         }
 
         url = reverse('my_leave_request_service')
 
-        postResponse = self.client.post(url, create_data, format='json')
-        self.assertEqual(postResponse.status_code, status.HTTP_201_CREATED)
+        # Check for normal creation success
+        post_response = self.client.post(url, create_data, format='json')
+        self.assertEqual(post_response.status_code, status.HTTP_201_CREATED)
 
-        postDuplicateLeaveResponse = self.client.post(url, update_data, format='json')
-        self.assertEqual(postDuplicateLeaveResponse.status_code, status.HTTP_400_BAD_REQUEST)
+        # Check for duplicate creation error
+        post_duplicate_leave_response = self.client.post(url, update_data, format='json')
+        self.assertEqual(post_duplicate_leave_response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        patchResponse = self.client.patch(url, update_data, format='json')
-        self.assertEqual(patchResponse.status_code, status.HTTP_201_CREATED)
-
-        newLeave = factories.LeaveFactory.create(
+        #Check for overlapping leavedates
+        overlap_leave = factories.LeaveFactory.create(
             user = user,
-            leave_type = factories.LeaveTypeFactory.create() 
+            leave_type = factories.LeaveTypeFactory.create()
         )
-        update_data['leave'] = newLeave.id
+        overlap_data = {
+            'leave': overlap_leave.id,
+            'timesheet': timesheet.id,
+            'starts_at': create_data['starts_at'],
+            'ends_at': create_data['ends_at']
+        }
+        post_overlapping_leave_response = self.client.post(url, overlap_data, format='json')
+        self.assertRaises(ValidationError)
+        self.assertEqual(post_overlapping_leave_response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        patchDuplicateDateResponse = self.client.patch(url, update_data, format='json')
-        self.assertEqual(patchDuplicateDateResponse.status_code, status.HTTP_400_BAD_REQUEST)
+        # Check for update success
+        patch_response = self.client.patch(url, update_data, format='json')
+        self.assertEqual(patch_response.status_code, status.HTTP_201_CREATED)
 
+        # Check for update error
+        new_leave = factories.LeaveFactory.create(
+            user = user,
+            leave_type = factories.LeaveTypeFactory.create()
+        )
+        update_data['leave'] = new_leave.id
+
+        patch_duplicate_date_response = self.client.patch(url, update_data, format='json')
+        self.assertRaises(ObjectDoesNotExist)
+        self.assertEqual(patch_duplicate_date_response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Check for validationerror
+        invalid_leave = factories.LeaveFactory.create(
+            user = user,
+            leave_type = factories.LeaveTypeFactory.create()
+        )
+        invalid_data = {
+            'leave': invalid_leave.id,
+            'timesheet': timesheet.id,
+            'starts_at': datetime.datetime(now.year, now.month, 17, 23, 23, 23),
+            'ends_at': datetime.datetime(now.year, now.month, 14, 5, 5, 5)
+        }
+
+        post_invalid_date_response = self.client.post(url, invalid_data, format='json')
+        self.assertRaises(ValidationError)
+        self.assertEqual(post_invalid_date_response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
@@ -870,8 +906,8 @@ class MyContractDurationAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcase
         )
         self.performance_type = factories.PerformanceTypeFactory.create()
         self.contract = factories.ContractFactory.create(
-            company=factories.InternalCompanyFactory.create(),
-            customer=factories.CompanyFactory.create()
+            company=self.company,
+            customer=self.customer
         )
         super().setUp()
 
@@ -1007,3 +1043,47 @@ class MyAttachmentAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
 
     def get_update_response(self, data=None, results=None, use_patch=None, **kwargs):
         return super().get_update_response(data=data, results=results, use_patch=True, format='multipart', **kwargs)
+
+
+class MyWorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'myworkschedule'
+    factory_class = factories.WorkScheduleFactory
+    user_factory = factories.AdminFactory
+    create_data = {
+        'label': 'Test schedule #1',
+        'monday': Decimal('1.20'),
+        'tuesday': Decimal('1.50'),
+        'wednesday': Decimal('1.75'),
+        'thursday': Decimal('0'),
+        'friday': Decimal('2'),
+        'saturday': Decimal('0'),
+        'sunday': Decimal('0'),
+    }
+    update_data = {
+        'label': 'Test schedule #2',
+        'monday': Decimal('2.10'),
+        'tuesday': Decimal('5.10'),
+        'wednesday': Decimal('7.50'),
+        'thursday': Decimal('0'),
+        'friday': Decimal('4'),
+        'saturday': Decimal('0'),
+        'sunday': Decimal('3'),
+    }
+
+    def setUp(self):
+        self.user = factories.AdminFactory.create()
+        self.client.force_authenticate(self.user)
+
+        self.work_schedule = factories.WorkScheduleFactory.create()
+
+        super().setUp()
+
+    def get_object(self, factory):
+        work_schedule = self.work_schedule
+        factories.EmploymentContractFactory.create(
+            user=self.user, 
+            company=factories.CompanyFactory.create(),
+            work_schedule=self.work_schedule,
+            employment_contract_type=factories.EmploymentContractTypeFactory.create()
+        )
+        return work_schedule
