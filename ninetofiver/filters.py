@@ -242,6 +242,8 @@ class LeaveFilter(FilterSet):
         fields = {
             'status': ['exact'],
             'description': ['exact', 'contains', 'icontains'],
+            'leavedate__starts_at' : ['gte'],
+            'leavedate__ends_at' : ['lte'],
         }
 
 
