@@ -113,7 +113,7 @@ class AttachmentSerializer(BaseSerializer):
 
     class Meta(BaseSerializer.Meta):
         model = models.Attachment
-        fields = BaseSerializer.Meta.fields + ('label', 'description', 'slug', 'user', 'file_url')
+        fields = BaseSerializer.Meta.fields + ('label', 'description', 'file', 'slug', 'user', 'file_url')
         read_only_fields = BaseSerializer.Meta.read_only_fields + ('file_url',)
 
     def get_file_url(self, obj):
