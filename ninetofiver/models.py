@@ -1015,3 +1015,29 @@ class StandbyPerformance(Performance):
     def __str__(self):
         """Return a string representation."""
         return '%s - %s' % (_('Standby'), super().__str__())
+
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object."""
+        super().perform_additional_validation(data, instance=instance)
+
+        instance_id = instance.id if instance else None # noqa
+
+        timesheet = data.get('timesheet', getattr(instance, 'timesheet', None))
+        day = data.get('day', getattr(instance, 'day', None))
+
+        if day:
+            days_in_timesheet = list(
+                StandbyPerformance.objects.filter(timesheet=timesheet).values_list('day', flat=True)
+            )
+
+            if day in days_in_timesheet:
+                raise ValidationError (
+                    _('The date is already linked to a standby performance.'),
+                )
+
+        def get_validation_args(self):
+            """Get a dict used for validation based on this instance."""
+            return merge_dicts(super().get_validation_args(), {
+                'performance': getattr((self, 'performance', None)),
+            })
