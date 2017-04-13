@@ -1,6 +1,7 @@
+import logging
 import django_filters
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db.models import Q
 
 from collections import Counter
@@ -11,7 +12,7 @@ from ninetofiver.utils import merge_dicts
 from rest_framework import generics
 
 from django.contrib.auth import models as auth_models
-
+from django.core.exceptions import ValidationError
 
 
 class IsNull(Func):
@@ -19,7 +20,6 @@ class IsNull(Func):
 
 
 class NullLastOrderingFilter(django_filters.OrderingFilter):
-
     """An ordering filter which places records with fields containing null values last."""
 
     def filter(self, qs, value):
@@ -234,16 +234,30 @@ class LeaveTypeFilter(FilterSet):
 
 
 class LeaveFilter(FilterSet):
-    order_fields = ('status', 'description', 'leavedate__starts_at', 'leavedate__ends_at')
+    def leavedate_range_distinct(self, queryset, name, value):
+        """Filters distinct leavedates between a given range."""
+        # split value.
+        values = value.split(',')
+        # validate input.
+        try:
+            start_date = datetime.strptime(values[0], "%Y-%m-%dT%H:%M:%S")
+            end_date = datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S")
+        except:
+            # Raise valitdation error.
+            raise ValidationError('Dates have to be in YYYY-MM-DDTHH-MM-SS format.')
+        # filter distinct using range.
+        queryset = queryset.filter(leavedate__starts_at__range=(start_date, end_date)).distinct()
+        return queryset
+
+    order_fields = ('status', 'description')
     order_by = NullLastOrderingFilter(fields=order_fields)
+    leavedate_range = django_filters.CharFilter(method='leavedate_range_distinct')
 
     class Meta:
         model = models.Leave
         fields = {
             'status': ['exact'],
-            'description': ['exact', 'contains', 'icontains'],
-            'leavedate__starts_at' : ['gte'],
-            'leavedate__ends_at' : ['lte'],
+            'description': ['exact', 'contains', 'icontains']
         }
 
 
