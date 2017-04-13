@@ -1,6 +1,6 @@
 import django_filters
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db.models import Q
 
 from collections import Counter
@@ -11,7 +11,7 @@ from ninetofiver.utils import merge_dicts
 from rest_framework import generics
 
 from django.contrib.auth import models as auth_models
-
+from django.core.exceptions import ValidationError
 
 
 class IsNull(Func):
@@ -19,7 +19,6 @@ class IsNull(Func):
 
 
 class NullLastOrderingFilter(django_filters.OrderingFilter):
-
     """An ordering filter which places records with fields containing null values last."""
 
     def filter(self, qs, value):
@@ -234,14 +233,50 @@ class LeaveTypeFilter(FilterSet):
 
 
 class LeaveFilter(FilterSet):
-    order_fields = ('status', 'description', 'leavedate__starts_at', 'leavedate__ends_at')
+
+    def leavedate_range_distinct(self, queryset, name, value):
+        """Filters distinct leavedates between a given range."""
+        
+        # Validate input.
+        try:
+            # Split value.
+            values = value.split(',')
+            start_date = datetime.strptime(values[0], "%Y-%m-%dT%H:%M:%S")
+            end_date = datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S")
+        except:
+            # Raise validation error.
+            raise ValidationError('Datetimes have to be in the correct \'YYYY-MM-DDTHH:mm:ss\' format.')
+
+        # Filter distinct using range.
+        return queryset.filter(leavedate__starts_at__range=(start_date, end_date)).distinct()
+
+
+    def leavedate_upcoming_distinct(self, queryset, name, value):
+        """Filters distinct leavedates happening after provided date."""
+
+        #Validate input
+        try:
+            #Convert input into values
+            base_date = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
+        except:
+            #Raise validationerror
+            raise ValidationError('Datetime has to be in the correct \'YYYY-MM-DDTHH:mm:ss\' format.')
+
+        # Filter distinct using range.
+        return queryset.filter(leavedate__starts_at__gte=base_date).distinct()
+
+
+    order_fields = ('status', 'description')
     order_by = NullLastOrderingFilter(fields=order_fields)
+
+    leavedate__range = django_filters.CharFilter(method='leavedate_range_distinct')
+    leavedate__gte = django_filters.CharFilter(method='leavedate_upcoming_distinct')
 
     class Meta:
         model = models.Leave
         fields = {
             'status': ['exact'],
-            'description': ['exact', 'contains', 'icontains'],
+            'description': ['exact', 'contains', 'icontains']
         }
 
 
