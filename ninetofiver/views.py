@@ -244,16 +244,6 @@ class ContractGroupViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
-class ContractDurationViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    API endpoint that allows contract durations to be viewed.
-    """
-    queryset = models.Contract.objects.all()
-    serializer_class = serializers.ContractDurationSerializer
-    filter_class = filters.ContractDurationFilter
-    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
-
-
 class ProjectEstimateViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows project estimates to be viewed or edited.
@@ -510,19 +500,6 @@ class MyContractViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.MyContractSerializer
     filter_class = filters.ContractFilter
     permission_classes = (permissions.IsAuthenticated,)
-
-    def get_queryset(self):
-        user = self.request.user
-        return models.Contract.objects.filter(contractuser__user=user).distinct()
-
-
-class MyContractDurationViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    API endpoint that allows contract durations for the currently authenticated user to be viewed.
-    """
-    serializer_class = serializers.MyContractDurationSerializer
-    filter_class = filters.MyContractDurationFilter
-    permission_classes = (permissions.IsAuthenticated, )
 
     def get_queryset(self):
         user = self.request.user
