@@ -1032,11 +1032,23 @@ class StandbyPerformance(Performance):
         day = data.get('day', getattr(instance, 'day', None))
 
         if day:
-            days_in_timesheet = list(
-                StandbyPerformance.objects.filter(timesheet=timesheet).values_list('day', flat=True)
+            # Check whether the user already has a standby planned during this time frame
+            existing = cls.objects.filter(
+                models.Q(
+                    timesheet=timesheet,
+                    day=day
+                )
             )
 
-            if day in days_in_timesheet:
+            if instance_id:
+                existing = existing.exclude(id=instance_id)
+
+            try:
+                existing = existing.all()[0]
+            except (cls.DoesNotExist, IndexError):
+                existing = None
+
+            if existing:
                 raise ValidationError (
                     _('The date is already linked to a standby performance.'),
                 )
