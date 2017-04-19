@@ -113,7 +113,7 @@ class AttachmentSerializer(BaseSerializer):
 
     class Meta(BaseSerializer.Meta):
         model = models.Attachment
-        fields = BaseSerializer.Meta.fields + ('label', 'description', 'slug', 'user', 'file_url')
+        fields = BaseSerializer.Meta.fields + ('label', 'description', 'file', 'slug', 'user', 'file_url')
         read_only_fields = BaseSerializer.Meta.read_only_fields + ('file_url',)
 
     def get_file_url(self, obj):
@@ -154,10 +154,18 @@ class PerformanceTypeSerializer(BaseSerializer):
 
 
 class ContractSerializer(BaseSerializer):
+    hours_spent = serializers.SerializerMethodField()
+
+    def get_hours_spent(self, obj):
+        total = 0
+        for hours in models.ActivityPerformance.objects.filter(contract=obj.id):
+            total += hours.duration
+        return total
+
     class Meta(BaseSerializer.Meta):
         model = models.Contract
         fields = BaseSerializer.Meta.fields + ('label', 'description', 'company', 'customer', 'performance_types',
-                                               'active', 'contract_groups')
+                                               'active', 'contract_groups', 'hours_spent')
 
 
 class ProjectContractSerializer(ContractSerializer):
@@ -166,9 +174,10 @@ class ProjectContractSerializer(ContractSerializer):
     def get_hours_estimated(self, obj):
         return obj.projectestimate_set.values_list('hours_estimated', flat=True)
 
+
     class Meta(ContractSerializer.Meta):
         model = models.ProjectContract
-        fields = ContractSerializer.Meta.fields + ('starts_at', 'ends_at', 'fixed_fee', 'hours_estimated')
+        fields = ContractSerializer.Meta.fields + ('starts_at', 'ends_at', 'fixed_fee', 'hours_estimated',)
         
 
 class ConsultancyContractSerializer(ContractSerializer):
@@ -199,20 +208,6 @@ class ContractGroupSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.ContractGroup
         fields = BaseSerializer.Meta.fields + ('label', )
-
-
-class ContractDurationSerializer(BaseSerializer):
-    total_duration = serializers.SerializerMethodField()
-
-    class Meta(BaseSerializer.Meta):
-        model = models.Contract
-        fields = BaseSerializer.Meta.fields + ('label', 'description', 'customer', 'company', 'total_duration',)
-
-    def get_total_duration(self, obj):
-        total = 0
-        for hours in models.ActivityPerformance.objects.filter(contract=obj.id):
-            total += hours.duration
-        return total
 
 
 class ProjectEstimateSerializer(BaseSerializer):
@@ -287,11 +282,6 @@ class MyTimesheetSerializer(TimesheetSerializer):
 class MyContractSerializer(ContractSerializer):
     class Meta(ContractSerializer.Meta):
         read_only_fields = ContractSerializer.Meta.read_only_fields + ('user', )
-
-
-class MyContractDurationSerializer(ContractDurationSerializer):
-    class Meta(ContractDurationSerializer.Meta):
-        read_only_fields = ContractDurationSerializer.Meta.read_only_fields + ('user', )
 
 
 class MyPerformanceSerializer(PerformanceSerializer):
