@@ -999,6 +999,11 @@ class ActivityPerformance(Performance):
                     _('The selected performance type is not valid for the selected contract'),
                 )
 
+            if not contract.active:
+                raise ValidationError(
+                    _('Activityperformances cannot be linked to closed contracts.')
+                )
+
     def get_validation_args(self):
         """Get a dict used for validation based on this instance."""
         return merge_dicts(super().get_validation_args(), {
