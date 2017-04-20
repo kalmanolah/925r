@@ -234,24 +234,45 @@ class LeaveTypeFilter(FilterSet):
 
 
 class LeaveFilter(FilterSet):
+
     def leavedate_range_distinct(self, queryset, name, value):
         """Filters distinct leavedates between a given range."""
-        # split value.
-        values = value.split(',')
-        # validate input.
+        
+        # Validate input.
         try:
+            # Split value.
+            values = value.split(',')
             start_date = datetime.strptime(values[0], "%Y-%m-%dT%H:%M:%S")
             end_date = datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S")
         except:
-            # Raise valitdation error.
-            raise ValidationError('Dates have to be in YYYY-MM-DDTHH-MM-SS format.')
-        # filter distinct using range.
-        queryset = queryset.filter(leavedate__starts_at__range=(start_date, end_date)).distinct()
-        return queryset
+            # Raise validation error.
+            raise ValidationError('Datetimes have to be in the correct \'YYYY-MM-DDTHH:mm:ss\' format.')
+
+        # Filter distinct using range.
+        return queryset.filter(leavedate__starts_at__range=(start_date, end_date)).distinct()
+
+
+    def leavedate_upcoming_distinct(self, queryset, name, value):
+        """Filters distinct leavedates happening after provided date."""
+
+        #Validate input
+        try:
+            #Convert input into values
+            base_date = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
+        except:
+            #Raise validationerror
+            raise ValidationError('Datetime has to be in the correct \'YYYY-MM-DDTHH:mm:ss\' format.')
+
+        # Filter distinct using range.
+        return queryset.filter(leavedate__starts_at__gte=base_date).distinct()
+
 
     order_fields = ('status', 'description')
     order_by = NullLastOrderingFilter(fields=order_fields)
     leavedate_range = django_filters.CharFilter(method='leavedate_range_distinct')
+
+    leavedate__range = django_filters.CharFilter(method='leavedate_range_distinct')
+    leavedate__gte = django_filters.CharFilter(method='leavedate_upcoming_distinct')
 
     class Meta:
         model = models.Leave
@@ -400,55 +421,6 @@ class ContractUserFilter(FilterSet):
     class Meta:
         model = models.ContractUser
         fields = {
-        }
-
-
-class ContractDurationFilter(FilterSet):
-
-    timesheet__month = django_filters.NumberFilter(name='activityperformance__timesheet__month')
-    timesheet__month__gte = django_filters.NumberFilter(name='activityperformance__timesheet__month', lookup_expr='gte')
-    timesheet__month__lte = django_filters.NumberFilter(name='activityperformance__timesheet__month', lookup_expr='lte')
-    timesheet__year = django_filters.NumberFilter(name='activityperformance__timesheet__year', )
-    timesheet__year__gte = django_filters.NumberFilter(name='activityperformance__timesheet__year', lookup_expr='gte')
-    timesheet__year__lte = django_filters.NumberFilter(name='activityperformance__timesheet__year', lookup_expr='lte')
-    timesheet__closed = django_filters.BooleanFilter(name='activityperformance__timesheet__closed')
-
-
-    order_fields = ('performance_types__label', 'timesheet__month', 'timesheet__month__gte', 'timesheet__month__lte', 'timesheet__year', 'timesheet__year__gte', 'timesheet__year__lte', 'active',
-        'contractuser_set__user', 'contractuser__user__username', 'contractuser__contract_role', 'contractuser__contract_role__label', )
-    order_by = NullLastOrderingFilter(fields=order_fields)
-
-    class Meta:
-        model = models.Contract
-        fields = {
-            'active': ['exact', ],
-            'performance_types__label': ['exact', 'contains', 'icontains', ],
-            'contractuser__user__username': ['exact', ],
-            'contractuser__contract_role__label': ['exact', 'contains', 'icontains', ],
-        }
-
-
-class MyContractDurationFilter(FilterSet):
-
-    timesheet__month = django_filters.NumberFilter(name='activityperformance__timesheet__month')
-    timesheet__month__gte = django_filters.NumberFilter(name='activityperformance__timesheet__month', lookup_expr='gte')
-    timesheet__month__lte = django_filters.NumberFilter(name='activityperformance__timesheet__month', lookup_expr='lte')
-    timesheet__year = django_filters.NumberFilter(name='activityperformance__timesheet__year', )
-    timesheet__year__gte = django_filters.NumberFilter(name='activityperformance__timesheet__year', lookup_expr='gte')
-    timesheet__year__lte = django_filters.NumberFilter(name='activityperformance__timesheet__year', lookup_expr='lte')
-    timesheet__closed = django_filters.BooleanFilter(name='activityperformance__timesheet__closed')
-
-
-    order_fields = ('performance_types__label', 'timesheet__month', 'timesheet__month__gte', 'timesheet__month__lte', 'timesheet__year', 'timesheet__year__gte', 
-        'timesheet__year__lte', 'active', 'contractuser__contract_role', 'contractuser__contract_role__label', )
-    order_by = NullLastOrderingFilter(fields=order_fields)
-
-    class Meta:
-        model = models.Contract
-        fields = {
-            'active': ['exact', ],
-            'performance_types__label': ['exact', 'contains', 'icontains', ],
-            'contractuser__contract_role__label': ['exact', 'contains', 'icontains', ],
         }
 
 

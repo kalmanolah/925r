@@ -999,6 +999,11 @@ class ActivityPerformance(Performance):
                     _('The selected performance type is not valid for the selected contract'),
                 )
 
+            if not contract.active:
+                raise ValidationError(
+                    _('Activityperformances cannot be linked to closed contracts.')
+                )
+
     def get_validation_args(self):
         """Get a dict used for validation based on this instance."""
         return merge_dicts(super().get_validation_args(), {
@@ -1015,3 +1020,41 @@ class StandbyPerformance(Performance):
     def __str__(self):
         """Return a string representation."""
         return '%s - %s' % (_('Standby'), super().__str__())
+
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object."""
+        super().perform_additional_validation(data, instance=instance)
+
+        instance_id = instance.id if instance else None # noqa
+
+        timesheet = data.get('timesheet', getattr(instance, 'timesheet', None))
+        day = data.get('day', getattr(instance, 'day', None))
+
+        if day:
+            # Check whether the user already has a standby planned during this time frame
+            existing = cls.objects.filter(
+                models.Q(
+                    timesheet=timesheet,
+                    day=day
+                )
+            )
+
+            if instance_id:
+                existing = existing.exclude(id=instance_id)
+
+            try:
+                existing = existing.all()[0]
+            except (cls.DoesNotExist, IndexError):
+                existing = None
+
+            if existing:
+                raise ValidationError (
+                    _('The date is already linked to a standby performance.'),
+                )
+
+        def get_validation_args(self):
+            """Get a dict used for validation based on this instance."""
+            return merge_dicts(super().get_validation_args(), {
+                'performance': getattr((self, 'performance', None)),
+            })
