@@ -418,9 +418,13 @@ class ContractRoleFilter(FilterSet):
 
 
 class ContractUserFilter(FilterSet):
+    order_fields = ('contract')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.ContractUser
         fields = {
+            'contract': ['exact',]
         }
 
 
