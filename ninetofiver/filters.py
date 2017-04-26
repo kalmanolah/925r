@@ -327,6 +327,7 @@ class ContractFilter(FilterSet):
 
             # User related fields
             'contractuser__user__username': ['exact', 'contains', 'icontains', ],
+            'contractuser__user__id': ['exact', ],
             'contractuser__user__first_name': ['exact', 'contains', 'icontains', ],
             'contractuser__user__last_name': ['exact', 'contains', 'icontains', ],
             'contractuser__user__groups': ['exact', 'contains', 'icontains', ],
