@@ -182,7 +182,7 @@ class ProjectContractSerializer(ContractSerializer):
     hours_estimated = serializers.SerializerMethodField()
 
     def get_hours_estimated(self, obj):
-        return obj.projectestimate_set.values_list('hours_estimated', flat=True)
+        return obj.projectestimate_set.values_list('hours_estimated', 'role_id',)
 
 
     class Meta(ContractSerializer.Meta):
