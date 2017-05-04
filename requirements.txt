@@ -15,14 +15,13 @@ factory-boy==2.7.0
 Faker==0.7.3
 humanize==0.5.1
 coreapi==2.0.8
-#pyjade==4.0.0
-https://github.com/syrusakbary/pyjade/archive/master.zip
+pyjade==4.0.0
 django-settings-export==1.2.1
 django-auth-ldap==1.2.8
 PyYAML==3.12
 django-countries==4.0
 django-model-utils==2.6
 django-admin-rangefilter==0.2.1
-git+http://github.com/mrts/django-admin-list-filter-dropdown.git
+django-admin-list-filter-dropdown==1.0.0
 django-downloadview==1.9
 coreschema==0.0.4
