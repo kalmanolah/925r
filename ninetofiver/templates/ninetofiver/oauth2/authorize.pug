@@ -1,0 +1,42 @@
+extends ninetofiver/account/page.pug
+- load crispy_forms_tags
+- load i18n
+
+block title
+  if not error
+    | {% trans "Authorize" %} {{ application.name }}?
+  else
+    | Error: {{ error.error }}
+
+block content_main
+  if not error
+    p {% trans "Application requires following permissions" %}
+    ul
+      for x, desc in scopes_descriptions
+        li {{ x }}
+
+    form(
+      action=''
+      method='POST'
+      role='form'
+    )
+      {% csrf_token %}
+      {{ form | crispy }}
+      div(class='btn-group')
+        button(
+          type='submit'
+          class='btn btn-primary'
+        )
+          i(class='fa fa-check')
+          | Authorize
+        button(
+          type='submit'
+          value='cancel'
+          class='btn btn-secondary'
+        )
+          i(class='fa fa-times')
+          | Cancel
+  else
+    div(class='alert alert-danger')
+      h4(class='alert-heading') Error: {{ error.error }}
+      p(class='m-b-0') {{ error.description }}

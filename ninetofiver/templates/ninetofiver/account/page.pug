@@ -1,0 +1,31 @@
+extends ninetofiver/base/page.pug
+
+block content
+  ul(class='nav nav-tabs')
+    li(class='nav-item')
+      a(
+        class='nav-link {% if request.resolver_match.view_name == "account" %}active{% endif %}'
+        href='{% url "account" %}'
+      ) Your account
+    li(class='nav-item')
+      a(
+        class='nav-link {% if request.resolver_match.view_name == "password_change" %}active{% endif %}'
+        href='{% url "password_change" %}'
+      ) Change password
+    li(class='nav-item')
+      a(
+        class='nav-link {% if request.resolver_match.view_name == "oauth2_provider:list" %}active{% endif %}'
+        href='{% url "oauth2_provider:list" %}'
+      ) Your applications
+    li(class='nav-item')
+      a(
+        class='nav-link {% if request.resolver_match.view_name == "oauth2_provider:authorized-token-list" %}active{% endif %}'
+        href='{% url "oauth2_provider:authorized-token-list" %}'
+      ) Authorized tokens
+
+  div(class='m-y-1')
+
+  div(class='card card-block')
+    h3(class='card-title')
+      block title
+    block content_main

@@ -1,0 +1,23 @@
+extends ninetofiver/authentication/page.pug
+- load crispy_forms_tags
+
+block title
+  | Register an account
+
+block content
+  form(
+    action='{% url "registration_register" %}'
+    method='POST'
+    role='form'
+  )
+    {% csrf_token %}
+    {{ form | crispy }}
+    button(
+      type='submit'
+      class='btn btn-outline-primary'
+    ) Submit
+    a(
+      href='{% url "home" %}'
+      onclick='window.history.back(); return false'
+      class='btn btn-outline-secondary pull-xs-right'
+    ) Back

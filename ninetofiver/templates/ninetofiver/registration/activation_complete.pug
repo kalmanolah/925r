@@ -1,0 +1,8 @@
+extends ninetofiver/authentication/page.pug
+
+block title
+  | Account activated
+
+block content
+  p Your account has been activated successfully. You can now log in.
+  a(class='btn btn-outline-primary' href='{% url "login" %}') Log in

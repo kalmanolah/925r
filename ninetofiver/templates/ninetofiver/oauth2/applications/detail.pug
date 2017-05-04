@@ -1,0 +1,49 @@
+extends ninetofiver/account/page.pug
+
+block title
+  | Viewing application: {{ application.name }}
+
+block content_main
+  table(class='table table-bordered table-hover')
+    tr
+      th Name
+      td {{ application.name }}
+    tr
+      th Client ID
+      td(class='text-wrap') {{ application.client_id }}
+    tr
+      th Client secret
+      td(class='text-wrap') {{ application.client_secret }}
+    tr
+      th Client type
+      td {{ application.client_type }}
+    tr
+      th Authorization grant type
+      td {{ application.authorization_grant_type }}
+    tr
+      th Redirect uris
+      td
+        if application.redirect_uris
+          {{ application.redirect_uris | linebreaksbr }}
+        else
+          | None
+
+  div(class='btn-group')
+    a(
+      href='{% url "oauth2_provider:list" %}'
+      class='btn btn-secondary'
+    )
+      i(class='fa fa-angle-double-left')
+      | Back
+    a(
+      href='{% url "oauth2_provider:update" pk=application.pk %}'
+      class='btn btn-secondary'
+    )
+      i(class='fa fa-edit')
+      | Edit
+    a(
+      href='{% url "oauth2_provider:delete" pk=application.pk %}'
+      class='btn btn-danger'
+    )
+      i(class='fa fa-trash')
+      | Delete
