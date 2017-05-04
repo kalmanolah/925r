@@ -31,14 +31,14 @@ from rest_framework_swagger.renderers import SwaggerUIRenderer
 def home_view(request):
     """Homepage."""
     context = {}
-    return render(request, 'ninetofiver/home/index.jade', context)
+    return render(request, 'ninetofiver/home/index.pug', context)
 
 
 @login_required
 def account_view(request):
     """User-specific account page."""
     context = {}
-    return render(request, 'ninetofiver/account/index.jade', context)
+    return render(request, 'ninetofiver/account/index.pug', context)
 
 
 @api_view(exclude_from_schema=True)

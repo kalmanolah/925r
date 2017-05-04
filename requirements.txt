@@ -15,7 +15,8 @@ factory-boy==2.7.0
 Faker==0.7.3
 humanize==0.5.1
 coreapi==2.0.8
-pyjade==4.0.0
+#pyjade==4.0.0
+pypugjs==4.2.2
 django-settings-export==1.2.1
 django-auth-ldap==1.2.8
 PyYAML==3.12

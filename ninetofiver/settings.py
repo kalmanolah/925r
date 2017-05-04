@@ -119,12 +119,12 @@ class Base(Configuration):
                     'django_settings_export.settings_export',
                 ],
                 'loaders': [
-                    ('pyjade.ext.django.Loader', (
+                    ('pypugjs.ext.django.Loader', (
                         'django.template.loaders.filesystem.Loader',
                         'django.template.loaders.app_directories.Loader',
                     )),
                 ],
-                'builtins': ['pyjade.ext.django.templatetags'],
+                'builtins': ['pypugjs.ext.django.templatetags'],
             },
         },
     ]
