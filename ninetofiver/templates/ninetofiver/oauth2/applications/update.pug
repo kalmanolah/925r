@@ -1,17 +1,12 @@
-extends ninetofiver/account/page.jade
+extends ninetofiver/account/page.pug
 - load crispy_forms_tags
 
 block title
-  | Deleting application: {{ application.name }}
+  | Editing application: {{ application.name }}
 
 block content_main
-  p
-    | Are you sure you want to delete the application 
-    strong {{ application.name }}
-    | ?
-
   form(
-    action='{% url "oauth2_provider:delete" pk=application.pk %}'
+    action='{% url "oauth2_provider:update" pk=application.pk %}'
     method='POST'
     role='form'
   )
@@ -20,10 +15,10 @@ block content_main
     div(class='btn-group')
       button(
         type='submit'
-        class='btn btn-danger'
+        class='btn btn-primary'
       )
-        i(class='fa fa-trash')
-        | Delete
+        i(class='fa fa-check')
+        | Save
       a(
         href='{% url "oauth2_provider:detail" pk=application.pk %}'
         class='btn btn-secondary'

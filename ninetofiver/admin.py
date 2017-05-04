@@ -160,7 +160,7 @@ class LeaveAdmin(admin.ModelAdmin):
         'make_approved',
         'make_rejected',
     ]
-    ordering = ('-leavedate__starts_at',)
+    ordering = ('-status',)
 
 
 @admin.register(models.LeaveDate)

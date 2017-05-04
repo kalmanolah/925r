@@ -1,23 +1,28 @@
-extends ninetofiver/authentication/page.jade
+extends ninetofiver/authentication/page.pug
 - load crispy_forms_tags
 
 block title
-  | Register an account
+  | Login
 
 block content
   form(
-    action='{% url "registration_register" %}'
+    action='{% url "login" %}'
     method='POST'
     role='form'
   )
     {% csrf_token %}
+    input(
+      type='hidden'
+      name='next'
+      value='{{ next }}'
+    )
     {{ form | crispy }}
     button(
       type='submit'
       class='btn btn-outline-primary'
-    ) Submit
+    ) Log in
+
     a(
-      href='{% url "home" %}'
-      onclick='window.history.back(); return false'
       class='btn btn-outline-secondary pull-xs-right'
-    ) Back
+      href='{% url "password_reset" %}'
+    ) Forgot your password?
