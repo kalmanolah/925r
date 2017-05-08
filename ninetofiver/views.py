@@ -27,7 +27,6 @@ from rest_framework.views import APIView
 from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
 
-import logging
 
 
 def home_view(request):
@@ -334,8 +333,6 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
     def create_leavedates(self, this, request):
         """ Used to handle logic and return the correct response. """
 
-        logging.basicConfig(filename='BONNAARRRR.log', level=logging.INFO, filemode='w')
-
         user = request.user
         leavedates = request.data
 
@@ -404,31 +401,23 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
             )[0]
             leave_object = models.Leave.objects.get(pk=leave)
 
-            logging.info('Entering the forloop.')
-
             # Create all leavedates ranging from the start to the end
             for x in range(0, days):
-                logging.info(x)
 
                 # If not correct timesheet, get /create it and overwrite
                 if not (timesheet.year == new_start.year and timesheet.month == new_start.month):
-                    logging.info('__________')
-                    logging.info('TIMESHEET CREATED ONO')
                     timesheet = models.Timesheet.objects.get_or_create(
                         user=user,
                         year=new_start.year,
                         month=new_start.month
                     )[0]
 
-                logging.info('CREATING LD OBJECT')
                 temp = models.LeaveDate(
                     leave=leave_object,
                     timesheet=timesheet,
                     starts_at=new_start,
                     ends_at=new_end
                 )
-                logging.info( temp );
-                logging.info( 'CREATED HOEZEE' );
 
                 # Call validation on the object
                 try:
