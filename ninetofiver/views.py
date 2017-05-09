@@ -28,7 +28,6 @@ from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
 
 
-
 def home_view(request):
     """Homepage."""
     context = {}
