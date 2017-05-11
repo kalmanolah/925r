@@ -347,6 +347,7 @@ class ContractFilter(FilterSet):
 
             # Performancetype fields
             'performance_types__label': ['exact', 'contains', 'icontains', ],
+            'performance_types__id': ['exact', ],
         }
 
 
