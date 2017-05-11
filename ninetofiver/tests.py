@@ -544,12 +544,12 @@ class ActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
     factory_class = factories.ActivityPerformanceFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'day': 12,
+        'day': 6,
         'duration': 12,
         'description': 'Just doing things',
     }
     update_data = {
-        'day': 13,
+        'day': 7,
         'duration': 13,
         'description': 'Not doing all that much',
     }
@@ -584,10 +584,10 @@ class StandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, tes
     factory_class = factories.StandbyPerformanceFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'day': 12,
+        'day': 9,
     }
     update_data = {
-        'day': 13,
+        'day': 10,
     }
 
     def setUp(self):
@@ -930,10 +930,10 @@ class MyStandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, t
     factory_class = factories.StandbyPerformanceFactory
     # user_factory = factories.AdminFactory
     create_data = {
-        'day': 12,
+        'day': 14,
     }
     update_data = {
-        'day': 13,
+        'day': 16,
     }
 
     def setUp(self):

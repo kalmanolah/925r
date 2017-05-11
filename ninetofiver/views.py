@@ -31,14 +31,14 @@ from rest_framework_swagger.renderers import SwaggerUIRenderer
 def home_view(request):
     """Homepage."""
     context = {}
-    return render(request, 'ninetofiver/home/index.jade', context)
+    return render(request, 'ninetofiver/home/index.pug', context)
 
 
 @login_required
 def account_view(request):
     """User-specific account page."""
     context = {}
-    return render(request, 'ninetofiver/account/index.jade', context)
+    return render(request, 'ninetofiver/account/index.pug', context)
 
 
 @api_view(exclude_from_schema=True)
@@ -392,16 +392,27 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
             
             my_list = list()
 
+            # Get timesheet, or create it
+            timesheet = models.Timesheet.objects.get_or_create(
+                user=user,
+                year=new_start.year,
+                month=new_start.month
+            )[0]
+            leave_object = models.Leave.objects.get(pk=leave)
+
             # Create all leavedates ranging from the start to the end
             for x in range(0, days):
-                # Get timesheet, or create it
-                timesheet, created = models.Timesheet.objects.get_or_create(
-                    user=user,
-                    year=new_start.year,
-                    month=new_start.month
-                )
+
+                # If not correct timesheet, get /create it and overwrite
+                if not (timesheet.year == new_start.year and timesheet.month == new_start.month):
+                    timesheet = models.Timesheet.objects.get_or_create(
+                        user=user,
+                        year=new_start.year,
+                        month=new_start.month
+                    )[0]
+
                 temp = models.LeaveDate(
-                    leave=models.Leave.objects.get(pk=leave),
+                    leave=leave_object,
                     timesheet=timesheet,
                     starts_at=new_start,
                     ends_at=new_end

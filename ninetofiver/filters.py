@@ -267,18 +267,25 @@ class LeaveFilter(FilterSet):
         return queryset.filter(leavedate__starts_at__gte=base_date).distinct()
 
 
+    def leavedate_timesheet(self, queryset, name, value):
+        """Filters distinct leavedates linked to the provided timesheet."""
+
+        return queryset.filter(leavedate__timesheet=value).distinct()
+
+
     order_fields = ('status', 'description')
     order_by = NullLastOrderingFilter(fields=order_fields)
     leavedate_range = django_filters.CharFilter(method='leavedate_range_distinct')
 
     leavedate__range = django_filters.CharFilter(method='leavedate_range_distinct')
     leavedate__gte = django_filters.CharFilter(method='leavedate_upcoming_distinct')
+    leavedate__timesheet = django_filters.NumberFilter(method='leavedate_timesheet')
 
     class Meta:
         model = models.Leave
         fields = {
             'status': ['exact'],
-            'description': ['exact', 'contains', 'icontains']
+            'description': ['exact', 'contains', 'icontains'],
         }
 
 
@@ -465,6 +472,7 @@ class PerformanceFilter(FilterSet):
         model = models.Performance
         fields = {
             'day': ['exact', 'gt', 'gte', 'lt', 'lte', ],
+            'timesheet': ['exact', ],
             'timesheet__month': ['exact', 'gte', 'lte', ],
             'timesheet__year': ['exact', 'gte', 'lte', ],
         }

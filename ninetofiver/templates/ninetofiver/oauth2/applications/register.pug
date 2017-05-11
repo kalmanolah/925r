@@ -1,12 +1,12 @@
-extends ninetofiver/account/page.jade
+extends ninetofiver/account/page.pug
 - load crispy_forms_tags
 
 block title
-  | Editing application: {{ application.name }}
+  | Create an application
 
 block content_main
   form(
-    action='{% url "oauth2_provider:update" pk=application.pk %}'
+    action='{% url "oauth2_provider:register" %}'
     method='POST'
     role='form'
   )
@@ -18,9 +18,9 @@ block content_main
         class='btn btn-primary'
       )
         i(class='fa fa-check')
-        | Save
+        | Submit
       a(
-        href='{% url "oauth2_provider:detail" pk=application.pk %}'
+        href='{% url "oauth2_provider:list" %}'
         class='btn btn-secondary'
       )
         i(class='fa fa-times')
