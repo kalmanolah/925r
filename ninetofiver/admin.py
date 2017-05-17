@@ -344,7 +344,16 @@ class PerformanceParentAdmin(PolymorphicParentModelAdmin):
 
         return None
 
+    def contract_role(self, obj):
+        try:
+            activity = getattr(obj, 'activityperformance', None)
+        except:
+            activity = None
+        
+        if activity:
+            return activity.contract_role
+
     base_model = models.Performance
     child_models = (models.ActivityPerformance, models.StandbyPerformance)
     list_filter = (PolymorphicChildModelFilter,)
-    list_display = ('__str__', 'timesheet', 'day', 'contract', 'performance_type', 'duration', 'description')
+    list_display = ('__str__', 'timesheet', 'day', 'contract', 'performance_type', 'duration', 'description', 'contract_role')

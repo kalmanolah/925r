@@ -241,7 +241,7 @@ class PerformanceSerializer(BaseSerializer):
 class ActivityPerformanceSerializer(PerformanceSerializer):
     class Meta(PerformanceSerializer.Meta):
         model = models.ActivityPerformance
-        fields = PerformanceSerializer.Meta.fields + ('duration', 'description', 'performance_type', 'contract')
+        fields = PerformanceSerializer.Meta.fields + ('duration', 'description', 'performance_type', 'contract', 'contract_role')
 
 
 class StandbyPerformanceSerializer(PerformanceSerializer):
