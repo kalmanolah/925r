@@ -343,6 +343,7 @@ class ContractFilter(FilterSet):
             'company__vat_identification_number': ['exact', ],
             'customer__vat_identification_number': ['exact', ],
             'company__name': ['exact', 'contains', 'icontains', ],
+            'company': ['exact', ],
             'customer__name': ['exact', 'contains', 'icontains', ],
             'company__country': ['exact', ],
             'customer__country': ['exact', ],
