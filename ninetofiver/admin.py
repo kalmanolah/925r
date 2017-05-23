@@ -349,7 +349,7 @@ class PerformanceParentAdmin(PolymorphicParentModelAdmin):
             activity = getattr(obj, 'activityperformance', None)
         except:
             activity = None
-        
+
         if activity:
             return activity.contract_role
 
