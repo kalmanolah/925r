@@ -215,10 +215,14 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
     def performance_types(obj):
         return format_html('<br>'.join(str(x) for x in list(obj.performance_types.all())))
 
+    def attachment(self, obj):
+        return format_html('<br>'.join('<a href="%s">%s</a>'
+                           % (x.get_file_url(), str(x)) for x in list(obj.attachments.all())))
+
     base_model = models.Contract
     child_models = (models.ProjectContract, models.ConsultancyContract, models.SupportContract)
     list_display = ('__str__', 'label', 'company', 'customer', 'contract_users',
-                    performance_types, 'description', 'active')
+                    performance_types, 'description', 'active', 'attachment')
     list_filter = (
         PolymorphicChildModelFilter, 
         ('company', RelatedDropdownFilter),

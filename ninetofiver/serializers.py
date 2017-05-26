@@ -175,7 +175,7 @@ class ContractSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Contract
         fields = BaseSerializer.Meta.fields + ('label', 'description', 'company', 'customer', 'performance_types',
-                                               'active', 'contract_groups', 'hours_spent')
+                                               'active', 'contract_groups', 'hours_spent', 'attachments')
 
 
 class ProjectContractSerializer(ContractSerializer):

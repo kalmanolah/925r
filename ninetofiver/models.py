@@ -655,7 +655,8 @@ class Contract(BaseModel):
     active = models.BooleanField(default=True)
     performance_types = models.ManyToManyField(PerformanceType, blank=True)
     contract_groups = models.ManyToManyField(ContractGroup, blank=True)
-
+    attachments = models.ManyToManyField(Attachment, blank=True)
+    
     def __str__(self):
         """Return a string representation."""
         return '%s [%s → %s]' % (self.label, self.company, self.customer)
