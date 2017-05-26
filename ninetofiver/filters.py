@@ -275,7 +275,6 @@ class LeaveFilter(FilterSet):
 
     order_fields = ('status', 'description')
     order_by = NullLastOrderingFilter(fields=order_fields)
-    leavedate_range = django_filters.CharFilter(method='leavedate_range_distinct')
 
     leavedate__range = django_filters.CharFilter(method='leavedate_range_distinct')
     leavedate__gte = django_filters.CharFilter(method='leavedate_upcoming_distinct')
