@@ -232,6 +232,11 @@ class TimesheetSerializer(BaseSerializer):
         fields = BaseSerializer.Meta.fields + ('user', 'year', 'month', 'closed')
 
 
+class WhereaboutSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.Whereabout
+        fields = BaseSerializer.Meta.fields + ('timesheet', 'day', 'location')
+
 class PerformanceSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Performance

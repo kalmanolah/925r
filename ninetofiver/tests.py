@@ -524,6 +524,36 @@ class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
         return self.create_data
 
 
+class WhereaboutAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'whereabout'
+    factory_class = factories.WhereaboutFactory
+    user_factory = factories.AdminFactory
+    create_data = {
+        'day': 12,
+        'location': 'Brasschaat',
+    }
+    update_data = {
+        'day': 13,
+        'location': 'Home'
+    }
+
+    def setUp(self):
+        self.timesheet = factories.OpenTimesheetFactory.create(
+            user=factories.AdminFactory.create(),
+        )
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(timesheet=self.timesheet)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'timesheet': self.timesheet.id
+        })
+
+        return self.create_data
+
+
 class PerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'performance'
     factory_class = factories.PerformanceFactory

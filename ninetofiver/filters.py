@@ -464,6 +464,22 @@ class TimesheetFilter(FilterSet):
         }
 
 
+class WhereaboutFilter(FilterSet):
+    order_fields = ('location', 'day', 'timesheet__month', 'timesheet__year', )
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
+    class Meta:
+        model = models.Whereabout
+        fields = {
+            'location': ['exact', 'contains', 'icontains'],
+            'day': ['exact', 'gt', 'gte', 'lt', 'lte', ],
+            'timesheet': ['exact', ],
+            'timesheet__month': ['exact', 'gte', 'lte', ],
+            'timesheet__year': ['exact', 'gte', 'lte', ],
+            'timesheet__user_id': ['exact'],
+        }
+
+
 class PerformanceFilter(FilterSet):
     order_fields = ('day', 'timesheet__month', 'timesheet__year', )
     order_by = NullLastOrderingFilter(fields=order_fields)

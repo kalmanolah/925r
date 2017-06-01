@@ -264,6 +264,16 @@ class TimesheetViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
+class WhereaboutViewSet(viewsets.ModelViewSet):
+    """"
+    API endpoint that allows whereabouts to be viewed or edited.
+    """
+    queryset = models.Whereabout.objects.all()
+    serializer_class = serializers.WhereaboutSerializer
+    filter_class = filters.WhereaboutFilter
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+
+
 class PerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
     """
     API endpoint that allows performances to be viewed or edited.

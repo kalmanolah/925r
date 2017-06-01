@@ -288,6 +288,12 @@ class TimesheetAdmin(admin.ModelAdmin):
     ordering = ('-year', 'month', 'user__first_name', 'user__last_name')
 
 
+@admin.register(models.Whereabout)
+class WhereaboutAdmin(admin.ModelAdmin):
+    list_display = ('__str__', )
+    ordering = ('-day', )    
+
+
 class PerformanceChildAdmin(PolymorphicChildModelAdmin):
     base_model = models.Performance
 
