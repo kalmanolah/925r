@@ -1,3 +1,4 @@
+import logging
 import django_filters
 
 from datetime import datetime, timedelta
@@ -274,6 +275,7 @@ class LeaveFilter(FilterSet):
 
     order_fields = ('status', 'description')
     order_by = NullLastOrderingFilter(fields=order_fields)
+    leavedate_range = django_filters.CharFilter(method='leavedate_range_distinct')
 
     leavedate__range = django_filters.CharFilter(method='leavedate_range_distinct')
     leavedate__gte = django_filters.CharFilter(method='leavedate_upcoming_distinct')
@@ -332,6 +334,7 @@ class ContractFilter(FilterSet):
 
             # User related fields
             'contractuser__user__username': ['exact', 'contains', 'icontains', ],
+            'contractuser__user__id': ['exact', ],
             'contractuser__user__first_name': ['exact', 'contains', 'icontains', ],
             'contractuser__user__last_name': ['exact', 'contains', 'icontains', ],
             'contractuser__user__groups': ['exact', 'contains', 'icontains', ],
@@ -340,6 +343,7 @@ class ContractFilter(FilterSet):
             'company__vat_identification_number': ['exact', ],
             'customer__vat_identification_number': ['exact', ],
             'company__name': ['exact', 'contains', 'icontains', ],
+            'company': ['exact', ],
             'customer__name': ['exact', 'contains', 'icontains', ],
             'company__country': ['exact', ],
             'customer__country': ['exact', ],
@@ -351,6 +355,7 @@ class ContractFilter(FilterSet):
 
             # Performancetype fields
             'performance_types__label': ['exact', 'contains', 'icontains', ],
+            'performance_types__id': ['exact', ],
         }
 
 
@@ -423,9 +428,13 @@ class ContractRoleFilter(FilterSet):
 
 
 class ContractUserFilter(FilterSet):
+    order_fields = ('contract')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.ContractUser
         fields = {
+            'contract': ['exact',]
         }
 
 

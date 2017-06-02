@@ -965,6 +965,7 @@ class ActivityPerformance(Performance):
 
     contract = models.ForeignKey(Contract, on_delete=models.PROTECT)
     performance_type = models.ForeignKey(PerformanceType, on_delete=models.PROTECT)
+    contract_role = models.ForeignKey(ContractRole, null=True, on_delete=models.PROTECT)
     description = models.TextField(max_length=255, blank=True, null=True)
     duration = models.DecimalField(
         max_digits=4,
@@ -989,7 +990,25 @@ class ActivityPerformance(Performance):
 
         contract = data.get('contract', getattr(instance, 'contract', None))
         performance_type = data.get('performance_type', getattr(instance, 'performance_type', None))
+        contract_role = data.get('contract_role', getattr(instance, 'contract_role', None))
 
+        if contract and contract_role:
+            # Ensure that contract is a project contract
+            if not isinstance(contract, ProjectContract):
+                raise ValidationError(
+                    _('The selected contract role is not valid for the selected contract.'),
+                )
+            # Ensure that contract role is valid for contract
+            performance = data.get('performance', getattr(instance, 'performance', None))
+            if performance:
+                timesheet = Timesheet.objects.get(id=performance.timesheet)
+                user_id = timesheet.user if timesheet else None # noga
+                contract_user = ContractUser.objects.filter(user=user_id, contract=contract.id, contract_role=contract_role)
+                if not contract_user:
+                    raise ValidationError(
+                        _('The selected contract role is not valid for the current user.'),
+                    )
+ 
         if contract and performance_type:
             # Ensure the performance type is valid for the contract
             allowed_types = list(contract.performance_types.all())
@@ -999,17 +1018,13 @@ class ActivityPerformance(Performance):
                     _('The selected performance type is not valid for the selected contract'),
                 )
 
-            if not contract.active:
-                raise ValidationError(
-                    _('Activityperformances cannot be linked to closed contracts.')
-                )
-
     def get_validation_args(self):
         """Get a dict used for validation based on this instance."""
         return merge_dicts(super().get_validation_args(), {
             'contract': getattr(self, 'contract', None),
             'performance_type': getattr(self, 'performance_type', None),
         })
+
 
 
 class StandbyPerformance(Performance):
