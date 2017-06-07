@@ -285,6 +285,7 @@ class LeaveFilter(FilterSet):
         fields = {
             'status': ['exact'],
             'description': ['exact', 'contains', 'icontains'],
+            'user_id': ['exact'],
         }
 
 
