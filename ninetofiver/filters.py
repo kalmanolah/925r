@@ -492,6 +492,7 @@ class PerformanceFilter(FilterSet):
             'timesheet': ['exact', ],
             'timesheet__month': ['exact', 'gte', 'lte', ],
             'timesheet__year': ['exact', 'gte', 'lte', ],
+            'timesheet__user_id': ['exact'],
         }
 
 
