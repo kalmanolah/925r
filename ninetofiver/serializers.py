@@ -229,7 +229,7 @@ class ProjectEstimateSerializer(BaseSerializer):
 class TimesheetSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Timesheet
-        fields = BaseSerializer.Meta.fields + ('user', 'year', 'month', 'closed')
+        fields = BaseSerializer.Meta.fields + ('user', 'year', 'month', 'status')
 
 
 class WhereaboutSerializer(BaseSerializer):
@@ -253,8 +253,6 @@ class StandbyPerformanceSerializer(PerformanceSerializer):
     class Meta(PerformanceSerializer.Meta):
         model = models.StandbyPerformance
         fields = PerformanceSerializer.Meta.fields
-
-
 
 
 class MyUserSerializer(UserSerializer):

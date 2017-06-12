@@ -406,6 +406,12 @@ class Timesheet(BaseModel):
 
     """Timesheet model."""
 
+    STATUS = Choices(
+        ('CLOSED', _('Closed')),
+        ('ACTIVE', _('Active')),
+        ('PENDING', _('Pending')),
+    )
+
     user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
     month = models.PositiveSmallIntegerField(
         validators=[
@@ -420,7 +426,7 @@ class Timesheet(BaseModel):
             validators.MaxValueValidator(3000),
         ]
     )
-    closed = models.BooleanField(default=False)
+    status = models.CharField(max_length=16, choices=STATUS, default=STATUS.ACTIVE)
 
     class Meta(BaseModel.Meta):
         unique_together = (('user', 'year', 'month'),)
@@ -579,7 +585,7 @@ class LeaveDate(BaseModel):
 
         if timesheet:
             # Verify timesheet this leave date is attached to isn't closed
-            if timesheet.closed:
+            if timesheet.status == Timesheet.STATUS.CLOSED:
                 raise ValidationError(
                     _('You cannot attach leave dates to a closed timesheet'),
                 )
@@ -935,7 +941,7 @@ class Whereabout(BaseModel):
 
         if timesheet:
             # Ensure no whereabout is added/modified for a closed timesheet
-            if timesheet.closed:
+            if timesheet.status == Timesheet.STATUS.CLOSED:
                 raise ValidationError(
                     _('Whereabout attached to a closed timesheet cannot be modified'),
                 )
@@ -986,7 +992,7 @@ class Performance(BaseModel):
 
         if timesheet:
             # Ensure no performance is added/modified for a closed timesheet
-            if timesheet.closed:
+            if timesheet.status == Timesheet.STATUS.CLOSED:
                 raise ValidationError(
                     _('Performance attached to a closed timesheet cannot be modified'),
                 )

@@ -272,18 +272,23 @@ class ProjectEstimateAdmin(admin.ModelAdmin):
 class TimesheetAdmin(admin.ModelAdmin):
 
     def make_closed(self, request, queryset):
-        queryset.update(closed=True)
+        queryset.update(status=models.Timesheet.STATUS.CLOSED)
     make_closed.short_description = _('Close selected timesheets')
 
-    def make_opened(self, request, queryset):
-        queryset.update(closed=False)
-    make_opened.short_description = _('Open selected timesheets')
+    def make_active(self, request, queryset):
+        queryset.update(status=models.Timesheet.STATUS.ACTIVE)
+    make_active.short_description = _('Activate selected timesheets')
 
-    list_display = ('__str__', 'user', 'month', 'year', 'closed')
-    list_filter = ('closed',)
+    def make_pending(self, request, queryset):
+        queryset.update(status=models.Timesheet.STATUS.PENDING)
+    make_pending.short_description = _('Set selected timesheets to pending')
+
+    list_display = ('__str__', 'user', 'month', 'year', 'status')
+    list_filter = ('status',)
     actions = [
         'make_closed',
-        'make_opened',
+        'make_active',
+        'make_pending',
     ]
     ordering = ('-year', 'month', 'user__first_name', 'user__last_name')
 
