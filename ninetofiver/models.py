@@ -655,7 +655,8 @@ class Contract(BaseModel):
     active = models.BooleanField(default=True)
     performance_types = models.ManyToManyField(PerformanceType, blank=True)
     contract_groups = models.ManyToManyField(ContractGroup, blank=True)
-
+    attachments = models.ManyToManyField(Attachment, blank=True)
+    
     def __str__(self):
         """Return a string representation."""
         return '%s [%s → %s]' % (self.label, self.company, self.customer)
@@ -904,6 +905,55 @@ class ProjectEstimate(BaseModel):
         """Return a string representation"""
         return '%s [Est: %s]' % (self.role.label, self.hours_estimated)
 
+
+###########################################
+# WHEREABOUT
+###########################################
+
+class Whereabout(BaseModel):
+# Defines the whereabouts for a user
+    """Whereabout model."""
+    timesheet = models.ForeignKey(Timesheet, on_delete=models.PROTECT)
+    day = models.PositiveSmallIntegerField(
+        validators=[
+            validators.MinValueValidator(1),
+            validators.MaxValueValidator(31),
+        ]
+    )
+    location = models.CharField(max_length=255)
+
+    def __str__(self):
+        """Retrun a string representation"""
+        return '%s (%s - %s)' % (self.location, self.day, self.timesheet)
+
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object"""
+        instance_id = instance.id if instance else None # noqa
+        timesheet = data.get('timesheet', getattr(instance, 'timesheet', None))
+        day = data.get('day', getattr(instance, 'day', None))
+
+        if timesheet:
+            # Ensure no whereabout is added/modified for a closed timesheet
+            if timesheet.closed:
+                raise ValidationError(
+                    _('Whereabout attached to a closed timesheet cannot be modified'),
+                )
+            
+            if day:
+                month_days = monthrange(timesheet.year, timesheet.month)[1]
+
+                if day > month_days:
+                    raise ValidationError(
+                        _('There are only %s days in the month this timesheet is attached to' % month_days),
+                    )
+        
+        def get_validation_args(self):
+            """Get a dict used for validation based on this instance"""
+            return {
+                'timesheet': getattr(self, 'timesheet', None),
+                'day': getattr(self, 'day', None),
+            }
 
 
 ###########################################

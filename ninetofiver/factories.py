@@ -209,6 +209,14 @@ class OpenTimesheetFactory(TimesheetFactory):
     closed = False
 
 
+class WhereaboutFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.Whereabout
+
+    day = factory.LazyFunction(lambda: random.randint(1, 27))
+    location = factory.LazyFunction(fake.city)
+
+
 class PerformanceFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.Performance

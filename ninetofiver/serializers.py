@@ -175,7 +175,7 @@ class ContractSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Contract
         fields = BaseSerializer.Meta.fields + ('label', 'description', 'company', 'customer', 'performance_types',
-                                               'active', 'contract_groups', 'hours_spent')
+                                               'active', 'contract_groups', 'hours_spent', 'attachments')
 
 
 class ProjectContractSerializer(ContractSerializer):
@@ -231,6 +231,11 @@ class TimesheetSerializer(BaseSerializer):
         model = models.Timesheet
         fields = BaseSerializer.Meta.fields + ('user', 'year', 'month', 'closed')
 
+
+class WhereaboutSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.Whereabout
+        fields = BaseSerializer.Meta.fields + ('timesheet', 'day', 'location')
 
 class PerformanceSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):

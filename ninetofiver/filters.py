@@ -275,7 +275,6 @@ class LeaveFilter(FilterSet):
 
     order_fields = ('status', 'description')
     order_by = NullLastOrderingFilter(fields=order_fields)
-    leavedate_range = django_filters.CharFilter(method='leavedate_range_distinct')
 
     leavedate__range = django_filters.CharFilter(method='leavedate_range_distinct')
     leavedate__gte = django_filters.CharFilter(method='leavedate_upcoming_distinct')
@@ -286,6 +285,7 @@ class LeaveFilter(FilterSet):
         fields = {
             'status': ['exact'],
             'description': ['exact', 'contains', 'icontains'],
+            'user_id': ['exact'],
         }
 
 
@@ -465,6 +465,22 @@ class TimesheetFilter(FilterSet):
         }
 
 
+class WhereaboutFilter(FilterSet):
+    order_fields = ('location', 'day', 'timesheet__month', 'timesheet__year', )
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
+    class Meta:
+        model = models.Whereabout
+        fields = {
+            'location': ['exact', 'contains', 'icontains'],
+            'day': ['exact', 'gt', 'gte', 'lt', 'lte', ],
+            'timesheet': ['exact', ],
+            'timesheet__month': ['exact', 'gte', 'lte', ],
+            'timesheet__year': ['exact', 'gte', 'lte', ],
+            'timesheet__user_id': ['exact'],
+        }
+
+
 class PerformanceFilter(FilterSet):
     order_fields = ('day', 'timesheet__month', 'timesheet__year', )
     order_by = NullLastOrderingFilter(fields=order_fields)
@@ -476,6 +492,7 @@ class PerformanceFilter(FilterSet):
             'timesheet': ['exact', ],
             'timesheet__month': ['exact', 'gte', 'lte', ],
             'timesheet__year': ['exact', 'gte', 'lte', ],
+            'timesheet__user_id': ['exact'],
         }
 
 
