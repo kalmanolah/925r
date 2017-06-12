@@ -508,7 +508,7 @@ class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
         'month': datetime.date.today().month,
     }
     update_data = {
-        'closed': False,
+        'status': 'ACTIVE',
         'year': datetime.date.today().year,
         'month': datetime.date.today().month,
     }
@@ -843,12 +843,12 @@ class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
     factory_class = factories.OpenTimesheetFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'closed': False,
+        'status': "ACTIVE",
         'year': datetime.date.today().year,
         'month': datetime.date.today().month,
     }
     update_data = {
-        'closed': False,
+        'status': "ACTIVE",
         'year': datetime.date.today().year,
         'month': datetime.date.today().month,
     }
