@@ -205,7 +205,7 @@ class TimesheetFactory(factory.DjangoModelFactory):
 
 
 class OpenTimesheetFactory(TimesheetFactory):
-    closed = False
+    Status= model.Timesheet.STATUS.ACTIVE
 
 
 class WhereaboutFactory(factory.DjangoModelFactory):
