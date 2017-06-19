@@ -94,7 +94,7 @@ class UserFilter(FilterSet):
         'employmentcontract__ended_at', 'employmentcontract__company__name', 'employmentcontract__work_schedule__label',
         'employmentcontract__employment_contract_type__label', 'leave__leavedate__starts_at', 'leave__leavedate__ends_at',
         'active_monday', 'active_tuesday', 'active_wednesday', 'active_thursday', 'active_friday',
-        'active_saturday', 'active_sunday')
+        'active_saturday', 'active_sunday', 'userinfo__join_date')
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
@@ -118,6 +118,7 @@ class UserFilter(FilterSet):
             'userinfo__gender': ['iexact', ],
             'userinfo__country': ['iexact', ],
             'userinfo__birth_date': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
+            'userinfo__join_date': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
 
             # Employmentcontract fields
             'employmentcontract__started_at': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],

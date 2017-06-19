@@ -3,7 +3,7 @@ import humanize
 import uuid
 
 from calendar import monthrange
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 from django.contrib.auth import models as auth_models
 from django.core import validators
@@ -365,6 +365,7 @@ class UserInfo(BaseModel):
     birth_date = models.DateField()
     gender = models.CharField(max_length=2, choices=GENDER)
     country = CountryField()
+    join_date = models.DateField(_("Became Inuit on"), default=date.today)
 
     def __str__(self):
         """Return a string representation."""

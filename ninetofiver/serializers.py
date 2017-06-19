@@ -10,11 +10,12 @@ class UserSerializer(serializers.ModelSerializer):
     country = serializers.CharField(source='userinfo.country')
     gender = serializers.CharField(source='userinfo.gender')
     birth_date = serializers.CharField(source='userinfo.birth_date')
+    join_date = serializers.CharField(source='userinfo.join_date')
     
     class Meta:
         model = auth_models.User
-        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date')
-        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date')
+        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date')
+        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date')
 
     def get_display_label(self, obj):
         return str(obj)
@@ -115,7 +116,7 @@ class UserRelativeSerializer(BaseSerializer):
 class UserInfoSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.UserInfo
-        fields = BaseSerializer.Meta.fields + ('birth_date', 'gender', 'country', 'user')
+        fields = BaseSerializer.Meta.fields + ('birth_date', 'gender', 'country', 'user', 'join_date')
 
 
 class AttachmentSerializer(BaseSerializer):
