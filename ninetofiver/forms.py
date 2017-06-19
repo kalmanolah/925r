@@ -14,4 +14,4 @@ class UserInfoAdminForm(forms.ModelForm):
         queryset = auth_models.User.objects.order_by('first_name', 'last_name'))
     class Meta:
         model = models.UserInfo
-        fields = ['user', 'gender', 'birth_date', 'country']
+        fields = ['user', 'gender', 'birth_date', 'country', 'join_date']

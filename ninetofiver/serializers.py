@@ -115,7 +115,7 @@ class UserRelativeSerializer(BaseSerializer):
 class UserInfoSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.UserInfo
-        fields = BaseSerializer.Meta.fields + ('birth_date', 'gender', 'country', 'user')
+        fields = BaseSerializer.Meta.fields + ('birth_date', 'gender', 'country', 'user', 'join_date')
 
 
 class AttachmentSerializer(BaseSerializer):

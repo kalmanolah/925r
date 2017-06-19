@@ -118,6 +118,7 @@ class UserFilter(FilterSet):
             'userinfo__gender': ['iexact', ],
             'userinfo__country': ['iexact', ],
             'userinfo__birth_date': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
+            'userinfo__join_date': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
 
             # Employmentcontract fields
             'employmentcontract__started_at': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],

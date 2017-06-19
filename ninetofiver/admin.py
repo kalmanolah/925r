@@ -17,16 +17,6 @@ from django.contrib.admin import widgets
 from ninetofiver.forms import UserInfoAdminForm
 
 
-@admin.register(models.UserInfo)
-class UserInfoAdmin(admin.ModelAdmin):
-    def user_groups(obj):
-        return format_html('<br>'.join(str(x) for x in list(obj.user.groups.all())))
-
-    list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country')
-    ordering = ('user',)
-    form = UserInfoAdminForm
-
-
 class EmploymentContractStatusFilter(admin.SimpleListFilter):
     title = 'Status'
     parameter_name = 'Status'
@@ -173,6 +163,16 @@ class LeaveAdmin(admin.ModelAdmin):
 class LeaveDateAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'leave', 'starts_at', 'ends_at')
     ordering = ('-starts_at',)
+
+
+@admin.register(models.UserInfo)
+class UserInfoAdmin(admin.ModelAdmin):
+    def user_groups(obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.user.groups.all())))
+
+    list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country')
+    ordering = ('user',)
+    form = UserInfoAdminForm
 
 
 @admin.register(models.PerformanceType)
