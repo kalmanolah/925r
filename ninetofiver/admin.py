@@ -1,5 +1,6 @@
 from datetime import date
 from django.contrib import admin
+from django.contrib.auth import models as auth_models
 from django.db.models import Q
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
@@ -11,6 +12,31 @@ from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin import PolymorphicParentModelAdmin
 from rangefilter.filter import DateRangeFilter
 from rangefilter.filter import DateTimeRangeFilter
+from django import forms
+from django.contrib.admin import widgets
+
+class UserModelChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return "%s, %s" % (obj.first_name, obj.last_name)
+
+
+class UserInfoAdminForm(forms.ModelForm):
+    user = UserModelChoiceField(
+        queryset = auth_models.User.objects.order_by('first_name', 'last_name'))
+    class Meta:
+        model = models.UserInfo
+        fields = ['user', 'gender', 'birth_date', 'country']
+
+
+@admin.register(models.UserInfo)
+class UserInfoAdmin(admin.ModelAdmin):
+    def user_groups(obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.user.groups.all())))
+
+    list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country')
+    ordering = ('user',)
+    form = UserInfoAdminForm
+
 
 class EmploymentContractStatusFilter(admin.SimpleListFilter):
     title = 'Status'
@@ -90,15 +116,6 @@ class WorkScheduleAdmin(admin.ModelAdmin):
 class UserRelativeAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'user', 'relation', 'gender', 'birth_date', )
     ordering = ('name',)
-
-
-@admin.register(models.UserInfo)
-class UserInfoAdmin(admin.ModelAdmin):
-    def user_groups(obj):
-        return format_html('<br>'.join(str(x) for x in list(obj.user.groups.all())))
-
-    list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country')
-    ordering = ('user',)
 
 
 @admin.register(models.Attachment)
