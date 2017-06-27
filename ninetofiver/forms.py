@@ -15,3 +15,10 @@ class UserInfoAdminForm(forms.ModelForm):
     class Meta:
         model = models.UserInfo
         fields = ['user', 'gender', 'birth_date', 'country', 'join_date']
+
+class TimesheetAdminForm(forms.ModelForm):
+    user = UserModelChoiceField(
+        queryset = auth_models.User.objects.order_by('first_name', 'last_name'))
+    class Meta:
+        model = models.Timesheet
+        fields = ['user', 'month', 'year', 'status']

@@ -14,7 +14,7 @@ from rangefilter.filter import DateRangeFilter
 from rangefilter.filter import DateTimeRangeFilter
 from django import forms
 from django.contrib.admin import widgets
-from ninetofiver.forms import UserInfoAdminForm
+from ninetofiver.forms import UserInfoAdminForm, TimesheetAdminForm
 
 
 class EmploymentContractStatusFilter(admin.SimpleListFilter):
@@ -297,6 +297,7 @@ class TimesheetAdmin(admin.ModelAdmin):
         'make_pending',
     ]
     ordering = ('-year', 'month', 'user__first_name', 'user__last_name')
+    form = TimesheetAdminForm
 
 
 @admin.register(models.Whereabout)
