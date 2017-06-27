@@ -14,7 +14,7 @@ from rangefilter.filter import DateRangeFilter
 from rangefilter.filter import DateTimeRangeFilter
 from django import forms
 from django.contrib.admin import widgets
-from ninetofiver.forms import UserInfoAdminForm, TimesheetAdminForm
+from ninetofiver.forms import *
 
 
 class EmploymentContractStatusFilter(admin.SimpleListFilter):
@@ -162,6 +162,7 @@ class LeaveAdmin(admin.ModelAdmin):
         'make_rejected',
     ]
     ordering = ('-status',)
+    form = LeaveAdminForm
 
 
 @admin.register(models.LeaveDate)
@@ -188,7 +189,6 @@ class PerformanceTypeAdmin(admin.ModelAdmin):
 
 class ContractUserInline(admin.TabularInline):
     model = models.ContractUser
-
 
 @admin.register(models.ContractGroup)
 class ContractGroupAdmin(admin.ModelAdmin):
@@ -270,6 +270,7 @@ class ContractRoleAdmin(admin.ModelAdmin):
 class ContractUserAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'contract', 'contract_role')
     ordering = ('user__first_name', 'user__last_name')
+    form = ContractUserAdminForm
 
 
 @admin.register(models.ProjectEstimate)

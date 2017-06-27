@@ -16,9 +16,26 @@ class UserInfoAdminForm(forms.ModelForm):
         model = models.UserInfo
         fields = ['user', 'gender', 'birth_date', 'country', 'join_date']
 
+
 class TimesheetAdminForm(forms.ModelForm):
     user = UserModelChoiceField(
         queryset = auth_models.User.objects.order_by('first_name', 'last_name'))
     class Meta:
         model = models.Timesheet
         fields = ['user', 'month', 'year', 'status']
+
+
+class LeaveAdminForm(forms.ModelForm):
+    user = UserModelChoiceField(
+        queryset = auth_models.User.objects.order_by('first_name', 'last_name'))
+    class Meta:
+        model = models.Leave
+        fields = ['user', 'leave_type', 'description', 'status', 'attachments']
+
+
+class ContractUserAdminForm(forms.ModelForm):
+    user = UserModelChoiceField(
+        queryset = auth_models.User.objects.order_by('first_name', 'last_name'))
+    class Meta:
+        model = models.ContractUser
+        fields = ['user', 'contract', 'contract_role']
