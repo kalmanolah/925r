@@ -109,6 +109,11 @@ class AttachmentAdmin(admin.ModelAdmin):
 class HolidayAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'date', 'country')
     ordering = ('-date',)
+    list_filter = (
+        ('country', DropdownFilter),
+        ('date', DateRangeFilter)
+    )
+    search_fields = ('name',)
 
 
 @admin.register(models.LeaveType)
