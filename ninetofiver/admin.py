@@ -83,6 +83,7 @@ class EmploymentContractAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'user__first_name', 'user__last_name', 'employment_contract_type__label',
                      'started_at', 'ended_at')
     ordering = ('user__first_name', 'user__last_name')
+    form = EmploymentContractAdminForm
 
 
 @admin.register(models.WorkSchedule)

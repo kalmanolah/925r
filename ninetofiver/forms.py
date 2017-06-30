@@ -39,3 +39,11 @@ class ContractUserAdminForm(forms.ModelForm):
     class Meta:
         model = models.ContractUser
         fields = ['user', 'contract', 'contract_role']
+
+
+class EmploymentContractAdminForm(forms.ModelForm):
+    user = UserModelChoiceField(
+        queryset = auth_models.User.objects.order_by('first_name', 'last_name'))
+    class Meta:
+        model = models.EmploymentContract
+        fields = ['user', 'company', 'employment_contract_type', 'work_schedule', 'started_at', 'ended_at']

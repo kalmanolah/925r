@@ -231,7 +231,12 @@ class EmploymentContract(BaseModel):
         started_at = data.get('started_at', getattr(instance, 'started_at', None))
         ended_at = data.get('ended_at', getattr(instance, 'ended_at', None))
 
-        if ended_at:
+        if not started_at:
+            raise ValidationError(
+                _('Please provide a valid date.')
+            )
+
+        if ended_at and started_at:
             """Verify whether the end date of the employment contract comes after the start date"""
             if ended_at < started_at:
                 raise ValidationError(
