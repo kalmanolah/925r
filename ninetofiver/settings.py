@@ -230,7 +230,7 @@ class Base(Configuration):
         },
         'DOC_EXPANSION': 'list',
         'SHOW_REQUEST_HEADERS': True,
-        'JSON_EDITOR': True,
+        'JSON_EDITOR': False,
         # 'APIS_SORTER': 'alpha',
         # 'OPERATIONS_SORTER': 'method',
         'VALIDATOR_URL': None,

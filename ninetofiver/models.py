@@ -3,7 +3,7 @@ import humanize
 import uuid
 
 from calendar import monthrange
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 from django.contrib.auth import models as auth_models
 from django.core import validators
@@ -231,7 +231,12 @@ class EmploymentContract(BaseModel):
         started_at = data.get('started_at', getattr(instance, 'started_at', None))
         ended_at = data.get('ended_at', getattr(instance, 'ended_at', None))
 
-        if ended_at:
+        if not started_at:
+            raise ValidationError(
+                _('Please provide a valid date.')
+            )
+
+        if ended_at and started_at:
             """Verify whether the end date of the employment contract comes after the start date"""
             if ended_at < started_at:
                 raise ValidationError(
@@ -365,6 +370,7 @@ class UserInfo(BaseModel):
     birth_date = models.DateField()
     gender = models.CharField(max_length=2, choices=GENDER)
     country = CountryField()
+    join_date = models.DateField(_("Became Inuit on"), default=date.today)
 
     def __str__(self):
         """Return a string representation."""
@@ -406,6 +412,12 @@ class Timesheet(BaseModel):
 
     """Timesheet model."""
 
+    STATUS = Choices(
+        ('CLOSED', _('Closed')),
+        ('ACTIVE', _('Active')),
+        ('PENDING', _('Pending')),
+    )
+
     user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
     month = models.PositiveSmallIntegerField(
         validators=[
@@ -420,7 +432,7 @@ class Timesheet(BaseModel):
             validators.MaxValueValidator(3000),
         ]
     )
-    closed = models.BooleanField(default=False)
+    status = models.CharField(max_length=16, choices=STATUS, default=STATUS.ACTIVE)
 
     class Meta(BaseModel.Meta):
         unique_together = (('user', 'year', 'month'),)
@@ -579,7 +591,7 @@ class LeaveDate(BaseModel):
 
         if timesheet:
             # Verify timesheet this leave date is attached to isn't closed
-            if timesheet.closed:
+            if timesheet.status == Timesheet.STATUS.CLOSED:
                 raise ValidationError(
                     _('You cannot attach leave dates to a closed timesheet'),
                 )
@@ -935,7 +947,7 @@ class Whereabout(BaseModel):
 
         if timesheet:
             # Ensure no whereabout is added/modified for a closed timesheet
-            if timesheet.closed:
+            if timesheet.status == Timesheet.STATUS.CLOSED:
                 raise ValidationError(
                     _('Whereabout attached to a closed timesheet cannot be modified'),
                 )
@@ -986,7 +998,7 @@ class Performance(BaseModel):
 
         if timesheet:
             # Ensure no performance is added/modified for a closed timesheet
-            if timesheet.closed:
+            if timesheet.status == Timesheet.STATUS.CLOSED:
                 raise ValidationError(
                     _('Performance attached to a closed timesheet cannot be modified'),
                 )

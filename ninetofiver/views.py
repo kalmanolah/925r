@@ -54,7 +54,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    queryset = auth_models.User.objects.all().order_by('-date_joined')
+    queryset = auth_models.User.objects.distinct().order_by('-date_joined')
     serializer_class = serializers.UserSerializer
     filter_class = filters.UserFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -511,7 +511,7 @@ class MyTimesheetViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return user.timesheet_set.exclude(closed=True)
+        return user.timesheet_set.exclude(status = models.Timesheet.STATUS.CLOSED)
 
 
 class MyContractViewSet(viewsets.ModelViewSet):
