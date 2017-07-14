@@ -27,3 +27,4 @@ django-admin-rangefilter==0.2.1
 django-admin-list-filter-dropdown==1.0.0
 django-downloadview==1.9
 coreschema==0.0.4
+python-redmine==2.0.2
