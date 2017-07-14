@@ -13,7 +13,7 @@ class UserInfoAdminForm(forms.ModelForm):
     user = UserModelChoiceField(
         queryset = auth_models.User.objects.order_by('first_name', 'last_name'))
     redmine_user_id = forms.ChoiceField(
-        choices = REDMINE_USER_CHOICES)
+        choices = get_redmine_user_choices())
     class Meta:
         model = models.UserInfo
         fields = ['user', 'gender', 'birth_date', 'country', 'join_date', 'redmine_user_id']
@@ -53,7 +53,7 @@ class EmploymentContractAdminForm(forms.ModelForm):
 
 class ProjectContractAdminForm(forms.ModelForm):
     redmine_project_id = forms.ChoiceField(
-       choices = REDMINE_PROJECT_CHOICES)
+       choices = get_redmine_project_choices())
     class Meta:
         model = models.ProjectContract
         fields = ['label', 'description', 'customer', 'company', 'active', 'performance_types', 'contract_groups', 'attachments', 'redmine_project_id', 'fixed_fee', 'starts_at', 'ends_at']

@@ -8,7 +8,7 @@ from redminelib import Redmine
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-
+from requests.exceptions import ConnectionError
 from ninetofiver import filters
 from ninetofiver import models
 from ninetofiver import serializers
@@ -31,8 +31,36 @@ from rest_framework_swagger import renderers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
 
-REDMINE = Redmine(REDMINE_URL, key=REDMINE_API_KEY)
 
+def get_redmine_time_entries():
+    if REDMINE_URL is not '' and REDMINE_API_KEY is not '':
+        try:
+            redmine = Redmine(REDMINE_URL, key=REDMINE_API_KEY)
+            return redmine.time_entry.all()
+        except ConnectionError:
+            print('Tried to connect to redmine but failed.')
+            return []
+        except Exception as e:
+            print('Something went wrong when trying to connect to redmine: ')
+            print(e)
+            return []
+    else:
+        return []
+
+def get_redmine_user_time_entries(user_id):
+    if REDMINE_URL is not '' and REDMINE_API_KEY is not '':
+        try:
+            redmine = Redmine(REDMINE_URL, key=REDMINE_API_KEY)
+            return redmine.time_entry.filter(user_id=user_id)
+        except ConnectionError:
+            print('Tried to connect to redmine but failed.')
+            return []
+        except Exception as e:
+            print('Something went wrong when trying to connect to redmine: ')
+            print(e)
+            return []
+    else:
+        return []
 
 def home_view(request):
     """Homepage."""
@@ -332,16 +360,17 @@ class RedmineTimeEntryViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows redmine time entries to be viewed or edited
     """
-    queryset = REDMINE.time_entry.all()
+    queryset = get_redmine_time_entries()
     serializer_class = serializers.RedmineTimeEntrySerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def list(self, request):
-        time_entries = REDMINE.time_entry.all()
+        time_entries = get_redmine_time_entries() 
         user_id = self.request.query_params.get('user_id', None)
         month = self.request.query_params.get('month', None)
         if user_id is not None and month is not None:
-            time_entries = REDMINE.time_entry.filter(user_id=user_id)
+            # time_entries = REDMINE.time_entry.filter(user_id=user_id)
+            time_entries = get_redmine_user_time_entries(user_id=user_id)
             # Only return the time entries of this month
             time_entries = list(filter(lambda x: x['spent_on'].month == int(month), time_entries))
 
