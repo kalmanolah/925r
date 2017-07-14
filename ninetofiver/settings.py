@@ -280,8 +280,8 @@ class Base(Configuration):
     AUTH_LDAP_ALWAYS_UPDATE_USER = True
 
     # REDMINE 
-    REDMINE_URL = ''
-    REDMINE_API_KEY = ''
+    REDMINE_URL = os.getenv('REDMINE_URL')
+    REDMINE_API_KEY = os.getenv('REDMINE_API_KEY')
 
 
 class Dev(Base):
