@@ -16,7 +16,7 @@ import yaml
 from configurations import Configuration
 from django_auth_ldap.config import LDAPSearch
 from django_auth_ldap.config import LDAPSearchUnion
-
+from redminelib import Redmine
 
 CFG_FILE_PATH = os.path.expanduser(os.environ.get('CFG_FILE_PATH', '/etc/925r/config.yml'))
 
@@ -136,8 +136,12 @@ class Base(Configuration):
 
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'YAYATA',
+            'USER': 'root',
+            'PASSWORD': 'rootroot',
+            'HOST': 'localhost',
+            'PORT': '3306',
         }
     }
 
@@ -274,6 +278,10 @@ class Base(Configuration):
         'last_name': 'sn',
     }
     AUTH_LDAP_ALWAYS_UPDATE_USER = True
+
+    # REDMINE 
+    REDMINE_URL = ''
+    REDMINE_API_KEY = ''
 
 
 class Dev(Base):

@@ -221,6 +221,7 @@ class PerformanceFactory(factory.DjangoModelFactory):
         model = models.Performance
 
     day = factory.LazyFunction(lambda: random.randint(1, 27))
+    redmine_time_entry_id = factory.LazyFunction(lambda: random.randint(0, 3000))
 
 
 class ActivityPerformanceFactory(PerformanceFactory):

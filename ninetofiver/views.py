@@ -2,7 +2,9 @@ from django.contrib.auth import models as auth_models
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
-
+from django.conf import settings
+from ninetofiver.settings import REDMINE_URL, REDMINE_API_KEY
+from redminelib import Redmine
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -24,8 +26,12 @@ from rest_framework.decorators import renderer_classes
 from rest_framework.renderers import CoreJSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.schemas import SchemaGenerator
+from rest_framework_swagger import renderers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
+
+REDMINE = Redmine(REDMINE_URL, key=REDMINE_API_KEY)
 
 
 def home_view(request):
@@ -317,6 +323,98 @@ class AttachmentViewSet(viewsets.ModelViewSet):
     filter_class = filters.AttachmentFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
     parser_classes = (parsers.MultiPartParser, parsers.FileUploadParser, parsers.JSONParser)
+
+
+###########################################
+# REDMINE
+###########################################
+class RedmineTimeEntryViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows redmine time entries to be viewed or edited
+    """
+    queryset = REDMINE.time_entry.all()
+    serializer_class = serializers.RedmineTimeEntrySerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def list(self, request):
+        time_entries = REDMINE.time_entry.all()
+        user_id = self.request.query_params.get('user_id', None)
+        month = self.request.query_params.get('month', None)
+        if user_id is not None and month is not None:
+            time_entries = REDMINE.time_entry.filter(user_id=user_id)
+            # Only return the time entries of this month
+            time_entries = list(filter(lambda x: x['spent_on'].month == int(month), time_entries))
+
+        serializer = serializers.RedmineTimeEntrySerializer(
+            instance=time_entries, many=True)
+        return Response(serializer.data)
+
+    def create(self, request):
+        serializer = serializers.RedmineTimeEntrySerializer(data=request.data)
+        if serializer.is_valid():
+            time_entry = REDMINE.time_entry.new()
+            time_entry.issue_id = request.data.get('issue')
+            time_entry.hours = request.data.get('hours')
+            time_entry.spent_on = request.data.get('spent_on')
+            time_entry.activity_id = request.data.get('activity')
+            time_entry.comments = request.data.get('comments')
+            time_entry.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self, request, pk=None):
+        try:
+            time_entry = REDMINE.time_entry.get(pk)
+        except KeyError:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.RedmineTimeEntrySerializer(instance=time_entry)
+        return Response(serializer.data)
+    
+    def update(self, request, pk=None):
+        try:
+            time_entry = REDMINE.time_entry.get(pk)
+        except KeyError:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.RedmineTimeEntrySerializer(
+            data=request.data, instance=time_entry)
+        if serializer.is_valid:
+            REDMINE.time_entry.update(
+                id=time_entry.id,
+                name=serializer.name,
+                identifier=serializer.identifier)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, pk=None):
+        try:
+            time_entry = REDMINE.time_entry.get(pk)
+        except KeyError:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.RedmineTimeEntrySerializer(
+            data=request.data, instance=time_entry, partial=True)
+        if serializer.is_valid():
+            REDMINE.time_entry.update(
+                resource_id=time_entry.id,
+                name=request.data.get('name'),
+                identifier=request.data.get('identifier'))
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None):
+        try:
+            time_entry = REDMINE.time_entry.get(pk)
+        except KeyError:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        time_entry.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class MyUserServiceAPIView(APIView):
