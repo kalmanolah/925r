@@ -52,7 +52,7 @@ router.register(r'my_performances/standby', views.MyStandbyPerformanceViewSet, b
 router.register(r'my_performances', views.MyPerformanceViewSet, base_name='myperformance')
 router.register(r'my_attachments', views.MyAttachmentViewSet, base_name='myattachment')
 router.register(r'my_workschedules', views.MyWorkScheduleViewSet, base_name='myworkschedule')
-router.register(r'redmine_time_entries', views.RedmineTimeEntryViewSet, base_name='redmineTimeEntry')
+router.register(r'redmine_time_entries', views.RedmineTimeEntryViewSet, base_name='redminetimeentry')
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
