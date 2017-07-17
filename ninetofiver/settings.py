@@ -134,16 +134,27 @@ class Base(Configuration):
     # Database
     # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'YAYATA',
-            'USER': 'root',
-            'PASSWORD': 'rootroot',
-            'HOST': 'localhost',
-            'PORT': '3306',
+    if os.getenv('TRAVIS', None):
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.mysql',
+                'NAME': 'travis_ci_db',
+                'USER': 'travis',
+                'PASSWORD': '',
+                'HOST': '127.0.0.1',
+            }
         }
-    }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.mysql',
+                'NAME': 'YAYATA',
+                'USER': 'root',
+                'PASSWORD': 'rootroot',
+                'HOST': 'localhost',
+                'PORT': '3306',
+            }
+        }
 
     # Password validation
     # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
