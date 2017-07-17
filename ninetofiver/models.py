@@ -1139,11 +1139,3 @@ class StandbyPerformance(Performance):
                 'performance': getattr((self, 'performance', None)),
             })
 
-
-###########################################
-# REDMINE
-###########################################
-# class RedmineTimeEntry(object):
-#     def __init(self, **kwargs):
-#         for field in ('id','user', 'activity', 'project', 'issue', 'hours', 'spent_on', 'created_on', 'updated_on', 'comments'):
-#             setattr(self, field, kwargs.get(field, None))
