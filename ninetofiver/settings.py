@@ -16,7 +16,6 @@ import yaml
 from configurations import Configuration
 from django_auth_ldap.config import LDAPSearch
 from django_auth_ldap.config import LDAPSearchUnion
-from redminelib import Redmine
 
 CFG_FILE_PATH = os.path.expanduser(os.environ.get('CFG_FILE_PATH', '/etc/925r/config.yml'))
 
