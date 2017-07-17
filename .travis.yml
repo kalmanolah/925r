@@ -11,7 +11,7 @@ services:
 env:
   - DJANGO=1.10.4 DB=mysql
 before_script:
-  - mysql -e 'create database test;' -u root
+  - mysql -e 'create database YAYATA;' -u root
 script:
   - coverage run --source=ninetofiver manage.py testninetofiver
 after_success:
