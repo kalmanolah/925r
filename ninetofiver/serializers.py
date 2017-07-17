@@ -65,51 +65,6 @@ class BaseSerializer(serializers.ModelSerializer):
 #         serializer = value.get_default_serializer()
 #         return serializer(value, context={'request': None}).data
 
-class RedmineProjectSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    name = serializers.CharField(max_length=255)
-    identifier = serializers.CharField(max_length=255)
-    description = serializers.CharField(max_length=255)
-    status = serializers.CharField(max_length=255)
-    created_on = serializers.CharField(max_length=255)
-    updated_on = serializers.CharField(max_length=255)
-
-    def to_representation(self, instance):
-        """
-        Object instance -> Dict of primitive datatypes.
-        """
-        ret = OrderedDict()
-        fields = [field for field in self.fields.values() if not field.write_only]
-
-        for field in fields:
-            try:
-                attribute = field.get_attribute(instance)
-                # attribute = getattr(instance, field, None)
-            except SkipField:
-                continue
-
-            if attribute is not None:
-                represenation = field.to_representation(attribute)
-                if represenation is None or represenation is '':
-                    # Do not seralize empty objects
-                    represenation = ''
-                if isinstance(represenation, list) and not represenation:
-                   # Do not serialize empty lists
-                    continue
-                ret[field.field_name] = represenation
-            else:
-                continue
-        return ret
-
-    def create(self, validated_data):
-        return models.RedmineProject(id=None, **validated_data)
-
-    def update(self, instance, validated_data):
-        for field, value in validated_data.items():
-            setattr(instance, field, value)
-        return instance
-
-
 class RedmineAttributeSerializer(serializers.Serializer):
     id = serializers.CharField(max_length=255)
     name = serializers.CharField(max_length=255)
@@ -130,57 +85,6 @@ class RedmineTimeEntrySerializer(serializers.Serializer):
     created_on = serializers.CharField(max_length=255)
     updated_on = serializers.CharField(max_length=255)
     comments = serializers.CharField(max_length=255 )
-    
-    def to_representation(self, instance):
-        """
-        Object instance -> Dict of primitive datatypes.
-        """
-        ret = OrderedDict()
-        fields = [field for field in self.fields.values() if not field.write_only]
-
-        for field in fields:
-            try:
-                attribute = field.get_attribute(instance)
-                # attribute = getattr(instance, field, None)
-            except SkipField:
-                logging.info('skipping')
-                continue
-            except Exception:
-                continue
-
-
-            if attribute is not None:
-                represenation = field.to_representation(attribute)
-                if represenation is None or represenation is '':
-                    # Do not seralize empty objects
-                    represenation = ''
-                if isinstance(represenation, list) and not represenation:
-                   # Do not serialize empty lists
-                    continue
-                ret[field.field_name] = represenation
-            else:
-                continue
-        return ret
-
-    def create(self, validated_data):
-        return models.RedmineTimeEntry(id=None, **validated_data)
-
-    def update(self, instance, validated_data):
-        for field, value in validated_data.items():
-            setattr(instance, field, value)
-        return instance
-
-
-class RedmineIssueSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    project = RedmineAttributeSerializer()
-    subject = serializers.CharField(max_length=255)
-    description = serializers.CharField(max_length=255)
-    assigned_to = RedmineAttributeSerializer()
-    priority = RedmineAttributeSerializer()
-    tracker = RedmineAttributeSerializer()
-    author = RedmineAttributeSerializer()
-    logging.basicConfig(filename='BOOONAAAARRRRR.log', level=logging.INFO, filemode='w')
 
     def to_representation(self, instance):
         """
@@ -212,14 +116,6 @@ class RedmineIssueSerializer(serializers.Serializer):
             else:
                 continue
         return ret
-
-    def create(self, validated_data):
-        return models.RedmineIssue(id=None, **validated_data)
-
-    def update(self, instance, validated_data):
-        for field, value in validated_data.items():
-            setattr(instance, field, value)
-        return instance
 
 
 class LeaveRequestSerializer(BaseSerializer):

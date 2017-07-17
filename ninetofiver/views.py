@@ -378,72 +378,72 @@ class RedmineTimeEntryViewSet(viewsets.ModelViewSet):
             instance=time_entries, many=True)
         return Response(serializer.data)
 
-    def create(self, request):
-        serializer = serializers.RedmineTimeEntrySerializer(data=request.data)
-        if serializer.is_valid():
-            time_entry = REDMINE.time_entry.new()
-            time_entry.issue_id = request.data.get('issue')
-            time_entry.hours = request.data.get('hours')
-            time_entry.spent_on = request.data.get('spent_on')
-            time_entry.activity_id = request.data.get('activity')
-            time_entry.comments = request.data.get('comments')
-            time_entry.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # def create(self, request):
+    #     serializer = serializers.RedmineTimeEntrySerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         time_entry = REDMINE.time_entry.new()
+    #         time_entry.issue_id = request.data.get('issue')
+    #         time_entry.hours = request.data.get('hours')
+    #         time_entry.spent_on = request.data.get('spent_on')
+    #         time_entry.activity_id = request.data.get('activity')
+    #         time_entry.comments = request.data.get('comments')
+    #         time_entry.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def retrieve(self, request, pk=None):
-        try:
-            time_entry = REDMINE.time_entry.get(pk)
-        except KeyError:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        except ValueError:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.RedmineTimeEntrySerializer(instance=time_entry)
-        return Response(serializer.data)
+    # def retrieve(self, request, pk=None):
+    #     try:
+    #         time_entry = REDMINE.time_entry.get(pk)
+    #     except KeyError:
+    #         return Response(status=status.HTTP_404_NOT_FOUND)
+    #     except ValueError:
+    #         return Response(status=status.HTTP_400_BAD_REQUEST)
+    #     serializer = serializers.RedmineTimeEntrySerializer(instance=time_entry)
+    #     return Response(serializer.data)
     
-    def update(self, request, pk=None):
-        try:
-            time_entry = REDMINE.time_entry.get(pk)
-        except KeyError:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        except ValueError:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.RedmineTimeEntrySerializer(
-            data=request.data, instance=time_entry)
-        if serializer.is_valid:
-            REDMINE.time_entry.update(
-                id=time_entry.id,
-                name=serializer.name,
-                identifier=serializer.identifier)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # def update(self, request, pk=None):
+    #     try:
+    #         time_entry = REDMINE.time_entry.get(pk)
+    #     except KeyError:
+    #         return Response(status=status.HTTP_404_NOT_FOUND)
+    #     except ValueError:
+    #         return Response(status=status.HTTP_400_BAD_REQUEST)
+    #     serializer = serializers.RedmineTimeEntrySerializer(
+    #         data=request.data, instance=time_entry)
+    #     if serializer.is_valid:
+    #         REDMINE.time_entry.update(
+    #             id=time_entry.id,
+    #             name=serializer.name,
+    #             identifier=serializer.identifier)
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def partial_update(self, request, pk=None):
-        try:
-            time_entry = REDMINE.time_entry.get(pk)
-        except KeyError:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        except ValueError:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.RedmineTimeEntrySerializer(
-            data=request.data, instance=time_entry, partial=True)
-        if serializer.is_valid():
-            REDMINE.time_entry.update(
-                resource_id=time_entry.id,
-                name=request.data.get('name'),
-                identifier=request.data.get('identifier'))
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+    # def partial_update(self, request, pk=None):
+    #     try:
+    #         time_entry = REDMINE.time_entry.get(pk)
+    #     except KeyError:
+    #         return Response(status=status.HTTP_404_NOT_FOUND)
+    #     except ValueError:
+    #         return Response(status=status.HTTP_400_BAD_REQUEST)
+    #     serializer = serializers.RedmineTimeEntrySerializer(
+    #         data=request.data, instance=time_entry, partial=True)
+    #     if serializer.is_valid():
+    #         REDMINE.time_entry.update(
+    #             resource_id=time_entry.id,
+    #             name=request.data.get('name'),
+    #             identifier=request.data.get('identifier'))
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, pk=None):
-        try:
-            time_entry = REDMINE.time_entry.get(pk)
-        except KeyError:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        except ValueError:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        time_entry.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    # def destroy(self, request, pk=None):
+    #     try:
+    #         time_entry = REDMINE.time_entry.get(pk)
+    #     except KeyError:
+    #         return Response(status=status.HTTP_404_NOT_FOUND)
+    #     except ValueError:
+    #         return Response(status=status.HTTP_400_BAD_REQUEST)
+    #     time_entry.delete()
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class MyUserServiceAPIView(APIView):
