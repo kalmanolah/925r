@@ -11,5 +11,4 @@ MANIFEST
 ninetofiver_venv/
 docs/_build/
 /media/
-/Import_scripts/
 *.log
