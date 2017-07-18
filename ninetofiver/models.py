@@ -371,7 +371,7 @@ class UserInfo(BaseModel):
     gender = models.CharField(max_length=2, choices=GENDER)
     country = CountryField()
     join_date = models.DateField(_("Became Inuit on"), default=date.today)
-    redmine_user_id = models.CharField(max_length=255, blank=True, null=True)
+    redmine_id = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         """Return a string representation."""
@@ -401,7 +401,6 @@ class UserInfo(BaseModel):
         return {
             'birth_date': getattr(self, 'birth_date', None),
         }
-
 
 
 ###########################################
@@ -669,7 +668,7 @@ class Contract(BaseModel):
     performance_types = models.ManyToManyField(PerformanceType, blank=True)
     contract_groups = models.ManyToManyField(ContractGroup, blank=True)
     attachments = models.ManyToManyField(Attachment, blank=True)
-    redmine_project_id = models.CharField(max_length=255, blank=True, null=True)
+    redmine_id = models.CharField(max_length=255, blank=True, null=True)
     
     def __str__(self):
         """Return a string representation."""
@@ -986,7 +985,7 @@ class Performance(BaseModel):
             validators.MaxValueValidator(31),
         ]
     )
-    redmine_time_entry_id = models.CharField(max_length=255, blank=True, null=True)
+    redmine_id = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         """Return a string representation."""
@@ -1138,4 +1137,3 @@ class StandbyPerformance(Performance):
             return merge_dicts(super().get_validation_args(), {
                 'performance': getattr((self, 'performance', None)),
             })
-
