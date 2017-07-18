@@ -1,10 +1,10 @@
-from ninetofiver.settings import REDMINE_URL, REDMINE_API_KEY
+from ninetofiver.settings import REDMINE_URL, REDMINE_API_KEY 
 from redminelib import Redmine
 from requests.exceptions import ConnectionError
 
 
 def get_redmine_project_choices():
-    if REDMINE_URL is not '' and REDMINE_API_KEY is not '': 
+    if REDMINE_URL and REDMINE_API_KEY: 
         try:
             redmine = Redmine(REDMINE_URL, key=REDMINE_API_KEY)
             projects = redmine.project.all()
@@ -21,7 +21,7 @@ def get_redmine_project_choices():
         return []
 
 def get_redmine_user_choices():
-    if REDMINE_URL is not '' and REDMINE_API_KEY is not '':
+    if REDMINE_URL and REDMINE_API_KEY: 
         try:
             redmine = Redmine(REDMINE_URL, key=REDMINE_API_KEY)
             users = redmine.user.all()
