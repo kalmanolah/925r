@@ -66,6 +66,7 @@ class Base(Configuration):
     # in the test suite
     NINETOFIVER_APPS = [
         'ninetofiver',
+        'ninetofiver.redmine',
     ]
 
     # Application definition
@@ -133,27 +134,16 @@ class Base(Configuration):
     # Database
     # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
-    if os.getenv('TRAVIS', None):
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.mysql',
-                'NAME': 'travis_ci_db',
-                'USER': 'travis',
-                'PASSWORD': '',
-                'HOST': '127.0.0.1',
-            }
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'YAYATA',
+            'USER': 'root',
+            'PASSWORD': 'rootroot',
+            'HOST': 'localhost',
+            'PORT': '3306',
         }
-    else:
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.mysql',
-                'NAME': 'YAYATA',
-                'USER': 'root',
-                'PASSWORD': 'rootroot',
-                'HOST': 'localhost',
-                'PORT': '3306',
-            }
-        }
+    }
 
     # Password validation
     # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
@@ -290,8 +280,8 @@ class Base(Configuration):
     AUTH_LDAP_ALWAYS_UPDATE_USER = True
 
     # REDMINE 
-    REDMINE_URL = os.getenv('REDMINE_URL')
-    REDMINE_API_KEY = os.getenv('REDMINE_API_KEY')
+    REDMINE_URL = '' 
+    REDMINE_API_KEY = ''
 
 
 class Dev(Base):
@@ -327,3 +317,21 @@ class Prod(Base):
     }
 
     REGISTRATION_OPEN = False
+
+
+class TravisCI(Base):
+
+    """Travis-CI configuration."""
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'travis_ci_db',
+            'USER': 'travis',
+            'PASSWORD': '',
+            'HOST': '127.0.0.1',
+        }
+    }
+
+    REDMINE_URL = os.getenv('REDMINE_URL')
+    REDMINE_API_KEY = os.getenv('REDMINE_API_KEY')
