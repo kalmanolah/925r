@@ -15,12 +15,12 @@ class UserSerializer(serializers.ModelSerializer):
     gender = serializers.CharField(source='userinfo.gender')
     birth_date = serializers.CharField(source='userinfo.birth_date')
     join_date = serializers.CharField(source='userinfo.join_date')
-    redmine_user_id = serializers.CharField(source='userinfo.redmine_user_id')
+    redmine_id = serializers.CharField(source='userinfo.redmine_id')
     
     class Meta:
         model = auth_models.User
-        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date', 'redmine_user_id')
-        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date', 'redmine_user_id')
+        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date', 'redmine_id')
+        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date', 'redmine_id')
 
     def get_display_label(self, obj):
         return str(obj)
@@ -64,58 +64,6 @@ class BaseSerializer(serializers.ModelSerializer):
 #     def to_representation(self, value):
 #         serializer = value.get_default_serializer()
 #         return serializer(value, context={'request': None}).data
-
-class RedmineAttributeSerializer(serializers.Serializer):
-    id = serializers.CharField(max_length=255)
-    name = serializers.CharField(max_length=255)
-
-class RedmineTimeEntryIssueSerializer(serializers.Serializer):
-    id = serializers.CharField(max_length=255)
-
-
-class RedmineTimeEntrySerializer(serializers.Serializer):
-    id = serializers.CharField(max_length=255)
-    issue = serializers.CharField(max_length=255)
-    user = RedmineAttributeSerializer()
-    activity = RedmineAttributeSerializer()
-    project = RedmineAttributeSerializer()
-    issue = RedmineTimeEntryIssueSerializer()
-    hours = serializers.CharField(max_length=255)
-    spent_on = serializers.CharField(max_length=255)
-    created_on = serializers.CharField(max_length=255)
-    updated_on = serializers.CharField(max_length=255)
-    comments = serializers.CharField(max_length=255 )
-
-    def to_representation(self, instance):
-        """
-        Object instance -> Dict of primitive datatypes.
-        """
-        ret = OrderedDict()
-        fields = [field for field in self.fields.values() if not field.write_only]
-
-        for field in fields:
-            try:
-                attribute = field.get_attribute(instance)
-                # attribute = getattr(instance, field, None)
-            except SkipField:
-                logging.info('skipping')
-                continue
-            except Exception:
-                continue
-
-
-            if attribute is not None:
-                represenation = field.to_representation(attribute)
-                if represenation is None or represenation is '':
-                    # Do not seralize empty objects
-                    represenation = ''
-                if isinstance(represenation, list) and not represenation:
-                   # Do not serialize empty lists
-                    continue
-                ret[field.field_name] = represenation
-            else:
-                continue
-        return ret
 
 
 class LeaveRequestSerializer(BaseSerializer):
@@ -245,7 +193,7 @@ class ProjectContractSerializer(ContractSerializer):
 
     class Meta(ContractSerializer.Meta):
         model = models.ProjectContract
-        fields = ContractSerializer.Meta.fields + ('redmine_project_id', 'starts_at', 'ends_at', 'fixed_fee', 'hours_estimated',)
+        fields = ContractSerializer.Meta.fields + ('redmine_id', 'starts_at', 'ends_at', 'fixed_fee', 'hours_estimated',)
         
 
 class ConsultancyContractSerializer(ContractSerializer):
@@ -298,7 +246,7 @@ class WhereaboutSerializer(BaseSerializer):
 class PerformanceSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Performance
-        fields = BaseSerializer.Meta.fields + ('timesheet', 'day', 'redmine_time_entry_id')
+        fields = BaseSerializer.Meta.fields + ('timesheet', 'day', 'redmine_id')
 
 
 class ActivityPerformanceSerializer(PerformanceSerializer):
