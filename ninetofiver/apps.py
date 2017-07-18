@@ -6,3 +6,7 @@ class NineToFiverConfig(AppConfig):
 
     def ready(self):
         import ninetofiver.signals # noqa
+
+
+class RedmineConfig(AppConfig):
+    name = 'redmine'
