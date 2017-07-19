@@ -10,7 +10,7 @@ from requests.exceptions import ConnectionError
 
 logger = logging.getLogger(__name__)
 
-def get_redmine_user_time_entries(user_id):
+def get_redmine_user_time_entries(user_id, params):
     if REDMINE_URL and REDMINE_API_KEY:
         try:
             redmine = Redmine(REDMINE_URL, key=REDMINE_API_KEY)
@@ -19,7 +19,8 @@ def get_redmine_user_time_entries(user_id):
             # Filter out time entries not in the current month.
             redmine_time_entries = list(filter(lambda x: x['spent_on'].month == int(today.month), redmine_time_entries))
             # Filter out time entries that are already imported.
-            redmine_time_entries = list(filter(lambda x: not Performance.objects.filter(redmine_id=x.id).first(), redmine_time_entries))
+            if params['filter_imported'] == 'true':
+                redmine_time_entries = list(filter(lambda x: not Performance.objects.filter(redmine_id=x.id).first(), redmine_time_entries))
             return redmine_time_entries
         except ConnectionError:
             print('Tried to connect to redmine but failed.')
@@ -42,7 +43,7 @@ class RedmineTimeEntryViewSet(viewsets.ModelViewSet):
         month = self.request.query_params.get('month', None)
         if user_id is not None and month is not None:
             # time_entries = REDMINE.time_entry.filter(user_id=user_id)
-            time_entries = get_redmine_user_time_entries(user_id=user_id)
+            time_entries = get_redmine_user_time_entries(user_id=user_id, params={})
             # Only return the time entries of this month
             time_entries = list(filter(lambda x: x['spent_on'].month == int(month), time_entries))
 

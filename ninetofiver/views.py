@@ -30,8 +30,6 @@ from ninetofiver.redmine.views import get_redmine_user_time_entries
 from ninetofiver.redmine.serializers import RedmineTimeEntrySerializer
 
 import ninetofiver.settings as settings
-import logging
-logging.basicConfig(filename='BOOONAAAARRRRR.log', level=logging.INFO, filemode='w')
 
 def home_view(request):
     """Homepage."""
@@ -333,9 +331,9 @@ class TimeEntryImportServiceAPIView(APIView):
     def get(self, request, format=None):
         # If Redmine credentials are provided
         if settings.REDMINE_URL and settings.REDMINE_API_KEY:
-            redmine_id = models.UserInfo.objects.get(user_id = request.user.id).redmine_id
+            redmine_id = models.UserInfo.objects.get(user_id=request.user.id).redmine_id
             if redmine_id:
-                redmine_time_entries = get_redmine_user_time_entries(user_id=redmine_id)
+                redmine_time_entries = get_redmine_user_time_entries(user_id=redmine_id, params=request.query_params)
                 data = RedmineTimeEntrySerializer(
                     instance=redmine_time_entries, many=True).data
         return Response(data)
