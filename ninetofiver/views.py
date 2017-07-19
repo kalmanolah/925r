@@ -326,7 +326,7 @@ class AttachmentViewSet(viewsets.ModelViewSet):
 
 class TimeEntryImportServiceAPIView(APIView):
     """
-    Gets time entries from external sources and returns them to be imported as performances
+    Gets time entries from external sources and returns them to be imported as performances.
     """
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -336,10 +336,9 @@ class TimeEntryImportServiceAPIView(APIView):
             redmine_id = models.UserInfo.objects.get(user_id = request.user.id).redmine_id
             if redmine_id:
                 redmine_time_entries = get_redmine_user_time_entries(user_id=redmine_id)
-
-                serializer = RedmineTimeEntrySerializer(
-                    instance=redmine_time_entries, many=True)
-        return response.Response(serializer.data)
+                data = RedmineTimeEntrySerializer(
+                    instance=redmine_time_entries, many=True).data
+        return Response(data)
 
 class MyUserServiceAPIView(APIView):
     """
