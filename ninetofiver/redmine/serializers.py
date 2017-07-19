@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.fields import SkipField
 from collections import OrderedDict
+import timestring
 
 class RedmineAttributeSerializer(serializers.Serializer):
     id = serializers.CharField(max_length=255)
@@ -51,4 +52,12 @@ class RedmineTimeEntrySerializer(serializers.Serializer):
                 ret[field.field_name] = represenation
             else:
                 continue
+        ret = {
+            'day': timestring.Date(ret['spent_on']).day,
+            'duration': ret['hours'],
+            'description': ret['comments'],
+            'id': int(ret['id']),
+            'source': 'redmine',
+
+        }
         return ret

@@ -1,9 +1,7 @@
 """Redmine specific settings."""
-import yaml
 import os
 
 from configurations import Configuration
-from ninetofiver import settings
 
 class Base(Configuration):
 

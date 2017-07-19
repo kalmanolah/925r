@@ -1,36 +1,26 @@
 import logging
 
 from redminelib import Redmine
-from ninetofiver.settings import REDMINE_URL, REDMINE_API_KEY 
+from ninetofiver.settings import REDMINE_URL, REDMINE_API_KEY
+from ninetofiver.models import Performance
 from ninetofiver.redmine import serializers
+from datetime import datetime
 from rest_framework import viewsets, permissions, response
 from requests.exceptions import ConnectionError
 
 logger = logging.getLogger(__name__)
 
-
-def get_redmine_time_entries():
-    logging.info('in get redmine time entries')
-    logging.info(REDMINE_URL)
-    if REDMINE_URL and REDMINE_API_KEY:
-        try:
-            redmine = Redmine(REDMINE_URL, key=REDMINE_API_KEY)
-            return redmine.time_entry.all()
-        except ConnectionError:
-            logger.info('Tried to connect to redmine but failed.')
-            return []
-        except Exception as e:
-            logger.info('Something went wrong when trying to connect to redmine: ')
-            logger.info(e)
-            return []
-    else:
-        return []
-
 def get_redmine_user_time_entries(user_id):
     if REDMINE_URL and REDMINE_API_KEY:
         try:
             redmine = Redmine(REDMINE_URL, key=REDMINE_API_KEY)
-            return redmine.time_entry.filter(user_id=user_id)
+            redmine_time_entries = redmine.time_entry.filter(user_id=user_id)
+            today = datetime.now()
+            # Filter out time entries not in the current month.
+            redmine_time_entries = list(filter(lambda x: x['spent_on'].month == int(today.month), redmine_time_entries))
+            # Filter out time entries that are already imported.
+            redmine_time_entries = list(filter(lambda x: not Performance.objects.filter(redmine_id=x.id).first(), redmine_time_entries))
+            return redmine_time_entries
         except ConnectionError:
             print('Tried to connect to redmine but failed.')
             return []
@@ -38,19 +28,16 @@ def get_redmine_user_time_entries(user_id):
             print('Something went wrong when trying to connect to redmine: ')
             print(e)
             return []
-    else:
-        return []
+    return []
 
 class RedmineTimeEntryViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows redmine time entries to be viewed or edited
     """
-    queryset = get_redmine_time_entries()
     serializer_class = serializers.RedmineTimeEntrySerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def list(self, request):
-        time_entries = get_redmine_time_entries() 
         user_id = self.request.query_params.get('user_id', None)
         month = self.request.query_params.get('month', None)
         if user_id is not None and month is not None:

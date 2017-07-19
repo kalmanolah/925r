@@ -66,7 +66,6 @@ class Base(Configuration):
     # in the test suite
     NINETOFIVER_APPS = [
         'ninetofiver',
-        'ninetofiver.redmine',
     ]
 
     # Application definition

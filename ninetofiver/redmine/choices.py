@@ -17,8 +17,7 @@ def get_redmine_project_choices():
             print('Somethiig went wrong when trying to connect to redmine: ')
             print(e)
             return []
-    else:
-        return []
+    return []
 
 def get_redmine_user_choices():
     if REDMINE_URL and REDMINE_API_KEY: 
@@ -34,5 +33,4 @@ def get_redmine_user_choices():
             print('Something went wrong when trying to connect to redmine: ')
             print(e)
             return []
-    else:
-        return []
+    return []
