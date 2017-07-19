@@ -52,12 +52,13 @@ class RedmineTimeEntrySerializer(serializers.Serializer):
                 ret[field.field_name] = represenation
             else:
                 continue
-        ret = {
-            'day': timestring.Date(ret['spent_on']).day,
-            'duration': ret['hours'],
-            'description': ret['comments'],
-            'id': int(ret['id']),
-            'source': 'redmine',
-
-        }
+        # ret = {
+        #     'day': timestring.Date(ret['spent_on']).day,
+        #     'duration': ret['hours'],
+        #     'description': ret['comments'],
+        #     'id': int(ret['id']),
+        #     'source': 'redmine',
+        #     'project_id': int(ret['project']['id']),
+        #     'activity': ret['activity']['name'],
+        # }
         return ret
