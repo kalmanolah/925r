@@ -280,8 +280,8 @@ class Base(Configuration):
     AUTH_LDAP_ALWAYS_UPDATE_USER = True
 
     # REDMINE 
-    REDMINE_URL = '' 
-    REDMINE_API_KEY = ''
+    REDMINE_URL = None 
+    REDMINE_API_KEY = None
 
 
 class Dev(Base):
