@@ -42,14 +42,14 @@ class RedmineTimeEntrySerializer(serializers.Serializer):
 
 
             if attribute is not None:
-                represenation = field.to_representation(attribute)
-                if represenation is None or represenation is '':
+                representation = field.to_representation(attribute)
+                if representation is None or representation is '':
                     # Do not seralize empty objects
-                    represenation = ''
-                if isinstance(represenation, list) and not represenation:
+                    representation = ''
+                if isinstance(representation, list) and not representation:
                    # Do not serialize empty lists
                     continue
-                ret[field.field_name] = represenation
+                ret[field.field_name] = representation
             else:
                 continue
         # ret = {
