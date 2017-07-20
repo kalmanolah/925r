@@ -282,6 +282,48 @@ class Base(Configuration):
     REDMINE_URL = None 
     REDMINE_API_KEY = None
 
+    # Logging
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            },
+            'simple': {
+                'format': '%(levelname)s %(message)s'
+            },
+        },
+        'filters': {
+            'require_debug_true': {
+                '()': 'django.utils.log.RequireDebugTrue',
+            },
+        },
+        'handlers': {
+            'syslog': {
+                'class': 'logging.handlers.SysLogHandler',
+                'formatter': 'verbose',
+                'facility': 'user',
+            },
+            'console': {
+                'level': 'DEBUG',
+                'filters': ['require_debug_true'],
+                'class': 'logging.StreamHandler',
+                'formatter': 'simple'
+            },
+        },
+        'loggers': {
+            'ninetofiver': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+            },
+            'syslog': {
+                'handlers': ['console', 'syslog'],
+                'level': 'INFO',
+            }
+        }
+    }
+
 
 class Dev(Base):
 
