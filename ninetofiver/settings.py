@@ -323,7 +323,7 @@ class Dev(Base):
         'loggers': {
             'ninetofiver': {
                 'handlers': ['console'],
-                'level': ['DEBUG', 'INFO', 'ERROR'],
+                'level': 'DEBUG',
             }
         }
     }
@@ -387,7 +387,7 @@ class Prod(Base):
          'loggers': {
             'ninetofiver': {
                 'handlers': ['console', 'syslog'],
-                'level': ['DEBUG', 'INFO', 'ERROR'],
+                'level': 'INFO',
             }
         }
     }
