@@ -9,9 +9,7 @@ install:
 services:
   - mysql
 env:
-  - DJANGO=1.10.4 
-  - DB=mysql 
-  - DJANGO_CONFIGURATION=TravisCI
+  - DJANGO=1.10.4 DB=mysql DJANGO_CONFIGURATION=TravisCI
 script:
   - coverage run --source=ninetofiver manage.py testninetofiver
 after_success:
