@@ -54,7 +54,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    queryset = auth_models.User.objects.all().order_by('-date_joined')
+    queryset = auth_models.User.objects.distinct().order_by('-date_joined')
     serializer_class = serializers.UserSerializer
     filter_class = filters.UserFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -264,6 +264,16 @@ class TimesheetViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
+class WhereaboutViewSet(viewsets.ModelViewSet):
+    """"
+    API endpoint that allows whereabouts to be viewed or edited.
+    """
+    queryset = models.Whereabout.objects.all()
+    serializer_class = serializers.WhereaboutSerializer
+    filter_class = filters.WhereaboutFilter
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+
+
 class PerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
     """
     API endpoint that allows performances to be viewed or edited.
@@ -336,8 +346,8 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
         leavedates = request.data
 
         # Make the datetimes aware of the timezone
-        start = timezone.make_aware( 
-            (datetime.strptime(leavedates['starts_at'], "%Y-%m-%dT%H:%M:%S")), 
+        start = timezone.make_aware(
+            (datetime.strptime(leavedates['starts_at'], "%Y-%m-%dT%H:%M:%S")),
             timezone.get_current_timezone()
         )
         end = timezone.make_aware(
@@ -345,7 +355,7 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
             timezone.get_current_timezone()
         )
         leave = int(leavedates['leave'])
-        # timesheet = int(leavedates['timesheet'])    
+        # timesheet = int(leavedates['timesheet'])
 
         #If the leave spans across one day only
         if start.date() == end.date():
@@ -389,7 +399,7 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
 
             new_start = start
             new_end = end.replace(year=(start.year), month=(start.month), day=(start.day), hour=(23), minute=(59), second=(59))
-            
+
             my_list = list()
 
             # Get timesheet, or create it
@@ -430,11 +440,11 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
 
                 # Convert object into a list because serializer needs a list
                 my_list.append({
-                    'id': temp.id, 
+                    'id': temp.id,
                     'created_at': temp.created_at,
                     'updated_at': temp.updated_at,
-                    'leave': temp.leave_id, 
-                    'timesheet': temp.timesheet_id, 
+                    'leave': temp.leave_id,
+                    'timesheet': temp.timesheet_id,
                     'starts_at': temp.starts_at,
                     'ends_at': temp.ends_at
                 })
@@ -464,6 +474,7 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
             return Response('Leavedates are already assigned to this leave object', status = status.HTTP_400_BAD_REQUEST)
         else:
             return self.create_leavedates(self, request)
+
 
 class MyLeaveViewSet(viewsets.ModelViewSet):
     """
@@ -501,7 +512,7 @@ class MyTimesheetViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return user.timesheet_set.exclude(closed=True)
+        return user.timesheet_set.exclude(status = models.Timesheet.STATUS.CLOSED)
 
 
 class MyContractViewSet(viewsets.ModelViewSet):

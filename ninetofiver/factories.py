@@ -202,11 +202,18 @@ class TimesheetFactory(factory.DjangoModelFactory):
 
     month = factory.LazyFunction(lambda: random.randint(1, 12))
     year = factory.LazyFunction(lambda: random.randint(2000, 3000))
-    closed = factory.LazyFunction(fake.boolean)
 
 
 class OpenTimesheetFactory(TimesheetFactory):
-    closed = False
+    status= models.Timesheet.STATUS.ACTIVE
+
+
+class WhereaboutFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.Whereabout
+
+    day = factory.LazyFunction(lambda: random.randint(1, 27))
+    location = factory.LazyFunction(fake.city)
 
 
 class PerformanceFactory(factory.DjangoModelFactory):

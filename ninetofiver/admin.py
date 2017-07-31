@@ -1,5 +1,6 @@
 from datetime import date
 from django.contrib import admin
+from django.contrib.auth import models as auth_models
 from django.db.models import Q
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
@@ -11,6 +12,10 @@ from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin import PolymorphicParentModelAdmin
 from rangefilter.filter import DateRangeFilter
 from rangefilter.filter import DateTimeRangeFilter
+from django import forms
+from django.contrib.admin import widgets
+from ninetofiver.forms import *
+
 
 class EmploymentContractStatusFilter(admin.SimpleListFilter):
     title = 'Status'
@@ -78,6 +83,7 @@ class EmploymentContractAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'user__first_name', 'user__last_name', 'employment_contract_type__label',
                      'started_at', 'ended_at')
     ordering = ('user__first_name', 'user__last_name')
+    form = EmploymentContractAdminForm
 
 
 @admin.register(models.WorkSchedule)
@@ -92,15 +98,6 @@ class UserRelativeAdmin(admin.ModelAdmin):
     ordering = ('name',)
 
 
-@admin.register(models.UserInfo)
-class UserInfoAdmin(admin.ModelAdmin):
-    def user_groups(obj):
-        return format_html('<br>'.join(str(x) for x in list(obj.user.groups.all())))
-
-    list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country')
-    ordering = ('user',)
-
-
 @admin.register(models.Attachment)
 class AttachmentAdmin(admin.ModelAdmin):
     def link(self, obj):
@@ -113,6 +110,11 @@ class AttachmentAdmin(admin.ModelAdmin):
 class HolidayAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'date', 'country')
     ordering = ('-date',)
+    list_filter = (
+        ('country', DropdownFilter),
+        ('date', DateRangeFilter)
+    )
+    search_fields = ('name',)
 
 
 @admin.register(models.LeaveType)
@@ -161,12 +163,23 @@ class LeaveAdmin(admin.ModelAdmin):
         'make_rejected',
     ]
     ordering = ('-status',)
+    form = LeaveAdminForm
 
 
 @admin.register(models.LeaveDate)
 class LeaveDateAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'leave', 'starts_at', 'ends_at')
     ordering = ('-starts_at',)
+
+
+@admin.register(models.UserInfo)
+class UserInfoAdmin(admin.ModelAdmin):
+    def user_groups(obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.user.groups.all())))
+
+    list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country')
+    ordering = ('user',)
+    form = UserInfoAdminForm
 
 
 @admin.register(models.PerformanceType)
@@ -177,7 +190,6 @@ class PerformanceTypeAdmin(admin.ModelAdmin):
 
 class ContractUserInline(admin.TabularInline):
     model = models.ContractUser
-
 
 @admin.register(models.ContractGroup)
 class ContractGroupAdmin(admin.ModelAdmin):
@@ -215,10 +227,14 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
     def performance_types(obj):
         return format_html('<br>'.join(str(x) for x in list(obj.performance_types.all())))
 
+    def attachment(self, obj):
+        return format_html('<br>'.join('<a href="%s">%s</a>'
+                           % (x.get_file_url(), str(x)) for x in list(obj.attachments.all())))
+
     base_model = models.Contract
     child_models = (models.ProjectContract, models.ConsultancyContract, models.SupportContract)
     list_display = ('__str__', 'label', 'company', 'customer', 'contract_users',
-                    performance_types, 'description', 'active')
+                    performance_types, 'description', 'active', 'attachment')
     list_filter = (
         PolymorphicChildModelFilter, 
         ('company', RelatedDropdownFilter),
@@ -255,6 +271,7 @@ class ContractRoleAdmin(admin.ModelAdmin):
 class ContractUserAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'contract', 'contract_role')
     ordering = ('user__first_name', 'user__last_name')
+    form = ContractUserAdminForm
 
 
 @admin.register(models.ProjectEstimate)
@@ -268,20 +285,32 @@ class ProjectEstimateAdmin(admin.ModelAdmin):
 class TimesheetAdmin(admin.ModelAdmin):
 
     def make_closed(self, request, queryset):
-        queryset.update(closed=True)
+        queryset.update(status=models.Timesheet.STATUS.CLOSED)
     make_closed.short_description = _('Close selected timesheets')
 
-    def make_opened(self, request, queryset):
-        queryset.update(closed=False)
-    make_opened.short_description = _('Open selected timesheets')
+    def make_active(self, request, queryset):
+        queryset.update(status=models.Timesheet.STATUS.ACTIVE)
+    make_active.short_description = _('Activate selected timesheets')
 
-    list_display = ('__str__', 'user', 'month', 'year', 'closed')
-    list_filter = ('closed',)
+    def make_pending(self, request, queryset):
+        queryset.update(status=models.Timesheet.STATUS.PENDING)
+    make_pending.short_description = _('Set selected timesheets to pending')
+
+    list_display = ('__str__', 'user', 'month', 'year', 'status')
+    list_filter = ('status',)
     actions = [
         'make_closed',
-        'make_opened',
+        'make_active',
+        'make_pending',
     ]
     ordering = ('-year', 'month', 'user__first_name', 'user__last_name')
+    form = TimesheetAdminForm
+
+
+@admin.register(models.Whereabout)
+class WhereaboutAdmin(admin.ModelAdmin):
+    list_display = ('__str__', )
+    ordering = ('-day', )    
 
 
 class PerformanceChildAdmin(PolymorphicChildModelAdmin):
@@ -344,7 +373,16 @@ class PerformanceParentAdmin(PolymorphicParentModelAdmin):
 
         return None
 
+    def contract_role(self, obj):
+        try:
+            activity = getattr(obj, 'activityperformance', None)
+        except:
+            activity = None
+
+        if activity:
+            return activity.contract_role
+
     base_model = models.Performance
     child_models = (models.ActivityPerformance, models.StandbyPerformance)
     list_filter = (PolymorphicChildModelFilter,)
-    list_display = ('__str__', 'timesheet', 'day', 'contract', 'performance_type', 'duration', 'description')
+    list_display = ('__str__', 'timesheet', 'day', 'contract', 'performance_type', 'duration', 'description', 'contract_role')

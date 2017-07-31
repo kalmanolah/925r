@@ -118,7 +118,7 @@ See [LICENSE](LICENSE)
 
 ```
 ninetofiver (925r): a free and open source time and leave tracking application.
-Copyright (C) 2016 Kalman Olah
+Copyright (C) 2016-2017 Kalman Olah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

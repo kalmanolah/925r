@@ -3,7 +3,7 @@ import humanize
 import uuid
 
 from calendar import monthrange
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 from django.contrib.auth import models as auth_models
 from django.core import validators
@@ -231,7 +231,12 @@ class EmploymentContract(BaseModel):
         started_at = data.get('started_at', getattr(instance, 'started_at', None))
         ended_at = data.get('ended_at', getattr(instance, 'ended_at', None))
 
-        if ended_at:
+        if not started_at:
+            raise ValidationError(
+                _('Please provide a valid date.')
+            )
+
+        if ended_at and started_at:
             """Verify whether the end date of the employment contract comes after the start date"""
             if ended_at < started_at:
                 raise ValidationError(
@@ -365,6 +370,7 @@ class UserInfo(BaseModel):
     birth_date = models.DateField()
     gender = models.CharField(max_length=2, choices=GENDER)
     country = CountryField()
+    join_date = models.DateField(_("Became Inuit on"), default=date.today)
 
     def __str__(self):
         """Return a string representation."""
@@ -406,6 +412,12 @@ class Timesheet(BaseModel):
 
     """Timesheet model."""
 
+    STATUS = Choices(
+        ('CLOSED', _('Closed')),
+        ('ACTIVE', _('Active')),
+        ('PENDING', _('Pending')),
+    )
+
     user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
     month = models.PositiveSmallIntegerField(
         validators=[
@@ -420,7 +432,7 @@ class Timesheet(BaseModel):
             validators.MaxValueValidator(3000),
         ]
     )
-    closed = models.BooleanField(default=False)
+    status = models.CharField(max_length=16, choices=STATUS, default=STATUS.ACTIVE)
 
     class Meta(BaseModel.Meta):
         unique_together = (('user', 'year', 'month'),)
@@ -579,7 +591,7 @@ class LeaveDate(BaseModel):
 
         if timesheet:
             # Verify timesheet this leave date is attached to isn't closed
-            if timesheet.closed:
+            if timesheet.status == Timesheet.STATUS.CLOSED:
                 raise ValidationError(
                     _('You cannot attach leave dates to a closed timesheet'),
                 )
@@ -655,7 +667,8 @@ class Contract(BaseModel):
     active = models.BooleanField(default=True)
     performance_types = models.ManyToManyField(PerformanceType, blank=True)
     contract_groups = models.ManyToManyField(ContractGroup, blank=True)
-
+    attachments = models.ManyToManyField(Attachment, blank=True)
+    
     def __str__(self):
         """Return a string representation."""
         return '%s [%s → %s]' % (self.label, self.company, self.customer)
@@ -905,6 +918,55 @@ class ProjectEstimate(BaseModel):
         return '%s [Est: %s]' % (self.role.label, self.hours_estimated)
 
 
+###########################################
+# WHEREABOUT
+###########################################
+
+class Whereabout(BaseModel):
+# Defines the whereabouts for a user
+    """Whereabout model."""
+    timesheet = models.ForeignKey(Timesheet, on_delete=models.PROTECT)
+    day = models.PositiveSmallIntegerField(
+        validators=[
+            validators.MinValueValidator(1),
+            validators.MaxValueValidator(31),
+        ]
+    )
+    location = models.CharField(max_length=255)
+
+    def __str__(self):
+        """Retrun a string representation"""
+        return '%s (%s - %s)' % (self.location, self.day, self.timesheet)
+
+    @classmethod
+    def perform_additional_validation(cls, data, instance=None):
+        """Perform additional validation on the object"""
+        instance_id = instance.id if instance else None # noqa
+        timesheet = data.get('timesheet', getattr(instance, 'timesheet', None))
+        day = data.get('day', getattr(instance, 'day', None))
+
+        if timesheet:
+            # Ensure no whereabout is added/modified for a closed timesheet
+            if timesheet.status == Timesheet.STATUS.CLOSED:
+                raise ValidationError(
+                    _('Whereabout attached to a closed timesheet cannot be modified'),
+                )
+            
+            if day:
+                month_days = monthrange(timesheet.year, timesheet.month)[1]
+
+                if day > month_days:
+                    raise ValidationError(
+                        _('There are only %s days in the month this timesheet is attached to' % month_days),
+                    )
+        
+        def get_validation_args(self):
+            """Get a dict used for validation based on this instance"""
+            return {
+                'timesheet': getattr(self, 'timesheet', None),
+                'day': getattr(self, 'day', None),
+            }
+
 
 ###########################################
 # PERFORMANCE
@@ -936,7 +998,7 @@ class Performance(BaseModel):
 
         if timesheet:
             # Ensure no performance is added/modified for a closed timesheet
-            if timesheet.closed:
+            if timesheet.status == Timesheet.STATUS.CLOSED:
                 raise ValidationError(
                     _('Performance attached to a closed timesheet cannot be modified'),
                 )
@@ -965,6 +1027,7 @@ class ActivityPerformance(Performance):
 
     contract = models.ForeignKey(Contract, on_delete=models.PROTECT)
     performance_type = models.ForeignKey(PerformanceType, on_delete=models.PROTECT)
+    contract_role = models.ForeignKey(ContractRole, null=True, on_delete=models.PROTECT)
     description = models.TextField(max_length=255, blank=True, null=True)
     duration = models.DecimalField(
         max_digits=4,
@@ -989,7 +1052,25 @@ class ActivityPerformance(Performance):
 
         contract = data.get('contract', getattr(instance, 'contract', None))
         performance_type = data.get('performance_type', getattr(instance, 'performance_type', None))
+        contract_role = data.get('contract_role', getattr(instance, 'contract_role', None))
 
+        if contract and contract_role:
+            # Ensure that contract is a project contract
+            if not isinstance(contract, ProjectContract):
+                raise ValidationError(
+                    _('The selected contract role is not valid for the selected contract.'),
+                )
+            # Ensure that contract role is valid for contract
+            performance = data.get('performance', getattr(instance, 'performance', None))
+            if performance:
+                timesheet = Timesheet.objects.get(id=performance.timesheet)
+                user_id = timesheet.user if timesheet else None # noga
+                contract_user = ContractUser.objects.filter(user=user_id, contract=contract.id, contract_role=contract_role)
+                if not contract_user:
+                    raise ValidationError(
+                        _('The selected contract role is not valid for the current user.'),
+                    )
+ 
         if contract and performance_type:
             # Ensure the performance type is valid for the contract
             allowed_types = list(contract.performance_types.all())
@@ -999,17 +1080,13 @@ class ActivityPerformance(Performance):
                     _('The selected performance type is not valid for the selected contract'),
                 )
 
-            if not contract.active:
-                raise ValidationError(
-                    _('Activityperformances cannot be linked to closed contracts.')
-                )
-
     def get_validation_args(self):
         """Get a dict used for validation based on this instance."""
         return merge_dicts(super().get_validation_args(), {
             'contract': getattr(self, 'contract', None),
             'performance_type': getattr(self, 'performance_type', None),
         })
+
 
 
 class StandbyPerformance(Performance):

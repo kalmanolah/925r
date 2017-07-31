@@ -7,10 +7,15 @@ from rest_framework import serializers
 class UserSerializer(serializers.ModelSerializer):
     display_label = serializers.SerializerMethodField()
 
+    country = serializers.CharField(source='userinfo.country')
+    gender = serializers.CharField(source='userinfo.gender')
+    birth_date = serializers.CharField(source='userinfo.birth_date')
+    join_date = serializers.CharField(source='userinfo.join_date')
+    
     class Meta:
         model = auth_models.User
-        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active')
-        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active')
+        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date')
+        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date')
 
     def get_display_label(self, obj):
         return str(obj)
@@ -108,6 +113,12 @@ class UserRelativeSerializer(BaseSerializer):
         fields = BaseSerializer.Meta.fields + ('name', 'relation', 'birth_date', 'gender', 'user')
 
 
+class UserInfoSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.UserInfo
+        fields = BaseSerializer.Meta.fields + ('birth_date', 'gender', 'country', 'user', 'join_date')
+
+
 class AttachmentSerializer(BaseSerializer):
     file_url = serializers.SerializerMethodField()
 
@@ -165,14 +176,14 @@ class ContractSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Contract
         fields = BaseSerializer.Meta.fields + ('label', 'description', 'company', 'customer', 'performance_types',
-                                               'active', 'contract_groups', 'hours_spent')
+                                               'active', 'contract_groups', 'hours_spent', 'attachments')
 
 
 class ProjectContractSerializer(ContractSerializer):
     hours_estimated = serializers.SerializerMethodField()
 
     def get_hours_estimated(self, obj):
-        return obj.projectestimate_set.values_list('hours_estimated', flat=True)
+        return obj.projectestimate_set.values_list('hours_estimated', 'role_id',)
 
 
     class Meta(ContractSerializer.Meta):
@@ -219,8 +230,13 @@ class ProjectEstimateSerializer(BaseSerializer):
 class TimesheetSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Timesheet
-        fields = BaseSerializer.Meta.fields + ('user', 'year', 'month', 'closed')
+        fields = BaseSerializer.Meta.fields + ('user', 'year', 'month', 'status')
 
+
+class WhereaboutSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.Whereabout
+        fields = BaseSerializer.Meta.fields + ('timesheet', 'day', 'location')
 
 class PerformanceSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
@@ -231,15 +247,13 @@ class PerformanceSerializer(BaseSerializer):
 class ActivityPerformanceSerializer(PerformanceSerializer):
     class Meta(PerformanceSerializer.Meta):
         model = models.ActivityPerformance
-        fields = PerformanceSerializer.Meta.fields + ('duration', 'description', 'performance_type', 'contract')
+        fields = PerformanceSerializer.Meta.fields + ('duration', 'description', 'performance_type', 'contract', 'contract_role')
 
 
 class StandbyPerformanceSerializer(PerformanceSerializer):
     class Meta(PerformanceSerializer.Meta):
         model = models.StandbyPerformance
         fields = PerformanceSerializer.Meta.fields
-
-
 
 
 class MyUserSerializer(UserSerializer):

@@ -1,3 +1,4 @@
+import logging
 import django_filters
 
 from datetime import datetime, timedelta
@@ -93,7 +94,7 @@ class UserFilter(FilterSet):
         'employmentcontract__ended_at', 'employmentcontract__company__name', 'employmentcontract__work_schedule__label',
         'employmentcontract__employment_contract_type__label', 'leave__leavedate__starts_at', 'leave__leavedate__ends_at',
         'active_monday', 'active_tuesday', 'active_wednesday', 'active_thursday', 'active_friday',
-        'active_saturday', 'active_sunday')
+        'active_saturday', 'active_sunday', 'userinfo__join_date')
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
@@ -117,6 +118,7 @@ class UserFilter(FilterSet):
             'userinfo__gender': ['iexact', ],
             'userinfo__country': ['iexact', ],
             'userinfo__birth_date': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
+            'userinfo__join_date': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
 
             # Employmentcontract fields
             'employmentcontract__started_at': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
@@ -284,6 +286,7 @@ class LeaveFilter(FilterSet):
         fields = {
             'status': ['exact'],
             'description': ['exact', 'contains', 'icontains'],
+            'user_id': ['exact'],
         }
 
 
@@ -332,6 +335,7 @@ class ContractFilter(FilterSet):
 
             # User related fields
             'contractuser__user__username': ['exact', 'contains', 'icontains', ],
+            'contractuser__user__id': ['exact', ],
             'contractuser__user__first_name': ['exact', 'contains', 'icontains', ],
             'contractuser__user__last_name': ['exact', 'contains', 'icontains', ],
             'contractuser__user__groups': ['exact', 'contains', 'icontains', ],
@@ -340,6 +344,7 @@ class ContractFilter(FilterSet):
             'company__vat_identification_number': ['exact', ],
             'customer__vat_identification_number': ['exact', ],
             'company__name': ['exact', 'contains', 'icontains', ],
+            'company': ['exact', ],
             'customer__name': ['exact', 'contains', 'icontains', ],
             'company__country': ['exact', ],
             'customer__country': ['exact', ],
@@ -351,6 +356,7 @@ class ContractFilter(FilterSet):
 
             # Performancetype fields
             'performance_types__label': ['exact', 'contains', 'icontains', ],
+            'performance_types__id': ['exact', ],
         }
 
 
@@ -423,9 +429,13 @@ class ContractRoleFilter(FilterSet):
 
 
 class ContractUserFilter(FilterSet):
+    order_fields = ('contract')
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
     class Meta:
         model = models.ContractUser
         fields = {
+            'contract': ['exact',]
         }
 
 
@@ -444,7 +454,7 @@ class ProjectEstimateFilter(FilterSet):
 
 
 class TimesheetFilter(FilterSet):
-    order_fields = ('year', 'month', 'closed')
+    order_fields = ('year', 'month', 'status')
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
@@ -452,7 +462,23 @@ class TimesheetFilter(FilterSet):
         fields = {
             'year': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'month': ['exact', 'gt', 'gte', 'lt', 'lte'],
-            'closed': ['exact'],
+            'status': ['exact'],
+        }
+
+
+class WhereaboutFilter(FilterSet):
+    order_fields = ('location', 'day', 'timesheet__month', 'timesheet__year', )
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
+    class Meta:
+        model = models.Whereabout
+        fields = {
+            'location': ['exact', 'contains', 'icontains'],
+            'day': ['exact', 'gt', 'gte', 'lt', 'lte', ],
+            'timesheet': ['exact', ],
+            'timesheet__month': ['exact', 'gte', 'lte', ],
+            'timesheet__year': ['exact', 'gte', 'lte', ],
+            'timesheet__user_id': ['exact'],
         }
 
 
@@ -467,6 +493,7 @@ class PerformanceFilter(FilterSet):
             'timesheet': ['exact', ],
             'timesheet__month': ['exact', 'gte', 'lte', ],
             'timesheet__year': ['exact', 'gte', 'lte', ],
+            'timesheet__user_id': ['exact'],
         }
 
 

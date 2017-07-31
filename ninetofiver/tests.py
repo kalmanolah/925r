@@ -503,12 +503,12 @@ class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
     factory_class = factories.TimesheetFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'closed': False,
+        'status': 'ACTIVE',
         'year': datetime.date.today().year,
         'month': datetime.date.today().month,
     }
     update_data = {
-        'closed': False,
+        'status': 'ACTIVE',
         'year': datetime.date.today().year,
         'month': datetime.date.today().month,
     }
@@ -519,6 +519,36 @@ class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
     def get_create_data(self):
         self.create_data.update({
             'user': self.user.id,
+        })
+
+        return self.create_data
+
+
+class WhereaboutAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'whereabout'
+    factory_class = factories.WhereaboutFactory
+    user_factory = factories.AdminFactory
+    create_data = {
+        'day': 12,
+        'location': 'Brasschaat',
+    }
+    update_data = {
+        'day': 13,
+        'location': 'Home'
+    }
+
+    def setUp(self):
+        self.timesheet = factories.OpenTimesheetFactory.create(
+            user=factories.AdminFactory.create(),
+        )
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(timesheet=self.timesheet)
+
+    def get_create_data(self):
+        self.create_data.update({
+            'timesheet': self.timesheet.id
         })
 
         return self.create_data
@@ -813,12 +843,12 @@ class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
     factory_class = factories.OpenTimesheetFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'closed': False,
+        'status': "ACTIVE",
         'year': datetime.date.today().year,
         'month': datetime.date.today().month,
     }
     update_data = {
-        'closed': False,
+        'status': "ACTIVE",
         'year': datetime.date.today().year,
         'month': datetime.date.today().month,
     }

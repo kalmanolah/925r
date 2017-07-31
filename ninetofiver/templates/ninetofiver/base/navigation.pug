@@ -39,7 +39,7 @@ nav(class='navbar navbar-full navbar-light bg-faded')
         a(class='nav-link' href='{% url "login" %}?next={{ request.path }}') Log in
       if settings.REGISTRATION_OPEN
         li(class='nav-item')
-          a(class='nav-link' href='{% url "registration_register" %}') Register
+          a(class='nav-link' href='{% url "registration_disallowed" %}') Register
 
   div(class='collapse navbar-toggleable-xs pull-xs-left' id='topNavBar')
     ul(class='nav navbar-nav')
