@@ -6,8 +6,10 @@ from ninetofiver import models
 
 class UserModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        return "%s, %s" % (obj.first_name, obj.last_name)
-
+        if obj.first_name:
+            return "%s, %s" % (obj.first_name, obj.last_name)
+        else:
+            return "%s" % (obj)
 
 class UserInfoAdminForm(forms.ModelForm):
     user = UserModelChoiceField(
