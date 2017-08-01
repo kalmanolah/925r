@@ -1,4 +1,3 @@
-import logging
 import django_filters
 
 from datetime import datetime, timedelta

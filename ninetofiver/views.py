@@ -2,11 +2,9 @@ from django.contrib.auth import models as auth_models
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
-
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-
 from ninetofiver import filters
 from ninetofiver import models
 from ninetofiver import serializers
@@ -24,9 +22,14 @@ from rest_framework.decorators import renderer_classes
 from rest_framework.renderers import CoreJSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.schemas import SchemaGenerator
+from rest_framework_swagger import renderers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
+from ninetofiver.redmine.views import get_redmine_user_time_entries
+from ninetofiver.redmine.serializers import RedmineTimeEntrySerializer
 
+import ninetofiver.settings as settings
 
 def home_view(request):
     """Homepage."""
@@ -309,7 +312,7 @@ class StandbyPerformanceViewSet(viewsets.ModelViewSet):
 
 
 class AttachmentViewSet(viewsets.ModelViewSet):
-    """
+    """`
     API endpoint that allows attachments to be viewed or edited.
     """
     queryset = models.Attachment.objects.all()
@@ -318,6 +321,22 @@ class AttachmentViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
     parser_classes = (parsers.MultiPartParser, parsers.FileUploadParser, parsers.JSONParser)
 
+
+class TimeEntryImportServiceAPIView(APIView):
+    """
+    Gets time entries from external sources and returns them to be imported as performances.
+    """
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, format=None):
+        # If Redmine credentials are provided
+        if settings.REDMINE_URL and settings.REDMINE_API_KEY:
+            redmine_id = models.UserInfo.objects.get(user_id=request.user.id).redmine_id
+            if redmine_id:
+                redmine_time_entries = get_redmine_user_time_entries(user_id=redmine_id, params=request.query_params)
+                data = RedmineTimeEntrySerializer(
+                    instance=redmine_time_entries, many=True).data
+        return Response(data)
 
 class MyUserServiceAPIView(APIView):
     """

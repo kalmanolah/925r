@@ -17,7 +17,6 @@ from configurations import Configuration
 from django_auth_ldap.config import LDAPSearch
 from django_auth_ldap.config import LDAPSearchUnion
 
-
 CFG_FILE_PATH = os.path.expanduser(os.environ.get('CFG_FILE_PATH', '/etc/925r/config.yml'))
 
 
@@ -136,8 +135,12 @@ class Base(Configuration):
 
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'YAYATA',
+            'USER': 'root',
+            'PASSWORD': 'rootroot',
+            'HOST': 'localhost',
+            'PORT': '3306',
         }
     }
 
@@ -275,6 +278,11 @@ class Base(Configuration):
     }
     AUTH_LDAP_ALWAYS_UPDATE_USER = True
 
+    # REDMINE 
+    REDMINE_URL = None 
+    REDMINE_API_KEY = None
+
+
 
 class Dev(Base):
 
@@ -282,9 +290,46 @@ class Dev(Base):
 
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+    # Logging
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            },
+            'simple': {
+                'format': '%(levelname)s %(message)s'
+            },
+        },
+        'filters': {
+            'require_debug_true': {
+                '()': 'django.utils.log.RequireDebugTrue',
+            },
+        },
+        'handlers': {
+            'syslog': {
+                'class': 'logging.handlers.SysLogHandler',
+                'formatter': 'verbose',
+                'facility': 'user',
+            },
+            'console': {
+                'level': 'DEBUG',
+                'filters': ['require_debug_true'],
+                'class': 'logging.StreamHandler',
+                'formatter': 'simple'
+            },
+        },
+        'loggers': {
+            'ninetofiver': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+            }
+        }
+    }
 
 class Prod(Base):
-
+  
     """Prod configuration."""
 
     DEBUG = False
@@ -309,3 +354,58 @@ class Prod(Base):
     }
 
     REGISTRATION_OPEN = False
+    # Logging
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            },
+            'simple': {
+                'format': '%(levelname)s %(message)s'
+            },
+        },
+        'filters': {
+            'require_debug_true': {
+                '()': 'django.utils.log.RequireDebugTrue',
+            },
+        },
+        'handlers': {
+            'syslog': {
+                'class': 'logging.handlers.SysLogHandler',
+                'formatter': 'verbose',
+                'facility': 'user',
+            },
+            'console': {
+                'level': 'DEBUG',
+                'filters': ['require_debug_true'],
+                'class': 'logging.StreamHandler',
+                'formatter': 'simple'
+            },
+        },
+         'loggers': {
+            'ninetofiver': {
+                'handlers': ['console', 'syslog'],
+                'level': 'INFO',
+            }
+        }
+    }
+
+
+class TravisCI(Base):
+
+    """Travis-CI configuration."""
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'travis_ci_db',
+            'USER': 'travis',
+            'PASSWORD': '',
+            'HOST': '127.0.0.1',
+        }
+    }
+
+    REDMINE_URL = os.getenv('REDMINE_URL')
+    REDMINE_API_KEY = os.getenv('REDMINE_API_KEY')
