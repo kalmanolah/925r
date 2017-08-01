@@ -2,6 +2,10 @@
 from django.contrib.auth import models as auth_models
 from ninetofiver import models
 from rest_framework import serializers
+import logging
+from collections import OrderedDict
+
+from rest_framework.fields import SkipField
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -11,11 +15,12 @@ class UserSerializer(serializers.ModelSerializer):
     gender = serializers.CharField(source='userinfo.gender')
     birth_date = serializers.CharField(source='userinfo.birth_date')
     join_date = serializers.CharField(source='userinfo.join_date')
+    redmine_id = serializers.CharField(source='userinfo.redmine_id')
     
     class Meta:
         model = auth_models.User
-        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date')
-        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date')
+        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date', 'redmine_id')
+        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date', 'redmine_id')
 
     def get_display_label(self, obj):
         return str(obj)
@@ -188,7 +193,7 @@ class ProjectContractSerializer(ContractSerializer):
 
     class Meta(ContractSerializer.Meta):
         model = models.ProjectContract
-        fields = ContractSerializer.Meta.fields + ('starts_at', 'ends_at', 'fixed_fee', 'hours_estimated',)
+        fields = ContractSerializer.Meta.fields + ('redmine_id', 'starts_at', 'ends_at', 'fixed_fee', 'hours_estimated',)
         
 
 class ConsultancyContractSerializer(ContractSerializer):
@@ -241,7 +246,7 @@ class WhereaboutSerializer(BaseSerializer):
 class PerformanceSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Performance
-        fields = BaseSerializer.Meta.fields + ('timesheet', 'day')
+        fields = BaseSerializer.Meta.fields + ('timesheet', 'day', 'redmine_id')
 
 
 class ActivityPerformanceSerializer(PerformanceSerializer):

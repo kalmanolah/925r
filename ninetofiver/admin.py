@@ -207,6 +207,7 @@ class ContractChildAdmin(PolymorphicChildModelAdmin):
 @admin.register(models.ProjectContract)
 class ProjectContractChildAdmin(ContractChildAdmin):
     base_model = models.ProjectContract
+    form = ProjectContractAdminForm
 
 
 #@admin.register(models.ConsultancyContract)
