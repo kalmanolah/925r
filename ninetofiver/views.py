@@ -312,7 +312,7 @@ class StandbyPerformanceViewSet(viewsets.ModelViewSet):
 
 
 class AttachmentViewSet(viewsets.ModelViewSet):
-    """`
+    """
     API endpoint that allows attachments to be viewed or edited.
     """
     queryset = models.Attachment.objects.all()
