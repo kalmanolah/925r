@@ -68,11 +68,6 @@ class BaseModel(PolymorphicModel):
         abstract = True
 
 
-
-###########################################
-# COMPANY
-###########################################
-
 class Company(BaseModel):
 # Defines the information used for internal and external companies, between whom contracts are made
 
@@ -102,11 +97,6 @@ class Company(BaseModel):
         # return '%s [%s]' % (self.name, self.vat_identification_number)
         return self.name
 
-
-
-###########################################
-# WORKSCHEDULE
-###########################################
 
 class WorkSchedule(BaseModel):
 # Defines the workschedule for a user
@@ -182,11 +172,6 @@ class WorkSchedule(BaseModel):
         """Return a string representation."""
         return self.label
 
-
-
-###########################################
-# EMPLOYMENTCONTRACT
-###########################################
 
 class EmploymentContractType(BaseModel):
 # Defines the type of employmentContract (PM, HR etc.)
@@ -305,11 +290,6 @@ class EmploymentContract(BaseModel):
         }
 
 
-
-###########################################
-# USER
-###########################################
-
 class UserRelative(BaseModel):
 # Defines the information for a relative and binds it to a user
 
@@ -403,10 +383,6 @@ class UserInfo(BaseModel):
         }
 
 
-###########################################
-# TIMESHEET
-###########################################
-
 class Timesheet(BaseModel):
 # Defines a month, year and activated status for a user
 
@@ -441,11 +417,6 @@ class Timesheet(BaseModel):
         """Return a string representation."""
         return '%02d-%04d [%s]' % (self.month, self.year, self.user)
 
-
-
-###########################################
-# LEAVE
-###########################################
 
 class Attachment(BaseModel):
 # Defines the class that holds attachments and binds them to a user
@@ -612,11 +583,6 @@ class LeaveDate(BaseModel):
             'leave': getattr(self, 'leave', None),
         }
 
-
-
-###########################################
-# CONTRACTS
-###########################################
 
 class PerformanceType(BaseModel):
 # Defines the type of Performance, how the activity hours should be calculated
@@ -919,10 +885,6 @@ class ProjectEstimate(BaseModel):
         return '%s [Est: %s]' % (self.role.label, self.hours_estimated)
 
 
-###########################################
-# WHEREABOUT
-###########################################
-
 class Whereabout(BaseModel):
 # Defines the whereabouts for a user
     """Whereabout model."""
@@ -968,10 +930,6 @@ class Whereabout(BaseModel):
                 'day': getattr(self, 'day', None),
             }
 
-
-###########################################
-# PERFORMANCE
-###########################################
 
 class Performance(BaseModel):
 # Binds a day to a timesheet
