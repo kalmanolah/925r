@@ -101,11 +101,11 @@ class EmploymentContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, tes
     factory_class = factories.EmploymentContractFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'started_at': datetime.date(datetime.date.today().year + 10, 1, 15),
+        'started_at': datetime.date(now.year + 10, 1, 15),
     }
     update_data = {
-        'started_at': datetime.date(datetime.date.today().year + 10, 1, 15),
-        'ended_at': datetime.date(datetime.date.today().year + 10, 1, 16),
+        'started_at': datetime.date(now.year + 10, 1, 15),
+        'ended_at': datetime.date(now.year + 10, 1, 16),
     }
 
     def setUp(self):
@@ -160,13 +160,13 @@ class UserRelativeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
     factory_class = factories.UserRelativeFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'birth_date': datetime.date(datetime.date.today().year - 10, 1, 15),
+        'birth_date': datetime.date(now.year - 10, 1, 15),
         'name': 'John Doe',
         'gender': 'm',
         'relation': 'Dad',
     }
     update_data = {
-        'birth_date': datetime.date(datetime.date.today().year - 10, 1, 15),
+        'birth_date': datetime.date(now.year - 10, 1, 15),
         'name': 'Jane Doe',
         'gender': 'f',
         'relation': 'Mom',
@@ -188,12 +188,12 @@ class HolidayAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Base
     user_factory = factories.AdminFactory
     create_data = {
         'name': 'Friday Night Deploy',
-        'date': datetime.date(datetime.date.today().year, 1, 15),
+        'date': datetime.date(now.year, 1, 15),
         'country': 'BE',
     }
     update_data = {
         'name': 'Saturday Morning Deploy',
-        'date': datetime.date(datetime.date.today().year, 1, 16),
+        'date': datetime.date(now.year, 1, 16),
         'country': 'BE',
     }
 
@@ -330,16 +330,16 @@ class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
         'active': True,
 
         'fixed_fee': 600.25,
-        'starts_at': datetime.date.today(),
-        'ends_at': datetime.date.today() + timedelta(days=365),
+        'starts_at': now,
+        'ends_at': now + timedelta(days=365),
     }
     update_data = {
         'label': 'More Projects & Stuff',
         'active': True,
 
         'fixed_fee': 300.25,
-        'starts_at': datetime.date.today() - timedelta(days=20),
-        'ends_at': datetime.date.today() + timedelta(days=730),
+        'starts_at': now - timedelta(days=20),
+        'ends_at': now + timedelta(days=730),
     }
 
     def setUp(self):
@@ -396,13 +396,13 @@ class ConsultancyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
     user_factory = factories.AdminFactory
     create_data = {
         'label': 'Consultancy & Stuff',
-        'starts_at': datetime.date.today(),
+        'starts_at': now,
         'day_rate': 600,
         'active': True,
     }
     update_data = {
         'label': 'More Consultancy & Stuff',
-        'starts_at': datetime.date.today(),
+        'starts_at': now,
         'day_rate': 600,
         'active': True,
     }
@@ -430,13 +430,13 @@ class SupportContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
     user_factory = factories.AdminFactory
     create_data = {
         'label': 'Support & Stuff',
-        'starts_at': datetime.date.today(),
+        'starts_at': now,
         'day_rate': 600,
         'active': True,
     }
     update_data = {
         'label': 'More Support & Stuff',
-        'starts_at': datetime.date.today(),
+        'starts_at': now,
         'day_rate': 600,
         'active': True,
     }
@@ -504,13 +504,13 @@ class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
     user_factory = factories.AdminFactory
     create_data = {
         'status': 'ACTIVE',
-        'year': datetime.date.today().year,
-        'month': datetime.date.today().month,
+        'year': now.year,
+        'month': now.month,
     }
     update_data = {
         'status': 'ACTIVE',
-        'year': datetime.date.today().year,
-        'month': datetime.date.today().month,
+        'year': now.year,
+        'month': now.month,
     }
 
     def get_object(self, factory):
@@ -864,13 +864,13 @@ class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
     user_factory = factories.AdminFactory
     create_data = {
         'status': "ACTIVE",
-        'year': datetime.date.today().year,
-        'month': datetime.date.today().month,
+        'year': now.year,
+        'month': now.month,
     }
     update_data = {
         'status': "ACTIVE",
-        'year': datetime.date.today().year,
-        'month': datetime.date.today().month,
+        'year': now.year,
+        'month': now.month,
     }
 
     def get_object(self, factory):
