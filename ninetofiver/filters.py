@@ -164,8 +164,9 @@ class EmploymentContractFilter(FilterSet):
         model = models.EmploymentContract
         fields = {
             'started_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
-            'ended_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
-            'user': ['exact']
+            'ended_at': ['exact', 'gt', 'gte', 'lt', 'lte', 'isnull'],
+            'user': ['exact'],
+
         }
 
 

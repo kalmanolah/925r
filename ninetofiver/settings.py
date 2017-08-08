@@ -141,6 +141,10 @@ class Base(Configuration):
             'PASSWORD': 'rootroot',
             'HOST': 'localhost',
             'PORT': '3306',
+            'TEST': {
+                'NAME': 'test_YAYATA',
+                'CHARSET': 'utf8',
+            },
         }
     }
 
@@ -401,7 +405,7 @@ class TravisCI(Base):
         'default': {
             'ENGINE': 'django.db.backends.mysql',
             'NAME': 'travis_ci_db',
-            'USER': 'travis',
+            'USER': 'root',
             'PASSWORD': '',
             'HOST': '127.0.0.1',
         }
