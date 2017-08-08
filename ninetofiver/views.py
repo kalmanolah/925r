@@ -365,7 +365,15 @@ class MonthInfoServiceAPIView(APIView):
     def total_hours_required(self, user, month):
         total = 0
         # Calculate total hours required.
-        work_schedule = models.WorkSchedule.objects.get(pk=models.EmploymentContract.objects.get(user_id=user).work_schedule.id)
+        try:
+            try:
+                employmentcontract = models.EmploymentContract.objects.get(user_id=user)
+            except ObjectDoesNotExist as oe:
+                return Response('Failed to get employmentcontract' + str(oe), status=status.HTTP_400_BAD_REQUEST)
+            work_schedule = models.WorkSchedule.objects.get(pk=employmentcontract.work_schedule.id)
+        except ObjectDoesNotExist as oe:
+            return Response('Failed to get workschedule' + str(oe), status=status.HTTP_400_BAD_REQUEST)
+            
 
         year = datetime.now().year
         # List that contains the amount of weekdays of the given month.
@@ -381,8 +389,15 @@ class MonthInfoServiceAPIView(APIView):
         logger.debug('total: ' + str(total))
         
         # Subtract holdays from total.
-        user_country = models.UserInfo.objects.get(user_id=user).country
-        holidays = models.Holiday.objects.filter(country=user_country).filter(date__month=month)
+        try:
+            user_country = models.UserInfo.objects.get(user_id=user).country
+        except ObjectDoesNotExist as oe:
+            return Response('Failed to get user country: ' + str(oe), status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            holidays = models.Holiday.objects.filter(country=user_country).filter(date__month=month)
+        except ObjectDoesNotExist as oe:
+            return Response('Failed to get holidays: ' + str(oe), status=status.HTTP_400_BAD_REQUEST)
         for holiday in holidays:
             total -= 8
         logger.debug('total after holidays: ' + str(total))
@@ -394,7 +409,10 @@ class MonthInfoServiceAPIView(APIView):
         RANGE_END = timezone.make_aware(datetime(year, month, monthrange(year, month)[1], 0, 0, 0), timezone.get_current_timezone())
 
         # Get all approved leaves of the user.
-        leaves = models.Leave.objects.filter(user_id=user, status=models.Leave.STATUS.APPROVED)
+        try:
+            leaves = models.Leave.objects.filter(user_id=user, status=models.Leave.STATUS.APPROVED)
+        except ObjectDoesNotExist as oe:
+            return Response('Failed to get leaves: ' + str(oe), status=status.HTTP_400_BAD_REQUEST)
         # Filter out those who don't start or end in the current month.
         result = list(filter(lambda x: (x.leavedate_set.first().starts_at >= RANGE_START and x.leavedate_set.first().starts_at <= RANGE_END) or (x.leavedate_set.last().starts_at >= RANGE_START and x.leavedate_set.last().starts_at <= RANGE_END), leaves))
         
