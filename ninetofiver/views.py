@@ -2,7 +2,10 @@ from django.contrib.auth import models as auth_models
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
-from datetime import datetime, timedelta
+from decimal import Decimal
+from datetime import datetime, timedelta, time
+from calendar import monthcalendar, weekday, monthrange, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
+from collections import Counter
 from django.utils import timezone
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from ninetofiver import filters
@@ -30,6 +33,9 @@ from ninetofiver.redmine.views import get_redmine_user_time_entries
 from ninetofiver.redmine.serializers import RedmineTimeEntrySerializer
 
 import ninetofiver.settings as settings
+
+import logging
+logger = logging.getLogger(__name__)
 
 def home_view(request):
     """Homepage."""
@@ -344,7 +350,6 @@ class MonthInfoServiceAPIView(APIView):
     Calculates and returns information from a given month.
     """
     permission_classes = (permissions.IsAuthenticated,)
-    filter_class = filters.MonthInfoFilter
 
     def get(self, request, format=None):
         # get user from params, defaults to the current user if user is omitted.
@@ -352,9 +357,7 @@ class MonthInfoServiceAPIView(APIView):
         # get month from params, defaults to the current month if month is omitted.
         month = request.query_params.get('month') or datetime.now().month
         month = int(month)
-        logger.debug('Hallo')
         hours_required = self.total_hours_required(user, month)
-        logger.debug(hours_required)
         serializer = serializers.MonthInfoSerializer(data={'hours_required': hours_required, })
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
@@ -382,41 +385,59 @@ class MonthInfoServiceAPIView(APIView):
         holidays = models.Holiday.objects.filter(country=user_country).filter(date__month=month)
         for holiday in holidays:
             total -= 8
-        logger.debug('total: ' + str(total))
+        logger.debug('total after holidays: ' + str(total))
 
         DAY_START = '09:00'
         DAY_END = '17:30'
         DAY_DURATION = 8
         RANGE_START = timezone.make_aware(datetime(year, month, 1, 0, 0, 0, 0), timezone.get_current_timezone())
-        RANGE_END = timezone.make_aware(datetime(year, month, 31, 0, 0, 0, 0), timezone.get_current_timezone())
+        RANGE_END = timezone.make_aware(datetime(year, month, monthrange(year, month)[1], 0, 0, 0), timezone.get_current_timezone())
 
         # Get all approved leaves of the user.
         leaves = models.Leave.objects.filter(user_id=user, status=models.Leave.STATUS.APPROVED)
         # Filter out those who don't start or end in the current month.
-        result = list(filter(lambda x: x.leavedate_set.first().starts_at >= RANGE_START or x.leavedate_set.first().starts_at <= RANGE_END, leaves))
+        result = list(filter(lambda x: (x.leavedate_set.first().starts_at >= RANGE_START and x.leavedate_set.first().starts_at <= RANGE_END) or (x.leavedate_set.last().starts_at >= RANGE_START and x.leavedate_set.last().starts_at <= RANGE_END), leaves))
         
         # Subtract leaves from total.
         for leave in result:
             leavedates = leave.leavedate_set.all()
+
+            first_leavedate = leavedates.first()
+            last_leavedate = leavedates.last()
+
             for leavedate in leavedates:
                 if leavedate.starts_at >= RANGE_START:
                     first_leavedate = leavedate
-                    logger.debug('fld: ' + str(first_leavedate.starts_at))
                     break
-            # logger.debug(leavedates.first()) 
-            # logger.debug(leavedates.last()) 
-            day_start_delta = datetime.strptime(str(leavedates.first().starts_at.time()), '%H:%M:%S') - (datetime.strptime(DAY_START, '%H:%M'))
-            day_end_delta = (datetime.strptime(DAY_END, '%H:%M')) - datetime.strptime(str(leavedates.first().ends_at.time()), '%H:%M:%S') 
-                        
-            hours_required = round(day_start_delta.seconds/3600, 1) + round(day_end_delta.seconds/3600, 1)
+            for leavedate in leavedates:
+                if leavedate.ends_at >= RANGE_END:
+                    last_leavedate = leavedate
+                    break
+            # first leavedate time deltas
+            fld_day_start_delta = datetime.strptime(str(first_leavedate.starts_at.time()), '%H:%M:%S') - (datetime.strptime(DAY_START, '%H:%M'))
+            fld_day_end_delta = (datetime.strptime(DAY_END, '%H:%M')) - datetime.strptime(str(first_leavedate.ends_at.time()), '%H:%M:%S') 
+            # subtract first leavedate time deltas from total
+            hours_required = round(fld_day_start_delta.seconds/3600, 1) + round(fld_day_end_delta.seconds/3600, 1)
             hours_required = hours_required if hours_required <= 8 else 8
             total -= Decimal(hours_required)
-            # logger.debug(hours_required)
+            
+            # if the leave spans more than one day: calculate last leavedate time deltas
+            if len(leavedates) > 1:
+                lld_day_start_delta = datetime.strptime(str(last_leavedate.starts_at.time()), '%H:%M:%S') - datetime.strptime(DAY_START, '%H:%M')
+                lld_day_end_delta = datetime.strptime(DAY_END, '%H:%M') - datetime.strptime(str(last_leavedate.ends_at.time()), '%H:%M:%S') 
+                # subtract last leavedate time deltas from total
+                hours_required = round(lld_day_start_delta.seconds/3600, 1) + round(lld_day_end_delta.seconds/3600, 1)
+                hours_required = hours_required if hours_required <= 8 else 8
+                total -= Decimal(hours_required)
+            
             # Check if the leave spans more days than one.
             if len(leavedates) > 1:
-                 total -= DAY_DURATION * (len(leavedates) - 2)
+                for leavedate in leavedates:
+                    # subtract a whole day if the leavedate is between the first leavedate and the last leavedate (of the specified month)
+                    if leavedate.starts_at.weekday() < 5 and leavedate.starts_at > first_leavedate.starts_at and leavedate.starts_at  < last_leavedate.starts_at: 
+                        total -= DAY_DURATION
 
-            # logger.debug(total)
+            logger.debug('total after leaves: ' + str(total))
         return total
 
 
