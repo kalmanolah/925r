@@ -141,6 +141,10 @@ class Base(Configuration):
             'PASSWORD': 'rootroot',
             'HOST': 'localhost',
             'PORT': '3306',
+            'TEST': {
+                'NAME': 'test_YAYATA',
+                'CHARSET': 'utf8',
+            },
         }
     }
 
