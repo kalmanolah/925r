@@ -1,4 +1,5 @@
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_assured import testcases
@@ -748,22 +749,55 @@ class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
 
 
 class MonthInfoServiceAPIViewTestcase(APITestCase): 
-    def test_get_required_hours(self):
-        user = factories.AdminFactory.create()
-        self.client.force_authenticate(user)
-        userinfo = factories.UserInfoFactory.create(
-            user=user
+    def setUp(self):
+        self.user = factories.AdminFactory.create()
+        self.client.force_authenticate(self.user)
+        self.userinfo = factories.UserInfoFactory.create(
+            user=self.user
         )
+        self.employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        self.url = reverse('month_info_service')
+        super().setUp()
 
+    def test_get_required_hours(self):
+        get_response = self.client.get(self.url)
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+
+    def test_get_required_hours_with_leave(self):
+        timesheet = factories.TimesheetFactory.create(
+            user=self.user,
+            month=now.month
+        )
+        leave = factories.LeaveFactory.create(
+            user=self.user,
+            leave_type=factories.LeaveTypeFactory.create()
+        )
+        leavedate = factories.LeaveDateFactory(
+            leave=leave,
+            timesheet=timesheet,
+            starts_at=timezone.make_aware(datetime.datetime(now.year, now.month, 1, 0, 0, 0), timezone.get_current_timezone()),
+            ends_at=timezone.make_aware(datetime.datetime(now.year, now.month, 1, 23, 59, 59), timezone.get_current_timezone())
+        )
+        get_response = self.client.get(self.url, {'month':now.month})
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+
+    def test_get_required_hours_of_user(self):
+        second_user = factories.UserFactory.create()
+        userinfo = factories.UserInfoFactory.create(
+            user=second_user
+        )
         employmentcontract = factories.EmploymentContractFactory.create(
             company=factories.CompanyFactory.create(),
             employment_contract_type=factories.EmploymentContractTypeFactory.create(),
-            user=user,
+            user=second_user,
             work_schedule=factories.WorkScheduleFactory.create(),
         )
-        url = reverse('month_info_service')
-
-        get_response = self.client.get(url)
+        get_response = self.client.get(self.url, {'user_id':second_user.id})
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
 
 
