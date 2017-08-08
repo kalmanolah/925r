@@ -747,6 +747,26 @@ class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
         return self.create_data
 
 
+class MonthInfoServiceAPIViewTestcase(APITestCase): 
+    def test_get_required_hours(self):
+        user = factories.AdminFactory.create()
+        self.client.force_authenticate(user)
+        userinfo = factories.UserInfoFactory.create(
+            user=user
+        )
+
+        employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        url = reverse('month_info_service')
+
+        get_response = self.client.get(url)
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+
+
 class MyLeaveRequestsServiceAPITestcase(APITestCase):
     def test_create_leave_dates(self):
         """
