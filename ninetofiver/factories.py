@@ -22,6 +22,15 @@ class UserFactory(factory.DjangoModelFactory):
     is_superuser = False
 
 
+class UserInfoFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.UserInfo
+
+    birth_date = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
+    gender = factory.LazyFunction(lambda: fake.simple_profile(sex=None)['sex'])
+    country = factory.LazyFunction(fake.country_code)
+
+
 class AdminFactory(UserFactory):
     is_staff = True
     is_superuser = True
