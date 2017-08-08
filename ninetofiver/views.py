@@ -338,6 +338,88 @@ class TimeEntryImportServiceAPIView(APIView):
                     instance=redmine_time_entries, many=True).data
         return Response(data)
 
+
+class MonthInfoServiceAPIView(APIView):
+    """
+    Calculates and returns information from a given month.
+    """
+    permission_classes = (permissions.IsAuthenticated,)
+    filter_class = filters.MonthInfoFilter
+
+    def get(self, request, format=None):
+        # get user from params, defaults to the current user if user is omitted.
+        user = request.query_params.get('user_id') or request.user
+        # get month from params, defaults to the current month if month is omitted.
+        month = request.query_params.get('month') or datetime.now().month
+        month = int(month)
+        logger.debug('Hallo')
+        hours_required = self.total_hours_required(user, month)
+        logger.debug(hours_required)
+        serializer = serializers.MonthInfoSerializer(data={'hours_required': hours_required, })
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    def total_hours_required(self, user, month):
+        total = 0
+        # Calculate total hours required.
+        work_schedule = models.WorkSchedule.objects.get(pk=models.EmploymentContract.objects.get(user_id=user).work_schedule.id)
+
+        year = datetime.now().year
+        # List that contains the amount of weekdays of the given month.
+        days = Counter(weekday(year, month, d + 1) for d in range(*monthrange(year, month)))
+        # Caluculate total hours required to work according to work schedule.
+        total += work_schedule.monday * days[MONDAY]
+        total += work_schedule.tuesday * days[TUESDAY]
+        total += work_schedule.wednesday * days[WEDNESDAY]
+        total += work_schedule.thursday * days[THURSDAY]
+        total += work_schedule.friday * days[FRIDAY]
+        total += work_schedule.saturday * days[SATURDAY]
+        total += work_schedule.sunday * days[SUNDAY]
+        logger.debug('total: ' + str(total))
+        
+        # Subtract holdays from total.
+        user_country = models.UserInfo.objects.get(user_id=user).country
+        holidays = models.Holiday.objects.filter(country=user_country).filter(date__month=month)
+        for holiday in holidays:
+            total -= 8
+        logger.debug('total: ' + str(total))
+
+        DAY_START = '09:00'
+        DAY_END = '17:30'
+        DAY_DURATION = 8
+        RANGE_START = timezone.make_aware(datetime(year, month, 1, 0, 0, 0, 0), timezone.get_current_timezone())
+        RANGE_END = timezone.make_aware(datetime(year, month, 31, 0, 0, 0, 0), timezone.get_current_timezone())
+
+        # Get all approved leaves of the user.
+        leaves = models.Leave.objects.filter(user_id=user, status=models.Leave.STATUS.APPROVED)
+        # Filter out those who don't start or end in the current month.
+        result = list(filter(lambda x: x.leavedate_set.first().starts_at >= RANGE_START or x.leavedate_set.first().starts_at <= RANGE_END, leaves))
+        
+        # Subtract leaves from total.
+        for leave in result:
+            leavedates = leave.leavedate_set.all()
+            for leavedate in leavedates:
+                if leavedate.starts_at >= RANGE_START:
+                    first_leavedate = leavedate
+                    logger.debug('fld: ' + str(first_leavedate.starts_at))
+                    break
+            # logger.debug(leavedates.first()) 
+            # logger.debug(leavedates.last()) 
+            day_start_delta = datetime.strptime(str(leavedates.first().starts_at.time()), '%H:%M:%S') - (datetime.strptime(DAY_START, '%H:%M'))
+            day_end_delta = (datetime.strptime(DAY_END, '%H:%M')) - datetime.strptime(str(leavedates.first().ends_at.time()), '%H:%M:%S') 
+                        
+            hours_required = round(day_start_delta.seconds/3600, 1) + round(day_end_delta.seconds/3600, 1)
+            hours_required = hours_required if hours_required <= 8 else 8
+            total -= Decimal(hours_required)
+            # logger.debug(hours_required)
+            # Check if the leave spans more days than one.
+            if len(leavedates) > 1:
+                 total -= DAY_DURATION * (len(leavedates) - 2)
+
+            # logger.debug(total)
+        return total
+
+
 class MyUserServiceAPIView(APIView):
     """
     Get the currently authenticated user.
