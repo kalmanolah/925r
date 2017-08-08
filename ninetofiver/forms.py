@@ -6,10 +6,7 @@ from ninetofiver.redmine.choices import *
 
 class UserModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        if obj.first_name:
-            return "%s, %s" % (obj.first_name, obj.last_name)
-        else:
-            return "%s" % (obj)
+        return "%s, %s" % (obj.first_name, obj.last_name)
 
 class UserInfoAdminForm(forms.ModelForm):
     user = UserModelChoiceField(
