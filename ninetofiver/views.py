@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from decimal import Decimal
 from datetime import datetime, timedelta, time
-from calendar import monthcalendar, weekday, monthrange, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
+from calendar import monthcalendar, weekday, monthrange, day_name
 from collections import Counter
 from django.utils import timezone
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -348,6 +348,8 @@ class TimeEntryImportServiceAPIView(APIView):
 class MonthInfoServiceAPIView(APIView):
     """
     Calculates and returns information from a given month.
+    Returns: hours_required of a given month and user
+    (as a string because decimal serialization can cause precision loss).
     """
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -358,6 +360,7 @@ class MonthInfoServiceAPIView(APIView):
         month = request.query_params.get('month') or datetime.now().month
         month = int(month)
         hours_required = self.total_hours_required(user, month)
+        logger.debug(isinstance(hours_required, Decimal))
         serializer = serializers.MonthInfoSerializer(data={'hours_required': hours_required, })
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
@@ -374,15 +377,22 @@ class MonthInfoServiceAPIView(APIView):
 
         year = datetime.now().year
         # List that contains the amount of weekdays of the given month.
-        days = Counter(weekday(year, month, d + 1) for d in range(*monthrange(year, month)))
+        start_date = datetime(year, month, 1)
+        end_date = datetime(year, month, monthrange(year, month)[1])
+        days_count = {}
+
+        for i in range((end_date - start_date).days + 1):
+            day = day_name[(start_date + timedelta(days=i)).weekday()]
+            days_count[day] = days_count[day] + 1 if day in days_count else 1
+
         # Caluculate total hours required to work according to work schedule.
-        total += work_schedule.monday * days[MONDAY]
-        total += work_schedule.tuesday * days[TUESDAY]
-        total += work_schedule.wednesday * days[WEDNESDAY]
-        total += work_schedule.thursday * days[THURSDAY]
-        total += work_schedule.friday * days[FRIDAY]
-        total += work_schedule.saturday * days[SATURDAY]
-        total += work_schedule.sunday * days[SUNDAY]
+        total += work_schedule.monday * days_count['Monday']
+        total += work_schedule.tuesday * days_count['Tuesday']
+        total += work_schedule.wednesday * days_count['Wednesday']
+        total += work_schedule.thursday * days_count['Thursday']
+        total += work_schedule.friday * days_count['Friday']
+        total += work_schedule.saturday * days_count['Saturday']
+        total += work_schedule.sunday * days_count['Sunday']
         logger.debug('total: ' + str(total))
         
         # Subtract holdays from total.
@@ -447,7 +457,7 @@ class MonthInfoServiceAPIView(APIView):
                         total -= DAY_DURATION
 
             logger.debug('total after leaves: ' + str(total))
-        return total
+        return Decimal(total)
 
 
 class MyUserServiceAPIView(APIView):
