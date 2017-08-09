@@ -357,11 +357,11 @@ class MonthInfoServiceAPIView(APIView):
         # get user from params, defaults to the current user if user is omitted.
         user = request.query_params.get('user_id') or request.user
         # get month from params, defaults to the current month if month is omitted.
-        month = request.query_params.get('month') or datetime.now().month
-        month = int(month)
-        hours_required = self.total_hours_required(user, month)
-        logger.debug(isinstance(hours_required, Decimal))
-        serializer = serializers.MonthInfoSerializer(data={'hours_required': hours_required, })
+        month = int(request.query_params.get('month') or datetime.now().month)
+        data = {}
+        data['hours_required'] = self.total_hours_required(user, month)
+        data['hours_performed'] = self.hours_performed(user, month)
+        serializer = serializers.MonthInfoSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 
@@ -457,6 +457,16 @@ class MonthInfoServiceAPIView(APIView):
                         total -= DAY_DURATION
 
             logger.debug('total after leaves: ' + str(total))
+        return Decimal(total)
+
+    def hours_performed(self, user, month):
+        total = 0
+        try:
+            performances = models.ActivityPerformance.objects.filter(timesheet__user_id=user, timesheet__month=month)
+        except ObjectDoesNotExist as oe:
+            return Response('Performances not found: ' + str(oe), status=status.HTTP_404_BAD_REQUEST)
+        for performance in performances:
+            total += Decimal(performance.duration)
         return Decimal(total)
 
 

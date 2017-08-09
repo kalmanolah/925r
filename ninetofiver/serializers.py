@@ -337,7 +337,7 @@ class MyWorkScheduleSerializer(WorkScheduleSerializer):
 
 class MonthInfoSerializer(serializers.Serializer):
     # user_id = serializers.CharField(max_length=255)
-    # hours_performed = serializers.CharField(max_length=255)
+    hours_performed = serializers.DecimalField(max_digits=255, decimal_places=2)
     hours_required = serializers.DecimalField(max_digits=255, decimal_places=2)
     # leaves = serializers.CharField(max_length=255)
     # holidays = serializers.CharField(max_length=255)

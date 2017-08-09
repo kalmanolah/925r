@@ -813,9 +813,6 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
 
     def test_get_required_hours_of_user(self):
-        userinfo = factories.UserInfoFactory.create(
-            user=self.user
-        )
         second_user = factories.UserFactory.create()
         userinfo = factories.UserInfoFactory.create(
             user=second_user
@@ -828,6 +825,85 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
         )
         get_response = self.client.get(self.url, {'user_id':second_user.id})
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+
+    def test_get_hours_performed(self):
+        userinfo = factories.UserInfoFactory.create(
+            user=self.user
+        )
+        employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        contract = factories.ContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        timesheet = factories.TimesheetFactory.create(
+            user=self.user,
+            month=now.month
+        )
+        activityperformance = factories.ActivityPerformanceFactory.create(
+            timesheet=timesheet,
+            contract=contract,
+            performance_type=factories.PerformanceTypeFactory.create()
+        )
+        get_response = self.client.get(self.url)
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+
+    def test_get_hours_performed_of_user(self):
+        second_user = factories.UserFactory.create()
+        employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=second_user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        userinfo = factories.UserInfoFactory.create(
+            user=second_user
+        )
+        contract = factories.ContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        timesheet = factories.TimesheetFactory.create(
+            user=second_user,
+            month=now.month
+        )
+        activityperformance = factories.ActivityPerformanceFactory.create(
+            timesheet=timesheet,
+            contract=contract,
+            performance_type=factories.PerformanceTypeFactory.create()
+        )
+        get_response = self.client.get(self.url, {'user_id': second_user.id})
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+    
+    def test_get_hours_performed_month(self):
+        userinfo = factories.UserInfoFactory.create(
+            user=self.user
+        )
+        employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        contract = factories.ContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        timesheet = factories.TimesheetFactory.create(
+            user=self.user,
+            month=now.month
+        )
+        activityperformance = factories.ActivityPerformanceFactory.create(
+            timesheet=timesheet,
+            contract=contract,
+            performance_type=factories.PerformanceTypeFactory.create()
+        )
+        get_response = self.client.get(self.url, {'month': now.month})
+
 
         
 class MyLeaveRequestsServiceAPITestcase(APITestCase):
