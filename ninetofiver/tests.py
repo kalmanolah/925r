@@ -838,9 +838,11 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         user = factories.AdminFactory.create()
         self.client.force_authenticate(user)
 
+        ltype = factories.LeaveTypeFactory.create()
+
         leave = factories.LeaveFactory.create(
             user = user,
-            leave_type = factories.LeaveTypeFactory.create() 
+            leave_type = ltype
         )
 
         timesheet = factories.OpenTimesheetFactory.create(
@@ -857,27 +859,29 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
             'ends_at': datetime.datetime(now.year, 4, 30, 0, 0, 0)
         }
 
-        update_data = {
-            'leave': leave.id,
-            'timesheet': timesheet.id,
-            'starts_at': datetime.datetime(now.year, now.month, 16, 7, 34, 34),
-            'ends_at': datetime.datetime(now.year, now.month, 16, 8, 34, 34)
-        }
-
         url = reverse('my_leave_request_service')
 
         # Check for normal creation success
         post_response = self.client.post(url, create_data, format='json')
         self.assertEqual(post_response.status_code, status.HTTP_201_CREATED)
 
+
         # Check for duplicate creation error
+        update_data = {
+            'leave': leave.id,
+            'timesheet': timesheet.id,
+            'starts_at': datetime.datetime(now.year, 4, 16, 7, 34, 34),
+            'ends_at': datetime.datetime(now.year, 4, 16, 8, 34, 34)
+        }
+
         post_duplicate_leave_response = self.client.post(url, update_data, format='json')
         self.assertEqual(post_duplicate_leave_response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
         #Check for overlapping leavedates
         overlap_leave = factories.LeaveFactory.create(
             user = user,
-            leave_type = factories.LeaveTypeFactory.create()
+            leave_type = ltype
         )
         overlap_data = {
             'leave': overlap_leave.id,
@@ -885,18 +889,21 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
             'starts_at': create_data['starts_at'],
             'ends_at': create_data['ends_at']
         }
+
         post_overlapping_leave_response = self.client.post(url, overlap_data, format='json')
         self.assertRaises(ValidationError)
         self.assertEqual(post_overlapping_leave_response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
         # Check for update success
         patch_response = self.client.patch(url, update_data, format='json')
         self.assertEqual(patch_response.status_code, status.HTTP_201_CREATED)
 
+
         # Check for update error
         new_leave = factories.LeaveFactory.create(
             user = user,
-            leave_type = factories.LeaveTypeFactory.create()
+            leave_type = ltype
         )
         update_data['leave'] = new_leave.id
 
@@ -904,16 +911,17 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         self.assertRaises(ObjectDoesNotExist)
         self.assertEqual(patch_duplicate_date_response.status_code, status.HTTP_400_BAD_REQUEST)
 
+
         # Check for validationerror
         invalid_leave = factories.LeaveFactory.create(
             user = user,
-            leave_type = factories.LeaveTypeFactory.create()
+            leave_type = ltype
         )
         invalid_data = {
             'leave': invalid_leave.id,
             'timesheet': timesheet.id,
-            'starts_at': datetime.datetime(now.year, now.month, 17, 23, 23, 23),
-            'ends_at': datetime.datetime(now.year, now.month, 14, 5, 5, 5)
+            'starts_at': datetime.datetime(now.year, 3, 17, 23, 23, 23),
+            'ends_at': datetime.datetime(now.year, 3, 14, 5, 5, 5)
         }
 
         post_invalid_date_response = self.client.post(url, invalid_data, format='json')
@@ -1046,7 +1054,7 @@ class MyStandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, t
         'day': 14,
     }
     update_data = {
-        'day': 16,
+        'day': 14,
     }
 
     def setUp(self):
@@ -1054,7 +1062,7 @@ class MyStandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, t
         self.client.force_authenticate(self.user)
 
         self.timesheet = factories.OpenTimesheetFactory.create(
-            user=self.user,
+            user = self.user,
         )
         super().setUp()
 

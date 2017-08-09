@@ -69,7 +69,7 @@ class BaseSerializer(serializers.ModelSerializer):
 class LeaveRequestSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.LeaveDate
-        fields = BaseSerializer.Meta.fields + ('leave', 'timesheet', 'starts_at', 'ends_at')
+        fields = BaseSerializer.Meta.fields + ('leave', 'starts_at', 'ends_at')
         
     def validate(self, data):
         """ Does nothing (rip) because validation is handled before this gets called

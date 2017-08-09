@@ -274,7 +274,7 @@ class TimesheetViewSet(viewsets.ModelViewSet):
 
 
 class WhereaboutViewSet(viewsets.ModelViewSet):
-    """"
+    """
     API endpoint that allows whereabouts to be viewed or edited.
     """
     queryset = models.Whereabout.objects.all()
@@ -318,7 +318,7 @@ class StandbyPerformanceViewSet(viewsets.ModelViewSet):
 
 
 class AttachmentViewSet(viewsets.ModelViewSet):
-    """`
+    """
     API endpoint that allows attachments to be viewed or edited.
     """
     queryset = models.Attachment.objects.all()
