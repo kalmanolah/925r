@@ -944,6 +944,7 @@ class Performance(BaseModel):
         ]
     )
     redmine_id = models.CharField(max_length=255, blank=True, null=True)
+    contract = models.ForeignKey(Contract, on_delete=models.PROTECT)
 
     def __str__(self):
         """Return a string representation."""
@@ -985,7 +986,6 @@ class ActivityPerformance(Performance):
 
     """Activity performance model."""
 
-    contract = models.ForeignKey(Contract, on_delete=models.PROTECT)
     performance_type = models.ForeignKey(PerformanceType, on_delete=models.PROTECT)
     contract_role = models.ForeignKey(ContractRole, null=True, on_delete=models.PROTECT)
     description = models.TextField(max_length=255, blank=True, null=True)
@@ -1047,8 +1047,6 @@ class ActivityPerformance(Performance):
             'performance_type': getattr(self, 'performance_type', None),
         })
 
-
-
 class StandbyPerformance(Performance):
 # Uses basic Performance to note the user was on standby
 
@@ -1067,6 +1065,7 @@ class StandbyPerformance(Performance):
 
         timesheet = data.get('timesheet', getattr(instance, 'timesheet', None))
         day = data.get('day', getattr(instance, 'day', None))
+        contract = data.get('contract', getattr(instance, 'contract', None))
 
         if day:
             # Check whether the user already has a standby planned during this time frame
@@ -1090,8 +1089,16 @@ class StandbyPerformance(Performance):
                     _('The date is already linked to a standby performance.'),
                 )
 
-        def get_validation_args(self):
-            """Get a dict used for validation based on this instance."""
-            return merge_dicts(super().get_validation_args(), {
-                'performance': getattr((self, 'performance', None)),
-            })
+        if contract:
+            # Ensure that contract is a support contract
+            if not isinstance(contract, SupportContract):
+                raise ValidationError(
+                    _('StandyPerformances can only be created on support contracts.'),
+                )
+
+    def get_validation_args(self):
+        """Get a dict used for validation based on this instance."""
+        return merge_dicts(super().get_validation_args(), {
+            'performance': getattr(self, 'performance', None),
+            'contract': getattr(self, 'contract', None),
+        })

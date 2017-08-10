@@ -2,7 +2,10 @@ from django.contrib.auth import models as auth_models
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
-from datetime import datetime, timedelta
+from decimal import Decimal
+from datetime import datetime, timedelta, time
+from calendar import monthcalendar, weekday, monthrange, day_name
+from collections import Counter
 from django.utils import timezone
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from ninetofiver import filters
@@ -30,6 +33,9 @@ from ninetofiver.redmine.views import get_redmine_user_time_entries
 from ninetofiver.redmine.serializers import RedmineTimeEntrySerializer
 
 import ninetofiver.settings as settings
+
+import logging
+logger = logging.getLogger(__name__)
 
 def home_view(request):
     """Homepage."""
@@ -337,6 +343,132 @@ class TimeEntryImportServiceAPIView(APIView):
                 data = RedmineTimeEntrySerializer(
                     instance=redmine_time_entries, many=True).data
         return Response(data)
+
+
+class MonthInfoServiceAPIView(APIView):
+    """
+    Calculates and returns information from a given month.
+    Returns: hours_required of a given month and user
+    (as a string because decimal serialization can cause precision loss).
+    """
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, format=None):
+        # get user from params, defaults to the current user if user is omitted.
+        user = request.query_params.get('user_id') or request.user
+        # get month from params, defaults to the current month if month is omitted.
+        month = int(request.query_params.get('month') or datetime.now().month)
+        data = {}
+        data['hours_required'] = self.total_hours_required(user, month)
+        data['hours_performed'] = self.hours_performed(user, month)
+        serializer = serializers.MonthInfoSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    def total_hours_required(self, user, month):
+        total = 0
+        # Calculate total hours required.
+        try:
+            employmentcontract = models.EmploymentContract.objects.get(user_id=user)
+        except ObjectDoesNotExist as oe:
+            return Response('Failed to get employmentcontract' + str(oe), status=status.HTTP_400_BAD_REQUEST)
+        work_schedule = models.WorkSchedule.objects.get(pk=employmentcontract.work_schedule.id)
+    
+
+        year = datetime.now().year
+        # List that contains the amount of weekdays of the given month.
+        start_date = datetime(year, month, 1)
+        end_date = datetime(year, month, monthrange(year, month)[1])
+        days_count = {}
+
+        for i in range((end_date - start_date).days + 1):
+            day = day_name[(start_date + timedelta(days=i)).weekday()]
+            days_count[day] = days_count[day] + 1 if day in days_count else 1
+
+        # Caluculate total hours required to work according to work schedule.
+        total += work_schedule.monday * days_count['Monday']
+        total += work_schedule.tuesday * days_count['Tuesday']
+        total += work_schedule.wednesday * days_count['Wednesday']
+        total += work_schedule.thursday * days_count['Thursday']
+        total += work_schedule.friday * days_count['Friday']
+        total += work_schedule.saturday * days_count['Saturday']
+        total += work_schedule.sunday * days_count['Sunday']
+        logger.debug('total: ' + str(total))
+        
+        # Subtract holdays from total.
+        try:
+            user_country = models.UserInfo.objects.get(user_id=user).country
+        except ObjectDoesNotExist as oe:
+            return Response('Failed to get user country: ' + str(oe), status=status.HTTP_400_BAD_REQUEST)
+        
+        holidays = models.Holiday.objects.filter(country=user_country).filter(date__month=month)
+        for holiday in holidays:
+            total -= 8
+        logger.debug('total after holidays: ' + str(total))
+
+        DAY_START = '09:00'
+        DAY_END = '17:30'
+        DAY_DURATION = 8
+        RANGE_START = timezone.make_aware(datetime(year, month, 1, 0, 0, 0, 0), timezone.get_current_timezone())
+        RANGE_END = timezone.make_aware(datetime(year, month, monthrange(year, month)[1], 0, 0, 0), timezone.get_current_timezone())
+
+        # Get all approved leaves of the user.
+        leaves = models.Leave.objects.filter(user_id=user, status=models.Leave.STATUS.APPROVED)
+        # Filter out those who don't start or end in the current month.
+        result = list(filter(lambda x: (x.leavedate_set.first().starts_at >= RANGE_START and x.leavedate_set.first().starts_at <= RANGE_END) or (x.leavedate_set.last().starts_at >= RANGE_START and x.leavedate_set.last().starts_at <= RANGE_END), leaves))
+        
+        # Subtract leaves from total.
+        for leave in result:
+            leavedates = leave.leavedate_set.all()
+
+            first_leavedate = leavedates.first()
+            last_leavedate = leavedates.last()
+
+            for leavedate in leavedates:
+                if leavedate.starts_at >= RANGE_START:
+                    first_leavedate = leavedate
+                    break
+            for leavedate in leavedates:
+                if leavedate.ends_at >= RANGE_END:
+                    last_leavedate = leavedate
+                    break
+            # first leavedate time deltas
+            fld_day_start_delta = datetime.strptime(str(first_leavedate.starts_at.time()), '%H:%M:%S') - (datetime.strptime(DAY_START, '%H:%M'))
+            fld_day_end_delta = (datetime.strptime(DAY_END, '%H:%M')) - datetime.strptime(str(first_leavedate.ends_at.time()), '%H:%M:%S') 
+            # subtract first leavedate time deltas from total
+            hours_required = round(fld_day_start_delta.seconds/3600, 1) + round(fld_day_end_delta.seconds/3600, 1)
+            hours_required = hours_required if hours_required <= 8 else 8
+            total -= Decimal(hours_required)
+            
+            # if the leave spans more than one day: calculate last leavedate time deltas
+            if len(leavedates) > 1:
+                lld_day_start_delta = datetime.strptime(str(last_leavedate.starts_at.time()), '%H:%M:%S') - datetime.strptime(DAY_START, '%H:%M')
+                lld_day_end_delta = datetime.strptime(DAY_END, '%H:%M') - datetime.strptime(str(last_leavedate.ends_at.time()), '%H:%M:%S') 
+                # subtract last leavedate time deltas from total
+                hours_required = round(lld_day_start_delta.seconds/3600, 1) + round(lld_day_end_delta.seconds/3600, 1)
+                hours_required = hours_required if hours_required <= 8 else 8
+                total -= Decimal(hours_required)
+            
+            # Check if the leave spans more days than one.
+            if len(leavedates) > 1:
+                for leavedate in leavedates:
+                    # subtract a whole day if the leavedate is between the first leavedate and the last leavedate (of the specified month)
+                    if leavedate.starts_at.weekday() < 5 and leavedate.starts_at > first_leavedate.starts_at and leavedate.starts_at  < last_leavedate.starts_at: 
+                        total -= DAY_DURATION
+
+            logger.debug('total after leaves: ' + str(total))
+        return Decimal(total)
+
+    def hours_performed(self, user, month):
+        total = 0
+        try:
+            performances = models.ActivityPerformance.objects.filter(timesheet__user_id=user, timesheet__month=month)
+        except ObjectDoesNotExist as oe:
+            return Response('Performances not found: ' + str(oe), status=status.HTTP_404_BAD_REQUEST)
+        for performance in performances:
+            total += Decimal(performance.duration)
+        return Decimal(total)
+
 
 class MyUserServiceAPIView(APIView):
     """

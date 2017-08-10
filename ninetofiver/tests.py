@@ -1,4 +1,5 @@
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_assured import testcases
@@ -101,11 +102,11 @@ class EmploymentContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, tes
     factory_class = factories.EmploymentContractFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'started_at': datetime.date(datetime.date.today().year + 10, 1, 15),
+        'started_at': datetime.date(now.year + 10, 1, 15),
     }
     update_data = {
-        'started_at': datetime.date(datetime.date.today().year + 10, 1, 15),
-        'ended_at': datetime.date(datetime.date.today().year + 10, 1, 16),
+        'started_at': datetime.date(now.year + 10, 1, 15),
+        'ended_at': datetime.date(now.year + 10, 1, 16),
     }
 
     def setUp(self):
@@ -160,13 +161,13 @@ class UserRelativeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
     factory_class = factories.UserRelativeFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'birth_date': datetime.date(datetime.date.today().year - 10, 1, 15),
+        'birth_date': datetime.date(now.year - 10, 1, 15),
         'name': 'John Doe',
         'gender': 'm',
         'relation': 'Dad',
     }
     update_data = {
-        'birth_date': datetime.date(datetime.date.today().year - 10, 1, 15),
+        'birth_date': datetime.date(now.year - 10, 1, 15),
         'name': 'Jane Doe',
         'gender': 'f',
         'relation': 'Mom',
@@ -188,12 +189,12 @@ class HolidayAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Base
     user_factory = factories.AdminFactory
     create_data = {
         'name': 'Friday Night Deploy',
-        'date': datetime.date(datetime.date.today().year, 1, 15),
+        'date': datetime.date(now.year, 1, 15),
         'country': 'BE',
     }
     update_data = {
         'name': 'Saturday Morning Deploy',
-        'date': datetime.date(datetime.date.today().year, 1, 16),
+        'date': datetime.date(now.year, 1, 16),
         'country': 'BE',
     }
 
@@ -330,16 +331,16 @@ class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
         'active': True,
 
         'fixed_fee': 600.25,
-        'starts_at': datetime.date.today(),
-        'ends_at': datetime.date.today() + timedelta(days=365),
+        'starts_at': now,
+        'ends_at': now + timedelta(days=365),
     }
     update_data = {
         'label': 'More Projects & Stuff',
         'active': True,
 
         'fixed_fee': 300.25,
-        'starts_at': datetime.date.today() - timedelta(days=20),
-        'ends_at': datetime.date.today() + timedelta(days=730),
+        'starts_at': now - timedelta(days=20),
+        'ends_at': now + timedelta(days=730),
     }
 
     def setUp(self):
@@ -396,13 +397,13 @@ class ConsultancyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
     user_factory = factories.AdminFactory
     create_data = {
         'label': 'Consultancy & Stuff',
-        'starts_at': datetime.date.today(),
+        'starts_at': now,
         'day_rate': 600,
         'active': True,
     }
     update_data = {
         'label': 'More Consultancy & Stuff',
-        'starts_at': datetime.date.today(),
+        'starts_at': now,
         'day_rate': 600,
         'active': True,
     }
@@ -430,13 +431,13 @@ class SupportContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
     user_factory = factories.AdminFactory
     create_data = {
         'label': 'Support & Stuff',
-        'starts_at': datetime.date.today(),
+        'starts_at': now,
         'day_rate': 600,
         'active': True,
     }
     update_data = {
         'label': 'More Support & Stuff',
-        'starts_at': datetime.date.today(),
+        'starts_at': now,
         'day_rate': 600,
         'active': True,
     }
@@ -504,13 +505,13 @@ class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
     user_factory = factories.AdminFactory
     create_data = {
         'status': 'ACTIVE',
-        'year': datetime.date.today().year,
-        'month': datetime.date.today().month,
+        'year': now.year,
+        'month': now.month,
     }
     update_data = {
         'status': 'ACTIVE',
-        'year': datetime.date.today().year,
-        'month': datetime.date.today().month,
+        'year': now.year,
+        'month': now.month,
     }
 
     def get_object(self, factory):
@@ -563,10 +564,15 @@ class PerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseR
         self.timesheet = factories.OpenTimesheetFactory.create(
             user=factories.AdminFactory.create(),
         )
+        self.contract = factories.ContractFactory.create(
+            active=True,
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(timesheet=self.timesheet)
+        return factory.create(timesheet=self.timesheet, contract=self.contract)
 
 
 class ActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
@@ -624,14 +630,20 @@ class StandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, tes
         self.timesheet = factories.OpenTimesheetFactory.create(
             user=factories.AdminFactory.create(),
         )
+        self.contract = factories.SupportContractFactory(
+            active=True,
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(timesheet=self.timesheet)
+        return factory.create(timesheet=self.timesheet, contract=self.contract)
 
     def get_create_data(self):
         self.create_data.update({
             'timesheet': self.timesheet.id,
+            'contract': self.contract.id,
         })
 
         return self.create_data
@@ -747,6 +759,164 @@ class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
         return self.create_data
 
 
+class MonthInfoServiceAPIViewTestcase(APITestCase): 
+    def setUp(self):
+        self.user = factories.AdminFactory.create()
+        self.client.force_authenticate(self.user)
+        self.url = reverse('month_info_service')
+        super().setUp()
+
+    def test_get_required_hours(self):
+        userinfo = factories.UserInfoFactory.create(
+            user=self.user
+        )
+        employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        get_response = self.client.get(self.url)
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+
+    def test_get_required_hours_without_employmentcontract(self):
+        userinfo = factories.UserInfoFactory.create(
+            user=self.user
+        )
+        get_response = self.client.get(self.url)
+        self.assertEqual(get_response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_required_hours_without_userinfo(self):
+        employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        get_response = self.client.get(self.url)
+        self.assertEqual(get_response.status_code, status.HTTP_400_BAD_REQUEST)
+        
+    def test_get_required_hours_with_leave(self):
+        userinfo = factories.UserInfoFactory.create(
+            user=self.user
+        )
+        employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        timesheet = factories.TimesheetFactory.create(
+            user=self.user,
+            month=now.month
+        )
+        leave = factories.LeaveFactory.create(
+            user=self.user,
+            leave_type=factories.LeaveTypeFactory.create()
+        )
+        leavedate = factories.LeaveDateFactory(
+            leave=leave,
+            timesheet=timesheet,
+            starts_at=timezone.make_aware(datetime.datetime(now.year, now.month, 1, 0, 0, 0), timezone.get_current_timezone()),
+            ends_at=timezone.make_aware(datetime.datetime(now.year, now.month, 1, 23, 59, 59), timezone.get_current_timezone())
+        )
+        get_response = self.client.get(self.url, {'month':now.month})
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+
+    def test_get_required_hours_of_user(self):
+        second_user = factories.UserFactory.create()
+        userinfo = factories.UserInfoFactory.create(
+            user=second_user
+        )
+        employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=second_user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        get_response = self.client.get(self.url, {'user_id':second_user.id})
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+
+    def test_get_hours_performed(self):
+        userinfo = factories.UserInfoFactory.create(
+            user=self.user
+        )
+        employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        contract = factories.ContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        timesheet = factories.TimesheetFactory.create(
+            user=self.user,
+            month=now.month
+        )
+        activityperformance = factories.ActivityPerformanceFactory.create(
+            timesheet=timesheet,
+            contract=contract,
+            performance_type=factories.PerformanceTypeFactory.create()
+        )
+        get_response = self.client.get(self.url)
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+
+    def test_get_hours_performed_of_user(self):
+        second_user = factories.UserFactory.create()
+        employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=second_user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        userinfo = factories.UserInfoFactory.create(
+            user=second_user
+        )
+        contract = factories.ContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        timesheet = factories.TimesheetFactory.create(
+            user=second_user,
+            month=now.month
+        )
+        activityperformance = factories.ActivityPerformanceFactory.create(
+            timesheet=timesheet,
+            contract=contract,
+            performance_type=factories.PerformanceTypeFactory.create()
+        )
+        get_response = self.client.get(self.url, {'user_id': second_user.id})
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+    
+    def test_get_hours_performed_month(self):
+        userinfo = factories.UserInfoFactory.create(
+            user=self.user
+        )
+        employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        contract = factories.ContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        timesheet = factories.TimesheetFactory.create(
+            user=self.user,
+            month=now.month
+        )
+        activityperformance = factories.ActivityPerformanceFactory.create(
+            timesheet=timesheet,
+            contract=contract,
+            performance_type=factories.PerformanceTypeFactory.create()
+        )
+        get_response = self.client.get(self.url, {'month': now.month})
+
+
+        
 class MyLeaveRequestsServiceAPITestcase(APITestCase):
     def test_create_leave_dates(self):
         """
@@ -852,13 +1022,13 @@ class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
     user_factory = factories.AdminFactory
     create_data = {
         'status': "ACTIVE",
-        'year': datetime.date.today().year,
-        'month': datetime.date.today().month,
+        'year': now.year,
+        'month': now.month,
     }
     update_data = {
         'status': "ACTIVE",
-        'year': datetime.date.today().year,
-        'month': datetime.date.today().month,
+        'year': now.year,
+        'month': now.month,
     }
 
     def get_object(self, factory):
@@ -914,10 +1084,15 @@ class MyPerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.Bas
         self.timesheet = factories.OpenTimesheetFactory.create(
             user=self.user,
         )
+        self.contract = factories.ContractFactory.create(
+            active=True,
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(timesheet=self.timesheet)
+        return factory.create(timesheet=self.timesheet, contract=self.contract)
 
 
 class MyActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
@@ -979,16 +1154,22 @@ class MyStandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, t
         self.client.force_authenticate(self.user)
 
         self.timesheet = factories.OpenTimesheetFactory.create(
-            user = self.user,
+            user=self.user,
+        )
+        self.contract = factories.SupportContractFactory.create(
+            active=True,
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
         )
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(timesheet=self.timesheet)
+        return factory.create(timesheet=self.timesheet, contract=self.contract)
 
     def get_create_data(self):
         self.create_data.update({
             'timesheet': self.timesheet.id,
+            'contract': self.contract.id,
         })
 
         return self.create_data

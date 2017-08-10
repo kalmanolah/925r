@@ -246,13 +246,13 @@ class WhereaboutSerializer(BaseSerializer):
 class PerformanceSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Performance
-        fields = BaseSerializer.Meta.fields + ('timesheet', 'day', 'redmine_id')
+        fields = BaseSerializer.Meta.fields + ('timesheet', 'day', 'redmine_id', 'contract')
 
 
 class ActivityPerformanceSerializer(PerformanceSerializer):
     class Meta(PerformanceSerializer.Meta):
         model = models.ActivityPerformance
-        fields = PerformanceSerializer.Meta.fields + ('duration', 'description', 'performance_type', 'contract', 'contract_role')
+        fields = PerformanceSerializer.Meta.fields + ('duration', 'description', 'performance_type', 'contract_role')
 
 
 class StandbyPerformanceSerializer(PerformanceSerializer):
@@ -333,3 +333,11 @@ class MyAttachmentSerializer(AttachmentSerializer):
 class MyWorkScheduleSerializer(WorkScheduleSerializer):
     class Meta(WorkScheduleSerializer.Meta):
         read_only_fields = WorkScheduleSerializer.Meta.read_only_fields + ('user',)
+
+
+class MonthInfoSerializer(serializers.Serializer):
+    # user_id = serializers.CharField(max_length=255)
+    hours_performed = serializers.DecimalField(max_digits=255, decimal_places=2)
+    hours_required = serializers.DecimalField(max_digits=255, decimal_places=2)
+    # leaves = serializers.CharField(max_length=255)
+    # holidays = serializers.CharField(max_length=255)

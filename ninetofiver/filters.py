@@ -483,7 +483,7 @@ class WhereaboutFilter(FilterSet):
 
 
 class PerformanceFilter(FilterSet):
-    order_fields = ('day', 'timesheet__month', 'timesheet__year', )
+    order_fields = ('day', 'timesheet__month', 'timesheet__year', 'contract', )
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
@@ -494,11 +494,12 @@ class PerformanceFilter(FilterSet):
             'timesheet__month': ['exact', 'gte', 'lte', ],
             'timesheet__year': ['exact', 'gte', 'lte', ],
             'timesheet__user_id': ['exact'],
+            'contract': ['exact'],
         }
 
 
 class ActivityPerformanceFilter(PerformanceFilter):
-    order_fields = PerformanceFilter.order_fields + ('duration', 'description', 'contract')
+    order_fields = PerformanceFilter.order_fields + ('duration', 'description', )
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta(PerformanceFilter.Meta):
@@ -506,7 +507,6 @@ class ActivityPerformanceFilter(PerformanceFilter):
         fields = merge_dicts(PerformanceFilter.Meta.fields, {
             'duration': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'description': ['exact', 'contains', 'icontains'],
-            'contract': ['exact'],
         })
 
 
