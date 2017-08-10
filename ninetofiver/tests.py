@@ -564,10 +564,15 @@ class PerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseR
         self.timesheet = factories.OpenTimesheetFactory.create(
             user=factories.AdminFactory.create(),
         )
+        self.contract = factories.ContractFactory.create(
+            active=True,
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(timesheet=self.timesheet)
+        return factory.create(timesheet=self.timesheet, contract=self.contract)
 
 
 class ActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
@@ -625,14 +630,20 @@ class StandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, tes
         self.timesheet = factories.OpenTimesheetFactory.create(
             user=factories.AdminFactory.create(),
         )
+        self.contract = factories.SupportContractFactory(
+            active=True,
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(timesheet=self.timesheet)
+        return factory.create(timesheet=self.timesheet, contract=self.contract)
 
     def get_create_data(self):
         self.create_data.update({
             'timesheet': self.timesheet.id,
+            'contract': self.contract.id,
         })
 
         return self.create_data
@@ -1073,10 +1084,15 @@ class MyPerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.Bas
         self.timesheet = factories.OpenTimesheetFactory.create(
             user=self.user,
         )
+        self.contract = factories.ContractFactory.create(
+            active=True,
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(timesheet=self.timesheet)
+        return factory.create(timesheet=self.timesheet, contract=self.contract)
 
 
 class MyActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
@@ -1138,16 +1154,22 @@ class MyStandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, t
         self.client.force_authenticate(self.user)
 
         self.timesheet = factories.OpenTimesheetFactory.create(
-            user = self.user,
+            user=self.user,
+        )
+        self.contract = factories.SupportContractFactory.create(
+            active=True,
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
         )
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(timesheet=self.timesheet)
+        return factory.create(timesheet=self.timesheet, contract=self.contract)
 
     def get_create_data(self):
         self.create_data.update({
             'timesheet': self.timesheet.id,
+            'contract': self.contract.id,
         })
 
         return self.create_data
