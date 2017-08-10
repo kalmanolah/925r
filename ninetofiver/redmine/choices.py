@@ -32,4 +32,4 @@ def get_redmine_user_choices():
         except Exception as e:
             logger.debug('Something went wrong when trying to connect to redmine: ')
             logger.debug(e)
-    return []
+    return [('None', 'None')]
