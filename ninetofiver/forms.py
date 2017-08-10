@@ -52,7 +52,26 @@ class EmploymentContractAdminForm(forms.ModelForm):
 
 class ProjectContractAdminForm(forms.ModelForm):
     redmine_id = forms.ChoiceField(
-       choices = get_redmine_project_choices())
+       choices = get_redmine_project_choices()
+    )
     class Meta:
         model = models.ProjectContract
         fields = ['label', 'description', 'customer', 'company', 'active', 'performance_types', 'contract_groups', 'attachments', 'redmine_id', 'fixed_fee', 'starts_at', 'ends_at']
+
+
+class ConsultancyContractAdminForm(forms.ModelForm):
+    redmine_id = forms.ChoiceField(
+       choices = get_redmine_project_choices()
+    )
+    class Meta:
+        model = models.ConsultancyContract
+        fields = ['label', 'description', 'customer', 'company', 'active', 'performance_types', 'contract_groups', 'attachments', 'redmine_id', 'starts_at', 'ends_at', 'duration', 'day_rate']
+
+
+class SupportContractAdminForm(forms.ModelForm):
+    redmine_id = forms.ChoiceField(
+       choices = get_redmine_project_choices()
+    )
+    class Meta:
+        model = models.SupportContract
+        fields = ['label', 'description', 'customer', 'company', 'active', 'performance_types', 'contract_groups', 'attachments', 'redmine_id', 'day_rate', 'fixed_fee', 'fixed_fee_period', 'starts_at', 'ends_at']

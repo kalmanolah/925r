@@ -11,14 +11,14 @@ def get_redmine_project_choices():
         try:
             redmine = Redmine(REDMINE_URL, key=REDMINE_API_KEY)
             projects = redmine.project.all()
-            REDMINE_PROJECT_CHOICES = ((project['id'], project['name']) for project in projects)
+            REDMINE_PROJECT_CHOICES = ((project['id'], project['name']) for project in projects).append('None')
             return REDMINE_PROJECT_CHOICES
         except ConnectionError:
             logger.debug('Tried to connect to redmine but failed.')
         except Exception as e:
             logger.debug('Somethiig went wrong when trying to connect to redmine: ')
             logger.debug(e)
-    return []
+    return [('None', 'None')]
 
 def get_redmine_user_choices():
     if REDMINE_URL and REDMINE_API_KEY: 
@@ -32,4 +32,4 @@ def get_redmine_user_choices():
         except Exception as e:
             logger.debug('Something went wrong when trying to connect to redmine: ')
             logger.debug(e)
-    return []
+    return [('None', 'None')]

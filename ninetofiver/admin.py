@@ -213,11 +213,13 @@ class ProjectContractChildAdmin(ContractChildAdmin):
 #@admin.register(models.ConsultancyContract)
 class ConsultancyContractChildAdmin(ContractChildAdmin):
     base_model = models.ConsultancyContract
+    form = ConsultancyContractAdminForm
 
 
 @admin.register(models.SupportContract)
 class SupportContractChildAdmin(ContractChildAdmin):
     base_model = models.SupportContract
+    form = SupportContractAdminForm
 
 
 @admin.register(models.Contract)
