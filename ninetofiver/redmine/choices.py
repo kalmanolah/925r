@@ -16,7 +16,7 @@ def get_redmine_project_choices():
         except ConnectionError:
             logger.debug('Tried to connect to redmine but failed.')
         except Exception as e:
-            logger.debug('Somethiig went wrong when trying to connect to redmine: ')
+            logger.debug('Something went wrong when trying to connect to redmine: ')
             logger.debug(e)
     return [('None', 'None')]
 
