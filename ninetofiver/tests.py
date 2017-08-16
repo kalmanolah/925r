@@ -970,6 +970,25 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         post_normal_response = self.client.post(self.create_url, create_data, format='json')
         self.assertEqual(post_normal_response.status_code, status.HTTP_201_CREATED)
 
+    def test_create_cross_year_success(self):
+        """Test a scenario where leave dates can be created from one year into the next."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'starts_at': datetime.datetime(now.year, 12, 25, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year + 1, 1, 5, 0, 0, 0)
+        }
+
+        # Check for normal creation success
+        post_create_cross_year_success = self.client.post(self.create_url, create_data, format='json')
+        self.assertEqual(post_create_cross_year_success.status_code, status.HTTP_201_CREATED)
+
     def test_inactive_employment_contract_error(self):
         """Test alternative scenario where a user no longer has an active employmentcontract."""
         ltype = factories.LeaveTypeFactory.create()
@@ -1056,11 +1075,44 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
 
         update_data = {
             'leave_id': leave.id,
-            'starts_at': datetime.datetime(now.year, now.month, 1, 0, 0, 0),
-            'ends_at': datetime.datetime(now.year, now.month, 18, 0, 0, 0)
+            'starts_at': datetime.datetime(now.year, now.month, 5, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 15, 0, 0, 0)
         }
         patch_leave_dates_success = self.client.patch(self.update_url, update_data, format='json')
         self.assertEqual(patch_leave_dates_success.status_code, status.HTTP_201_CREATED)
+
+    def put_leave_dates_success(self):
+        """Test scenario where a pre-existing leave is putted."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+
+        update_data = {
+            'leave_id': leave.id,
+            'starts_at': datetime.datetime(now.year, now.month, 1, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 18, 0, 0, 0)
+        }
+        put_leave_dates_success = self.client.put(self.update_url, update_data, format='json')
+        self.assertEqual(put_leave_dates_success.status_code, status.HTTP_201_CREATED)
+
+    def put_invalid_leave_error(self):
+        """Test scenario where a pre-existing leave is putted."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+
+        update_data = {
+            'leave_id': leave.id,
+            'starts_at': datetime.datetime(now.year, now.month, 1, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 18, 0, 0, 0)
+        }
+        put_leave_dates_success = self.client.put(self.update_url, update_data, format='json')
+        self.assertRaises(ObjectDoesNotExist)
+        self.assertEqual(put_leave_dates_success.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_patch_leave_error(self):
         """Test scenario where a newly created leave_request is updated with a new leave_id."""
