@@ -59,7 +59,8 @@ urlpatterns += [
     url(r'^$', views.home_view, name='home'),
     url(r'^api/v1/', include(router.urls + [
         url(r'^services/my_user/$', views.MyUserServiceAPIView.as_view(), name='my_user_service'),
-        url(r'^services/my_leave_request/$', views.MyLeaveRequestServiceAPIView.as_view(), name='my_leave_request_service'),
+        url(r'^services/my_leave_request_create/$', views.MyLeaveRequestCreateServiceAPIView.as_view(), name='my_leave_request_create_service'),
+        url(r'^services/my_leave_request_update/$', views.MyLeaveRequestUpdateServiceAPIView.as_view(), name='my_leave_request_update_service'),
         url(r'^services/time_entry_import/$', views.TimeEntryImportServiceAPIView.as_view(), name='time_entry_import_service'),
         url(r'^services/month_info/$', views.MonthInfoServiceAPIView.as_view(), name='month_info_service'),
         url(r'^services/download_attachment/(?P<slug>[A-Za-z0-9_-]+)/$', ObjectDownloadView.as_view(model=models.Attachment, file_field='file'), name='download_attachment_service')

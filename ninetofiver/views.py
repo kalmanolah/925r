@@ -31,6 +31,7 @@ from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
 from ninetofiver.redmine.views import get_redmine_user_time_entries
 from ninetofiver.redmine.serializers import RedmineTimeEntrySerializer
+from django.db.models import Q
 
 import ninetofiver.settings as settings
 
@@ -393,7 +394,7 @@ class MonthInfoServiceAPIView(APIView):
         total += work_schedule.friday * days_count['Friday']
         total += work_schedule.saturday * days_count['Saturday']
         total += work_schedule.sunday * days_count['Sunday']
-        logger.debug('total: ' + str(total))
+        # logger.debug('total: ' + str(total))
         
         # Subtract holdays from total.
         try:
@@ -404,7 +405,7 @@ class MonthInfoServiceAPIView(APIView):
         holidays = models.Holiday.objects.filter(country=user_country).filter(date__month=month)
         for holiday in holidays:
             total -= 8
-        logger.debug('total after holidays: ' + str(total))
+        # logger.debug('total after holidays: ' + str(total))
 
         DAY_START = '09:00'
         DAY_END = '17:30'
@@ -456,7 +457,7 @@ class MonthInfoServiceAPIView(APIView):
                     if leavedate.starts_at.weekday() < 5 and leavedate.starts_at > first_leavedate.starts_at and leavedate.starts_at  < last_leavedate.starts_at: 
                         total -= DAY_DURATION
 
-            logger.debug('total after leaves: ' + str(total))
+            # logger.debug('total after leaves: ' + str(total))
         return Decimal(total)
 
     def hours_performed(self, user, month):
@@ -482,76 +483,71 @@ class MyUserServiceAPIView(APIView):
         return Response(data)
 
 
-class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
+class MyLeaveRequestServiceAPIView(generics.GenericAPIView):
     """
-    Set the leavedates for the corresponding leave.
+    Baseclass to create all leavedates for a given range.
     """
-    queryset = models.LeaveDate.objects.all()
-    serializer_class = serializers.LeaveRequestSerializer
+    serializer_class = serializers.LeaveRequestCreateSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    def create_leavedates(self, this, request):
-        """ Used to handle logic and return the correct response. """
+    def calculate_end(self, user, start, end):
+        """Calculcate the end_date's time, based off of the workschedule's hours & minutes for that day."""
+        #Get the current workschedule, based off of the active employmentcontract
+        ec = models.EmploymentContract.objects.get(
+            Q(user = user),
+            Q(ended_at__isnull = True)  | Q(ended_at__gte = datetime.now())
+        )
+        ws = models.WorkSchedule.objects.get(employmentcontract = ec).__dict__
 
+        #Get the hours of required work, count from midnight to those hours
+        working_day = ws[start.strftime('%A').lower()]
+        working_hours = int(working_day) 
+        working_minutes = (working_day - working_hours) * 60
+
+        return end.replace(
+            year=(start.year), 
+            month=(start.month), 
+            day=(start.day), 
+            hour=working_hours, 
+            minute=working_minutes,
+            second=(1)
+        )
+
+    def create_leavedates(self, this, request, leave):
+        """ Used to handle logic and return the correct response. """
         user = request.user
         leavedates = request.data
 
-        # Make the datetimes aware of the timezone
-        start = timezone.make_aware(
-            (datetime.strptime(leavedates['starts_at'], "%Y-%m-%dT%H:%M:%S")),
-            timezone.get_current_timezone()
-        )
-        end = timezone.make_aware(
-            (datetime.strptime(leavedates['ends_at'], "%Y-%m-%dT%H:%M:%S")),
-            timezone.get_current_timezone()
-        )
-        leave = int(leavedates['leave'])
-        # timesheet = int(leavedates['timesheet'])
-
-        #If the leave spans across one day only
-        if start.date() == end.date():
-            timesheet, created = models.Timesheet.objects.get_or_create(
-                user=user,
-                year=start.year,
-                month=start.month
+        try:
+            # Make the datetimes aware of the timezone
+            start = timezone.make_aware(
+                (datetime.strptime(leavedates['starts_at'], "%Y-%m-%dT%H:%M:%S")),
+                timezone.get_current_timezone()
+            )
+            end = timezone.make_aware(
+                (datetime.strptime(leavedates['ends_at'], "%Y-%m-%dT%H:%M:%S")),
+                timezone.get_current_timezone()
             )
 
             try:
-                #Create leavedate
-                ld = models.LeaveDate(
-                    leave = models.Leave.objects.get(pk=leave),
-                    timesheet = timesheet,
-                    starts_at = start,
-                    ends_at = end
+                new_start = start.replace(
+                    year=start.year,
+                    month=start.month,
+                    day=start.day,
+                    hour=0,
+                    minute=0,
+                    second=0
                 )
+                new_end = self.calculate_end(user, new_start, end)
+                days = (end - start).days + 1
 
-                try:
-                    #Validate & save
-                    ld.full_clean()
-                except ValidationError as ve:
-                    return Response('LEAVEDATE -> ValidationError', status = status.HTTP_400_BAD_REQUEST)
-
-                ld.save()
-
-            except ObjectDoesNotExist as oe:
-                return Response('LEAVE -> ObjectDoesNotExist', status = status.HTTP_400_BAD_REQUEST)
-
-            return Response( [leavedates], status = status.HTTP_201_CREATED )
-
-        #If leave spans across several days
-        else:
-            if(end.hour == 0 and end.minute == 0 and end.second == 0):
-                end = end - timedelta(seconds=1)
-
-            days = (end-start).days + 1
+            except Exception as e:
+                leave.delete()
+                return Response('Workschedule couldn\'t be found for that user.', status = status.HTTP_400_BAD_REQUEST)
 
             if days < 0:
-                return Response('END DATE SHOULD COME AFTER START DATE', status = status.HTTP_400_BAD_REQUEST)
-
-            new_start = start
-            new_end = end.replace(year=(start.year), month=(start.month), day=(start.day), hour=(23), minute=(59), second=(59))
-
-            my_list = list()
+                leave.delete()
+                return Response('End date should come after start date.', status = status.HTTP_400_BAD_REQUEST)
 
             # Get timesheet, or create it
             timesheet = models.Timesheet.objects.get_or_create(
@@ -559,7 +555,9 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
                 year=new_start.year,
                 month=new_start.month
             )[0]
-            leave_object = models.Leave.objects.get(pk=leave)
+
+
+            my_list = list()
 
             # Create all leavedates ranging from the start to the end
             for x in range(0, days):
@@ -573,7 +571,7 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
                     )[0]
 
                 temp = models.LeaveDate(
-                    leave=leave_object,
+                    leave=leave,
                     timesheet=timesheet,
                     starts_at=new_start,
                     ends_at=new_end
@@ -583,7 +581,7 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
                 try:
                     temp.full_clean()
                 except ValidationError as e:
-                    models.Leave.objects.filter(pk=leave).delete()
+                    leave.delete()
                     return Response(e, status = status.HTTP_400_BAD_REQUEST)
 
                 # Save the object
@@ -598,33 +596,88 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView):
                     'timesheet': temp.timesheet_id,
                     'starts_at': temp.starts_at,
                     'ends_at': temp.ends_at
-                })
-                new_start += timedelta(days=1)
-                new_end += timedelta(days=1)
+                }) 
 
-                #After initial run, set start time on begin of day
-                if x < 1:
-                    new_start = new_start.replace(hour=(0), minute=(0), second=(0))
                 #Set time to original end when second to last has run
-                if x == days - 2:
-                    new_end = new_end.replace(hour=(end.hour), minute=(end.minute), second=(end.second))
+                if x <= days - 2:
+                    try:
+                        new_start += timedelta(days=1)
+                        new_end = self.calculate_end(user, new_start, new_end + timedelta(days=1))
+                    except Exception as e:
+                        leave.delete()
+                        return Response('Workschedule couldn\'t be found for that user', status = status.HTTP_400_BAD_REQUEST)
 
-            serializer = this.get_serializer(data=my_list, many=True)
-            #Empty call, does nothing (rip)
-            serializer.is_valid(raise_exception=True)
+            leave.status = 'PENDING'
+            leave.save()
 
-            return Response(serializer.data, status = status.HTTP_201_CREATED)
+            return_dict = {
+                'leave': leave.id,
+                'description': leave.description,
+                'leave_type': leave.leave_type.id,
+                'starts_at': start,
+                'ends_at': end
+            }
+            return Response(return_dict, status = status.HTTP_201_CREATED)
 
-    def patch(self, request, format=None):
-        models.LeaveDate.objects.filter(leave=int(request.data['leave'])).delete()
-        return self.create_leavedates(self, request)
+        except Exception as e:
+            leave.delete()
+            return Response(e, status = status.HTTP_400_BAD_REQUEST)
+
+
+class MyLeaveRequestCreateServiceAPIView(generics.CreateAPIView, MyLeaveRequestServiceAPIView):
+    """
+    Creates a leave and all its leavedates for a given range.
+    """
+    serializer_class = serializers.LeaveRequestCreateSerializer
+
+    def create_leave(self, request):
+        """Creates the leave object for the leavedates."""
+        lt = models.LeaveType.objects.get(pk=request.data['leave_type'])
+
+        if lt is None:
+            raise ObjectDoesNotExist('Leavetype could not be found based on the provided pk.')
+
+        return models.Leave.objects.create(
+            user = request.user,
+            description = request.data['description'],
+            leave_type = lt,
+            status = 'DRAFT',
+        )
 
     def post(self, request, format=None):
-        #Return an error saying leavedates already exist for the leave object, or return the created objects
-        if models.LeaveDate.objects.filter(leave=int(request.data['leave'])):
-            return Response('Leavedates are already assigned to this leave object', status = status.HTTP_400_BAD_REQUEST)
-        else:
-            return self.create_leavedates(self, request)
+        """Defines the behaviour for a post request."""
+        leave = self.create_leave(request)
+        return self.create_leavedates(self, request, leave)
+
+
+class MyLeaveRequestUpdateServiceAPIView(generics.UpdateAPIView, MyLeaveRequestServiceAPIView):
+    """
+    Updates a leave's leavedates for a given range.
+    """
+    serializer_class = serializers.LeaveRequestUpdateSerializer
+
+    def get_leave(self, request):
+        """Creates the leave object for the leavedates."""
+        lv = models.Leave.objects.filter(pk=request.data['leave_id'])[0]
+
+        if lv is None:
+            raise ObjectDoesNotExist('Leave object could not be found based on the provided pk.')
+
+        return lv
+
+    def update(self, request):
+        """Defines the behaviour for an update request."""
+        lv = self.get_leave(request)
+        models.LeaveDate.objects.filter(leave=lv).delete()
+        return self.create_leavedates(self, request, lv)
+
+    def patch(self, request, format=None):
+        """Defines the behaviour for a patch request."""
+        return self.update(request)
+
+    def put(self, request, format=None):
+        """Defines the behaviour for a put request."""
+        return self.update(request)
 
 
 class MyLeaveViewSet(viewsets.ModelViewSet):

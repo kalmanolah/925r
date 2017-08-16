@@ -70,27 +70,6 @@ class BaseSerializer(serializers.ModelSerializer):
 #         serializer = value.get_default_serializer()
 #         return serializer(value, context={'request': None}).data
 
-
-class LeaveRequestSerializer(BaseSerializer):
-    class Meta(BaseSerializer.Meta):
-        model = models.LeaveDate
-        fields = BaseSerializer.Meta.fields + ('leave', 'starts_at', 'ends_at')
-        
-    def validate(self, data):
-        """ Does nothing (rip) because validation is handled before this gets called
-        The view handles a .full_clean() to force validation BEFORE save, instead of after
-        Save after (here) would generate ridiculous duplicate-errors """
-        return data
-
-    def get_type(self, obj):
-        """ Object is an ordered list, only way to get the class name 'relatively clean' """
-        return self.Meta.model.__name__
-
-    def get_display_label(self, obj):
-        """ Repeats the __str__ method from models.LeaveDate, because the obj is an orderedlist & can't reach it """
-        return '%s - %s' % (dict(obj)['starts_at'].strftime('%Y-%m-%d %H:%M:%S'), dict(obj)['ends_at'].strftime('%Y-%m-%d %H:%M:%S'))
-
-
 class CompanySerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Company
@@ -363,3 +342,55 @@ class MonthInfoSerializer(serializers.Serializer):
     hours_required = serializers.DecimalField(max_digits=255, decimal_places=2)
     # leaves = serializers.CharField(max_length=255)
     # holidays = serializers.CharField(max_length=255)
+
+
+class LeaveRequestSerializer(serializers.Serializer):
+    starts_at = serializers.DateTimeField()
+    ends_at = serializers.DateTimeField()
+
+    def validate_starts_at(self, val):
+        """
+        Check that the start is a datetime.
+        """
+        if type(val) is not datetime.datetime:
+            return serializers.ValidationError("Starts_at is not a datetime object.")
+        return val
+
+    def validate_ends_at(self, val):
+        """
+        Check that the end is a datetime.
+        """
+        if type(val) is not datetime.datetime:
+            return serializers.ValidationError("Ends_at is not a datetime object.")
+        return val
+
+class LeaveRequestCreateSerializer(LeaveRequestSerializer):
+    description = serializers.CharField(max_length=255)
+    leave_type = serializers.IntegerField()
+
+    def validate_description(self, val):
+        """
+        Check that the description is indeed a string.
+        """
+        if type(val) is not str:
+            raise serializers.ValidationError("Description is not a string.")
+        return val
+        
+    def validate_leave_type(self, val):
+        """
+        Check that the description is indeed a string.
+        """
+        if models.LeaveType.objects.filter(pk=val)[0] is None:
+            raise serializers.ValidationError("LeaveType is not valid.")
+        return val
+
+class LeaveRequestUpdateSerializer(LeaveRequestSerializer):
+    leave_id = serializers.IntegerField()
+
+    def validate_leave_id(self, val):
+        """
+        Check that the description is indeed a string.
+        """
+        if type(val) is not int or type(val) is not None:
+            raise serializers.ValidationError("Leave id is not integer.")
+        return val
