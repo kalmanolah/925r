@@ -465,7 +465,7 @@ class MonthInfoServiceAPIView(APIView):
         try:
             performances = models.ActivityPerformance.objects.filter(timesheet__user_id=user, timesheet__month=month)
         except ObjectDoesNotExist as oe:
-            return Response('Performances not found: ' + str(oe), status=status.HTTP_404_BAD_REQUEST)
+            return Response('Performances not found: ' + str(oe), status=status.HTTP_404_NOT_FOUND)
         for performance in performances:
             total += Decimal(performance.duration)
         return Decimal(total)
@@ -621,7 +621,7 @@ class MyLeaveRequestServiceAPIView(generics.GenericAPIView):
 
         except Exception as e:
             leave.delete()
-            return Response(e, status = status.HTTP_400_BAD_REQUEST)
+            return Response(e, status = status.HTTP_404_NOT_FOUND)
 
 
 class MyLeaveRequestCreateServiceAPIView(generics.CreateAPIView, MyLeaveRequestServiceAPIView):
@@ -658,12 +658,12 @@ class MyLeaveRequestUpdateServiceAPIView(generics.UpdateAPIView, MyLeaveRequestS
 
     def get_leave(self, request):
         """Creates the leave object for the leavedates."""
-        lv = models.Leave.objects.filter(pk=request.data['leave_id'])[0]
+        lv = models.Leave.objects.filter(pk=request.data['leave_id'])
 
-        if lv is None:
+        if len(lv) is 0:
             raise ObjectDoesNotExist('Leave object could not be found based on the provided pk.')
 
-        return lv
+        return lv[0]
 
     def update(self, request):
         """Defines the behaviour for an update request."""
