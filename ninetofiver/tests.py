@@ -8,6 +8,10 @@ from ninetofiver import factories
 from decimal import Decimal
 from datetime import timedelta
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from ninetofiver.settings import REDMINE_URL, REDMINE_API_KEY
+from ninetofiver.redmine.choices import get_redmine_project_choices, get_redmine_user_choices
+from ninetofiver.redmine.views import get_redmine_user_time_entries
+from redminelib import exceptions, Redmine
 
 import tempfile
 import datetime
@@ -1182,3 +1186,40 @@ class MyWorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcas
             employment_contract_type=factories.EmploymentContractTypeFactory.create()
         )
         return work_schedule
+
+
+class RedmineAPITestCase(APITestCase):
+    def test_empty_redmine_url(self):
+        redmine = Redmine('', key=REDMINE_API_KEY)
+        self.assertRaises(exceptions.ResourceError)
+
+    def test_redmine_project_choices(self):
+        project_choices = get_redmine_project_choices()
+        self.assertIsNotNone(project_choices)
+
+    def test_redmine_user_choices(self):
+        user_choices = get_redmine_user_choices()
+        self.assertIsNotNone(user_choices)
+
+    def test_redmine_user_time_entry_import(self):
+        users = get_redmine_user_choices()
+        user = next(users)
+        params = {
+            'filter_imported': 'false'
+        }
+        time_entries = get_redmine_user_time_entries(user[0], params)
+        self.assertIsNotNone(time_entries)
+
+    def test_redmine_user_time_entry_import_filter_imported(self):
+        users = get_redmine_user_choices()
+        user = next(users)
+        params = {
+            'filter_imported': 'true'
+        }
+        time_entries = get_redmine_user_time_entries(user[0], params)
+        self.assertIsNotNone(time_entries)
+
+    def test_redmine_get_projects(self):
+        redmine = Redmine(REDMINE_URL, key=REDMINE_API_KEY)
+        projects = redmine.project.all()
+        self.assertTrue(len(projects) > 0)
