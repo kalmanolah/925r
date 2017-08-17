@@ -13,6 +13,9 @@ from ninetofiver.redmine.choices import get_redmine_project_choices, get_redmine
 from ninetofiver.redmine.views import get_redmine_user_time_entries
 from redminelib import exceptions, Redmine
 
+import logging
+logging.basicConfig(filename='BONARRRRRRRRRRRRRrrr.log', filemode='w', level=logging.WARNING)
+
 import tempfile
 import datetime
 
@@ -251,13 +254,14 @@ class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
     base_name = 'leavedate'
     factory_class = factories.LeaveDateFactory
     user_factory = factories.AdminFactory
+
     create_data = {
-        'starts_at': datetime.datetime(now.year, now.month, 16, 7, 34, 34, tzinfo=utc),
-        'ends_at': datetime.datetime(now.year, now.month, 16, 8, 34, 34, tzinfo=utc),
+        'starts_at': datetime.datetime(now.year, now.month, 1, 7, 34, 34, tzinfo=utc),
+        'ends_at': datetime.datetime(now.year, now.month, 1, 8, 34, 34, tzinfo=utc),
     }
     update_data = {
-        'starts_at': datetime.datetime(now.year, now.month, 16, 9, 34, 34, tzinfo=utc),
-        'ends_at': datetime.datetime(now.year, now.month, 16, 10, 34, 34, tzinfo=utc),
+        'starts_at': datetime.datetime(now.year, now.month, 7, 9, 34, 34, tzinfo=utc),
+        'ends_at': datetime.datetime(now.year, now.month, 7, 10, 34, 34, tzinfo=utc),
     }
 
     def setUp(self):
@@ -266,12 +270,20 @@ class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
             user=user,
             leave_type=factories.LeaveTypeFactory.create(),
         )
+        self.workschedule = factories.WorkScheduleFactory.create()
+        self.employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=user,
+            work_schedule=self.workschedule,
+        )
         self.timesheet = factories.OpenTimesheetFactory.create(
             user=user,
         )
         self.timesheet.year = now.year
         self.timesheet.month = now.month
         self.timesheet.save()
+
         super().setUp()
 
     def get_object(self, factory):
@@ -726,18 +738,25 @@ class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
     factory_class = factories.LeaveDateFactory
     # user_factory = factories.AdminFactory
     create_data = {
-        'starts_at': datetime.datetime(now.year, now.month, 16, 7, 34, 34, tzinfo=utc),
-        'ends_at': datetime.datetime(now.year, now.month, 16, 8, 34, 34, tzinfo=utc),
+        'starts_at': datetime.datetime(now.year, now.month, 10, 7, 34, 34, tzinfo=utc),
+        'ends_at': datetime.datetime(now.year, now.month, 10, 8, 34, 34, tzinfo=utc),
     }
     update_data = {
-        'starts_at': datetime.datetime(now.year, now.month, 16, 9, 34, 34, tzinfo=utc),
-        'ends_at': datetime.datetime(now.year, now.month, 16, 10, 34, 34, tzinfo=utc),
+        'starts_at': datetime.datetime(now.year, now.month, 14, 9, 34, 34, tzinfo=utc),
+        'ends_at': datetime.datetime(now.year, now.month, 14, 10, 34, 34, tzinfo=utc),
     }
 
     def setUp(self):
         self.user = factories.AdminFactory.create()
         self.client.force_authenticate(self.user)
 
+        self.workschedule = factories.WorkScheduleFactory.create()
+        self.employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user,
+            work_schedule=self.workschedule,
+        )
         self.leave = factories.LeaveFactory.create(
             user=self.user,
             leave_type=factories.LeaveTypeFactory.create(),
@@ -764,6 +783,7 @@ class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
 
 
 class MonthInfoServiceAPIViewTestcase(APITestCase): 
+
     def setUp(self):
         self.user = factories.AdminFactory.create()
         self.client.force_authenticate(self.user)
@@ -851,102 +871,361 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
 
         
 class MyLeaveRequestsServiceAPITestcase(APITestCase):
-    def test_create_leave_dates(self):
-        """
-        Ensure we can create the leave dates for a leave object
-        """
-        user = factories.AdminFactory.create()
-        self.client.force_authenticate(user)
+    def setUp(self):
+        self.user = factories.AdminFactory.create()
+        self.client.force_authenticate(self.user)
 
+        workschedule = factories.WorkScheduleFactory.create()
+        self.employmentcontract = factories.EmploymentContractFactory.create(
+            company = factories.CompanyFactory.create(),
+            employment_contract_type = factories.EmploymentContractTypeFactory.create(),
+            user = self.user,
+            work_schedule = workschedule
+        )
+
+        self.create_url = reverse('my_leave_request_service')
+        self.update_url = reverse('my_leave_request_update_service')
+        super().setUp()
+
+    #Success 
+    #   Full day
+    def test_normal_create_success(self):
+        """Test normal scenario where leave dates can be created."""
         ltype = factories.LeaveTypeFactory.create()
-
         leave = factories.LeaveFactory.create(
-            user = user,
+            user = self.user,
             leave_type = ltype
         )
-
-        timesheet = factories.OpenTimesheetFactory.create(
-            user = user,
-            year = now.year,
-            month = now.month
-        )
-
-
         create_data = {
-            'leave': leave.id,
-            'timesheet': timesheet.id,
-            'starts_at': datetime.datetime(now.year, 4, 28, 0, 0, 0),
-            'ends_at': datetime.datetime(now.year, 4, 30, 0, 0, 0)
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 2, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 5, 0, 0, 0)
         }
-
-        url = reverse('my_leave_request_service')
 
         # Check for normal creation success
-        post_response = self.client.post(url, create_data, format='json')
-        self.assertEqual(post_response.status_code, status.HTTP_201_CREATED)
+        post_normal_response = self.client.post(self.create_url, create_data, format='json')
+        self.assertEqual(post_normal_response.status_code, status.HTTP_201_CREATED)
 
-
-        # Check for duplicate creation error
-        update_data = {
-            'leave': leave.id,
-            'timesheet': timesheet.id,
-            'starts_at': datetime.datetime(now.year, 4, 16, 7, 34, 34),
-            'ends_at': datetime.datetime(now.year, 4, 16, 8, 34, 34)
+    def test_create_cross_year_success(self):
+        """Test a scenario where leave dates can be created from one year into the next."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, 12, 25, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year + 1, 1, 5, 0, 0, 0)
         }
 
-        post_duplicate_leave_response = self.client.post(url, update_data, format='json')
+        # Check for normal creation success
+        post_create_cross_year_success = self.client.post(self.create_url, create_data, format='json')
+        self.assertEqual(post_create_cross_year_success.status_code, status.HTTP_201_CREATED)
+
+    def test_patch_leave_dates_success(self):
+        """Test scenario where a pre-existing leave is patched."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 1, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 18, 0, 0, 0)
+        }
+        temp_post = self.client.post(self.create_url, create_data, format='json')
+
+        update_data = {
+            'leave_id': temp_post.data['leave'],
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 5, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 15, 0, 0, 0)
+        }
+        patch_leave_dates_success = self.client.patch(self.update_url, update_data, format='json')
+        self.assertEqual(patch_leave_dates_success.status_code, status.HTTP_201_CREATED)
+
+    def test_put_leave_dates_success(self):
+        """Test scenario where a pre-existing leave is putted."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 1, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 18, 0, 0, 0)
+        }
+        temp_post = self.client.post(self.create_url, create_data, format='json')
+        logging.warning(temp_post)
+
+        update_data = {
+            'leave_id': temp_post.data['leave'],
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 1, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 18, 0, 0, 0)
+        }
+        put_leave_dates_success = self.client.put(self.update_url, update_data, format='json')
+        self.assertEqual(put_leave_dates_success.status_code, status.HTTP_201_CREATED)
+
+    #   Single day with time
+    def test_normal_single_day_create_success(self):
+        """Test normal scenario where leave dates can be created for a single day with time."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': False,
+            'starts_at': datetime.datetime(now.year, now.month, 2, 9, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 2, 14, 30, 0)
+        }
+
+        # Check for normal creation success
+        post_normal_single_day_response = self.client.post(self.create_url, create_data, format='json')
+        self.assertEqual(post_normal_single_day_response.status_code, status.HTTP_201_CREATED)
+
+    def test_patch_leave_dates_single_day_success(self):
+        """Test scenario where a pre-existing leave is patched for a single day with time."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': False,
+            'starts_at': datetime.datetime(now.year, now.month, 1, 9, 30, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 1, 11, 0, 0)
+        }
+        temp_post = self.client.post(self.create_url, create_data, format='json')
+
+        update_data = {
+            'leave_id': temp_post.data['leave'],
+            'full_day': False,
+            'starts_at': datetime.datetime(now.year, now.month, 2, 14, 30, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 2, 15, 0, 0)
+        }
+        patch_leave_dates_single_day_success = self.client.patch(self.update_url, update_data, format='json')
+        self.assertEqual(patch_leave_dates_single_day_success.status_code, status.HTTP_201_CREATED)
+
+    def test_put_leave_dates_single_day_success(self):
+        """Test scenario where a pre-existing leave is putted for a single day with time."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': False,
+            'starts_at': datetime.datetime(now.year, now.month, 1, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 1, 23, 0, 0)
+        }
+        temp_post = self.client.post(self.create_url, create_data, format='json')
+        logging.warning(temp_post)
+
+        update_data = {
+            'leave_id': temp_post.data['leave'],
+            'full_day': False,
+            'starts_at': datetime.datetime(now.year, now.month, 18, 12, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 18, 16, 30, 0)
+        }
+        put_leave_dates_single_day_success = self.client.put(self.update_url, update_data, format='json')
+        self.assertEqual(put_leave_dates_single_day_success.status_code, status.HTTP_201_CREATED)
+
+
+    #Error
+    #   Full day
+    def test_inactive_employment_contract_error(self):
+        """Test alternative scenario where a user no longer has an active employmentcontract."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 9, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 11, 0, 0, 0)
+        }
+
+        with self.assertRaises(Exception):
+            self.employmentcontract.ended_at = datetime.datetime(now.year - 1, now.month, 1, 0, 0, 0)
+            self.employmentcontract.save()
+            post_inactive_employmentcontract_response = self.client.post(self.create_url, create_data, format='json')
+            self.assertEqual(post_inactive_employmentcontract_response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_duplicate_leave_creation_error(self):
+        """Test scenario where leaves are requested, yet overlap"""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 1, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 18, 0, 0, 0)
+        }
+        temp_post = self.client.post(self.create_url, create_data, format='json')
+
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 2, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 17, 0, 0, 0)
+        }
+        post_duplicate_leave_response = self.client.post(self.create_url, create_data, format='json')
         self.assertEqual(post_duplicate_leave_response.status_code, status.HTTP_400_BAD_REQUEST)
 
-
-        #Check for overlapping leavedates
-        overlap_leave = factories.LeaveFactory.create(
-            user = user,
+    def test_overlapping_leave_creation_error(self):
+        """Test scenario where leaves are requested, yet overlap"""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
             leave_type = ltype
         )
-        overlap_data = {
-            'leave': overlap_leave.id,
-            'timesheet': timesheet.id,
-            'starts_at': create_data['starts_at'],
-            'ends_at': create_data['ends_at']
-        }
 
-        post_overlapping_leave_response = self.client.post(url, overlap_data, format='json')
-        self.assertRaises(ValidationError)
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 1, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 18, 0, 0, 0)
+        }
+        temp_post = self.client.post(self.create_url, create_data, format='json')
+
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 2, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 17, 0, 0, 0)
+        }
+        post_overlapping_leave_response = self.client.post(self.create_url, create_data, format='json')
         self.assertEqual(post_overlapping_leave_response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_put_invalid_leave_error(self):
+        """Test scenario where a non-existant leave is putted."""
 
-        # Check for update success
-        patch_response = self.client.patch(url, update_data, format='json')
-        self.assertEqual(patch_response.status_code, status.HTTP_201_CREATED)
-
-
-        # Check for update error
-        new_leave = factories.LeaveFactory.create(
-            user = user,
-            leave_type = ltype
-        )
-        update_data['leave'] = new_leave.id
-
-        patch_duplicate_date_response = self.client.patch(url, update_data, format='json')
-        self.assertRaises(ObjectDoesNotExist)
-        self.assertEqual(patch_duplicate_date_response.status_code, status.HTTP_400_BAD_REQUEST)
-
-
-        # Check for validationerror
-        invalid_leave = factories.LeaveFactory.create(
-            user = user,
-            leave_type = ltype
-        )
-        invalid_data = {
-            'leave': invalid_leave.id,
-            'timesheet': timesheet.id,
-            'starts_at': datetime.datetime(now.year, 3, 17, 23, 23, 23),
-            'ends_at': datetime.datetime(now.year, 3, 14, 5, 5, 5)
+        update_data = {
+            'leave_id': 420,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 1, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 18, 0, 0, 0)
         }
 
-        post_invalid_date_response = self.client.post(url, invalid_data, format='json')
-        self.assertRaises(ValidationError)
-        self.assertEqual(post_invalid_date_response.status_code, status.HTTP_400_BAD_REQUEST)
+        with self.assertRaises(ObjectDoesNotExist):
+            put_leave_dates_error = self.client.put(self.update_url, update_data, format='json')
+            self.assertEqual(put_leave_dates_error.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_patch_leave_error(self):
+        """Test scenario where a newly created leave_request is updated with a new leave_id."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 1, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 18, 0, 0, 0)
+        }
+        temp_post = self.client.post(self.create_url, create_data, format='json')
+
+        newLType = factories.LeaveTypeFactory.create()
+        newLeave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+        create_data['leave_id'] = newLeave.id
+
+        patch_leave_error = self.client.patch(self.update_url, create_data, format='json')
+        self.assertRaises(ObjectDoesNotExist)
+        self.assertEqual(patch_leave_error.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_patch_start_end_error(self):
+        """Test scenario where the end happens before the start."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 5, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 2, 0, 0, 0)
+        }
+
+        post_invalid_start_end = self.client.post(self.create_url, create_data, format='json')
+        self.assertEqual(post_invalid_start_end.status_code, status.HTTP_400_BAD_REQUEST)
+
+    #   Single day with time
+    def test_single_day_full_day_error(self):
+        """Test a scenario where the start and end are on the same day but the full_day flag is active."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 9, 10, 30, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 9, 12, 30, 0)
+        }
+
+        post_single_day_full_day = self.client.post(self.create_url, create_data, format='json')
+        self.assertEqual(post_single_day_full_day.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
@@ -1079,7 +1358,7 @@ class MyStandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, t
         'day': 14,
     }
     update_data = {
-        'day': 14,
+        'day': 17,
     }
 
     def setUp(self):

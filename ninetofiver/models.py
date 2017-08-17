@@ -17,6 +17,9 @@ from ninetofiver.utils import merge_dicts
 from polymorphic.models import PolymorphicManager
 from polymorphic.models import PolymorphicModel
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 # Monkey patch user model to serialize properly
 def user_str(self):
@@ -1015,21 +1018,13 @@ class ActivityPerformance(Performance):
         contract_role = data.get('contract_role', getattr(instance, 'contract_role', None))
 
         if contract and contract_role:
-            # Ensure that contract is a project contract
-            if not isinstance(contract, ProjectContract):
+            # Ensure the contract role is valid for the contract and contract_user
+            user = data.get('timesheet', getattr(instance, 'timesheet', None)).user
+            allowed = ContractUser.objects.filter(contract=contract, user=user, contract_role=contract_role)
+            if not allowed:
                 raise ValidationError(
-                    _('The selected contract role is not valid for the selected contract.'),
+                    _('The selected contract role is not valid for that user on that contract.')
                 )
-            # Ensure that contract role is valid for contract
-            performance = data.get('performance', getattr(instance, 'performance', None))
-            if performance:
-                timesheet = Timesheet.objects.get(id=performance.timesheet)
-                user_id = timesheet.user if timesheet else None # noga
-                contract_user = ContractUser.objects.filter(user=user_id, contract=contract.id, contract_role=contract_role)
-                if not contract_user:
-                    raise ValidationError(
-                        _('The selected contract role is not valid for the current user.'),
-                    )
  
         if contract and performance_type:
             # Ensure the performance type is valid for the contract
@@ -1071,6 +1066,7 @@ class StandbyPerformance(Performance):
             # Check whether the user already has a standby planned during this time frame
             existing = cls.objects.filter(
                 models.Q(
+                    contract=contract,
                     timesheet=timesheet,
                     day=day
                 )
@@ -1086,7 +1082,7 @@ class StandbyPerformance(Performance):
 
             if existing:
                 raise ValidationError (
-                    _('The date is already linked to a standby performance.'),
+                    _('The standby performance is already linked to that contract for that day.'),
                 )
 
         if contract:
