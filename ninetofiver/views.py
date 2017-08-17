@@ -355,12 +355,19 @@ class MonthInfoServiceAPIView(APIView):
 
     def get(self, request, format=None):
         # get user from params, defaults to the current user if user is omitted.
-        user = request.query_params.get('user_id') or request.user
+        user_id = request.query_params.get('user_id') or request.user.id
+        try:
+            user = auth_models.User.objects.get(pk=user_id)
+        except ObjectDoesNotExist as oe:
+            return Response("Can't find user with id: " + str(user_id), status=status.HTTP_400_BAD_REQUEST)
         # get month from params, defaults to the current month if month is omitted.
         month = int(request.query_params.get('month') or datetime.now().month)
         data = {}
-        data['hours_required'] = self.total_hours_required(user, month)
-        data['hours_performed'] = self.hours_performed(user, month)
+        try:
+            data['hours_required'] = self.total_hours_required(user_id, month)
+        except ObjectDoesNotExist as oe:
+            return Response('No employment contract found for user with id: ' + str(user_id), status=status.HTTP_400_BAD_REQUEST)
+        data['hours_performed'] = self.hours_performed(user_id, month)
         serializer = serializers.MonthInfoSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
@@ -368,12 +375,10 @@ class MonthInfoServiceAPIView(APIView):
     def total_hours_required(self, user, month):
         total = 0
         # Calculate total hours required.
-        try:
-            employmentcontract = models.EmploymentContract.objects.get(user_id=user)
-        except ObjectDoesNotExist as oe:
-            return Response('Failed to get employmentcontract' + str(oe), status=status.HTTP_400_BAD_REQUEST)
-        work_schedule = models.WorkSchedule.objects.get(pk=employmentcontract.work_schedule.id)
-    
+        employmentcontract = models.EmploymentContract.objects.filter(user=int(user))
+        if len(employmentcontract) == 0:
+            raise ObjectDoesNotExist
+        work_schedule = models.WorkSchedule.objects.get(pk=employmentcontract[0].work_schedule.id)
 
         year = datetime.now().year
         # List that contains the amount of weekdays of the given month.
