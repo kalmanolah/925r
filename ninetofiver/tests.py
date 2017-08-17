@@ -1309,7 +1309,7 @@ class MyStandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, t
         'day': 14,
     }
     update_data = {
-        'day': 14,
+        'day': 17,
     }
 
     def setUp(self):

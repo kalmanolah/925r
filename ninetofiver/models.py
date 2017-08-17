@@ -1066,6 +1066,7 @@ class StandbyPerformance(Performance):
             # Check whether the user already has a standby planned during this time frame
             existing = cls.objects.filter(
                 models.Q(
+                    contract=contract,
                     timesheet=timesheet,
                     day=day
                 )
@@ -1081,7 +1082,7 @@ class StandbyPerformance(Performance):
 
             if existing:
                 raise ValidationError (
-                    _('The date is already linked to a standby performance.'),
+                    _('The standby performance is already linked to that contract for that day.'),
                 )
 
         if contract:
