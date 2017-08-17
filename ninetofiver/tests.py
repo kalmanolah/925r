@@ -764,59 +764,62 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
         self.user = factories.AdminFactory.create()
         self.client.force_authenticate(self.user)
         self.url = reverse('month_info_service')
-        super().setUp()
-
-    def test_get_required_hours(self):
-        userinfo = factories.UserInfoFactory.create(
-            user=self.user
-        )
-        employmentcontract = factories.EmploymentContractFactory.create(
+        self.employmentcontract = factories.EmploymentContractFactory.create(
             company=factories.CompanyFactory.create(),
             employment_contract_type=factories.EmploymentContractTypeFactory.create(),
             user=self.user,
             work_schedule=factories.WorkScheduleFactory.create(),
         )
+        self.userinfo = factories.UserInfoFactory.create(
+            user=self.user
+        )
+        self.timesheet = factories.TimesheetFactory.create(
+            user=self.user,
+            month=now.month
+        )
+        self.second_user = factories.UserFactory.create()
+        self.second_userinfo = factories.UserInfoFactory.create(
+            user=self.second_user
+        )
+        self.second_employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.second_user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        self.contract = factories.ContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        self.activityperformance = factories.ActivityPerformanceFactory.create(
+            timesheet=self.timesheet,
+            contract=self.contract,
+            performance_type=factories.PerformanceTypeFactory.create()
+        )
+        super().setUp()
+
+    def test_get_required_hours(self):
         get_response = self.client.get(self.url)
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
 
     def test_get_required_hours_without_employmentcontract(self):
-        userinfo = factories.UserInfoFactory.create(
-            user=self.user
-        )
+        self.employmentcontract.delete()
         get_response = self.client.get(self.url)
         self.assertEqual(get_response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_get_required_hours_without_userinfo(self):
-        employmentcontract = factories.EmploymentContractFactory.create(
-            company=factories.CompanyFactory.create(),
-            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
-            user=self.user,
-            work_schedule=factories.WorkScheduleFactory.create(),
-        )
+        self.userinfo.delete()
         get_response = self.client.get(self.url)
         self.assertEqual(get_response.status_code, status.HTTP_400_BAD_REQUEST)
         
     def test_get_required_hours_with_leave(self):
-        userinfo = factories.UserInfoFactory.create(
-            user=self.user
-        )
-        employmentcontract = factories.EmploymentContractFactory.create(
-            company=factories.CompanyFactory.create(),
-            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
-            user=self.user,
-            work_schedule=factories.WorkScheduleFactory.create(),
-        )
-        timesheet = factories.TimesheetFactory.create(
-            user=self.user,
-            month=now.month
-        )
         leave = factories.LeaveFactory.create(
             user=self.user,
             leave_type=factories.LeaveTypeFactory.create()
         )
         leavedate = factories.LeaveDateFactory(
             leave=leave,
-            timesheet=timesheet,
+            timesheet=self.timesheet,
             starts_at=timezone.make_aware(datetime.datetime(now.year, now.month, 1, 0, 0, 0), timezone.get_current_timezone()),
             ends_at=timezone.make_aware(datetime.datetime(now.year, now.month, 1, 23, 59, 59), timezone.get_current_timezone())
         )
@@ -824,97 +827,23 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
 
     def test_get_required_hours_of_user(self):
-        second_user = factories.UserFactory.create()
-        userinfo = factories.UserInfoFactory.create(
-            user=second_user
-        )
-        employmentcontract = factories.EmploymentContractFactory.create(
-            company=factories.CompanyFactory.create(),
-            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
-            user=second_user,
-            work_schedule=factories.WorkScheduleFactory.create(),
-        )
-        get_response = self.client.get(self.url, {'user_id':second_user.id})
+        get_response = self.client.get(self.url, {'user_id':self.second_user.id})
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
 
     def test_get_hours_performed(self):
-        userinfo = factories.UserInfoFactory.create(
-            user=self.user
-        )
-        employmentcontract = factories.EmploymentContractFactory.create(
-            company=factories.CompanyFactory.create(),
-            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
-            user=self.user,
-            work_schedule=factories.WorkScheduleFactory.create(),
-        )
-        contract = factories.ContractFactory.create(
-            company=factories.CompanyFactory.create(),
-            customer=factories.CompanyFactory.create()
-        )
-        timesheet = factories.TimesheetFactory.create(
-            user=self.user,
-            month=now.month
-        )
-        activityperformance = factories.ActivityPerformanceFactory.create(
-            timesheet=timesheet,
-            contract=contract,
-            performance_type=factories.PerformanceTypeFactory.create()
-        )
         get_response = self.client.get(self.url)
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
 
     def test_get_hours_performed_of_user(self):
-        second_user = factories.UserFactory.create()
-        employmentcontract = factories.EmploymentContractFactory.create(
-            company=factories.CompanyFactory.create(),
-            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
-            user=second_user,
-            work_schedule=factories.WorkScheduleFactory.create(),
-        )
-        userinfo = factories.UserInfoFactory.create(
-            user=second_user
-        )
-        contract = factories.ContractFactory.create(
-            company=factories.CompanyFactory.create(),
-            customer=factories.CompanyFactory.create()
-        )
-        timesheet = factories.TimesheetFactory.create(
-            user=second_user,
-            month=now.month
-        )
-        activityperformance = factories.ActivityPerformanceFactory.create(
-            timesheet=timesheet,
-            contract=contract,
-            performance_type=factories.PerformanceTypeFactory.create()
-        )
-        get_response = self.client.get(self.url, {'user_id': second_user.id})
+        get_response = self.client.get(self.url, {'user_id': self.second_user.id})
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
-    
+  
     def test_get_hours_performed_month(self):
-        userinfo = factories.UserInfoFactory.create(
-            user=self.user
-        )
-        employmentcontract = factories.EmploymentContractFactory.create(
-            company=factories.CompanyFactory.create(),
-            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
-            user=self.user,
-            work_schedule=factories.WorkScheduleFactory.create(),
-        )
-        contract = factories.ContractFactory.create(
-            company=factories.CompanyFactory.create(),
-            customer=factories.CompanyFactory.create()
-        )
-        timesheet = factories.TimesheetFactory.create(
-            user=self.user,
-            month=now.month
-        )
-        activityperformance = factories.ActivityPerformanceFactory.create(
-            timesheet=timesheet,
-            contract=contract,
-            performance_type=factories.PerformanceTypeFactory.create()
-        )
         get_response = self.client.get(self.url, {'month': now.month})
 
+    def test_get_required_hours_with_invalid_user(self):
+        get_response = self.client.get(self.url, {'user_id': '999999999'})
+        self.assertEqual(get_response.status_code, status.HTTP_400_BAD_REQUEST)
 
         
 class MyLeaveRequestsServiceAPITestcase(APITestCase):
