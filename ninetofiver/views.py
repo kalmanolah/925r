@@ -483,7 +483,7 @@ class MyUserServiceAPIView(APIView):
         return Response(data)
 
 
-class MyLeaveRequestServiceAPIView(generics.GenericAPIView):
+class MyLeaveRequestService(generics.GenericAPIView):
     """
     Baseclass to create all leavedates for a given range.
     """
@@ -492,6 +492,7 @@ class MyLeaveRequestServiceAPIView(generics.GenericAPIView):
 
     def calculate_end(self, user, start, end):
         """Calculcate the end_date's time, based off of the workschedule's hours & minutes for that day."""
+
         #Get the current workschedule, based off of the active employmentcontract
         ec = models.EmploymentContract.objects.get(
             Q(user = user),
@@ -516,115 +517,153 @@ class MyLeaveRequestServiceAPIView(generics.GenericAPIView):
     def create_leavedates(self, this, request, leave):
         """ Used to handle logic and return the correct response. """
         user = request.user
-        leavedates = request.data
+        data = request.data
 
         try:
             # Make the datetimes aware of the timezone
             start = timezone.make_aware(
-                (datetime.strptime(leavedates['starts_at'], "%Y-%m-%dT%H:%M:%S")),
+                (datetime.strptime(data['starts_at'], "%Y-%m-%dT%H:%M:%S")),
                 timezone.get_current_timezone()
             )
             end = timezone.make_aware(
-                (datetime.strptime(leavedates['ends_at'], "%Y-%m-%dT%H:%M:%S")),
+                (datetime.strptime(data['ends_at'], "%Y-%m-%dT%H:%M:%S")),
                 timezone.get_current_timezone()
             )
 
-            try:
-                new_start = start.replace(
+            #If the leave isn't flagged as full_day
+            if not data['full_day'] and start.date() == end.date():
+                timesheet, created = models.Timesheet.objects.get_or_create(
+                    user=user,
                     year=start.year,
-                    month=start.month,
-                    day=start.day,
-                    hour=0,
-                    minute=0,
-                    second=0
-                )
-                new_end = self.calculate_end(user, new_start, end)
-                days = (end - start).days + 1
-
-            except Exception as e:
-                leave.delete()
-                return Response('Workschedule couldn\'t be found for that user.', status = status.HTTP_400_BAD_REQUEST)
-
-            if days < 0:
-                leave.delete()
-                return Response('End date should come after start date.', status = status.HTTP_400_BAD_REQUEST)
-
-            # Get timesheet, or create it
-            timesheet = models.Timesheet.objects.get_or_create(
-                user=user,
-                year=new_start.year,
-                month=new_start.month
-            )[0]
-
-
-            my_list = list()
-
-            # Create all leavedates ranging from the start to the end
-            for x in range(0, days):
-
-                # If not correct timesheet, get /create it and overwrite
-                if not (timesheet.year == new_start.year and timesheet.month == new_start.month):
-                    timesheet = models.Timesheet.objects.get_or_create(
-                        user=user,
-                        year=new_start.year,
-                        month=new_start.month
-                    )[0]
-
-                temp = models.LeaveDate(
-                    leave=leave,
-                    timesheet=timesheet,
-                    starts_at=new_start,
-                    ends_at=new_end
+                    month=start.month
                 )
 
-                # Call validation on the object
+                #Create leavedate
+                ld = models.LeaveDate(
+                    leave = leave,
+                    timesheet = timesheet,
+                    starts_at = start,
+                    ends_at = end
+                )
+
+                #Validate & save
+                ld.full_clean()
+                ld.save()
+
+                leave.status = 'PENDING'
+                leave.save()
+
+                return_dict = {
+                    'leave': leave.id,
+                    'description': leave.description,
+                    'leave_type': leave.leave_type.id,
+                    'full_day': data['full_day'],
+                    'starts_at': start,
+                    'ends_at': end
+                }
+                return Response(return_dict, status = status.HTTP_201_CREATED)
+
+            #If the leave is flagged as full_day
+            elif data['full_day'] and start.date() != end.date():
                 try:
-                    temp.full_clean()
-                except ValidationError as e:
+                    new_start = start.replace(
+                        year=start.year,
+                        month=start.month,
+                        day=start.day,
+                        hour=0,
+                        minute=0,
+                        second=0
+                    )
+                    new_end = self.calculate_end(user, new_start, end)
+                    days = (end - start).days + 1
+
+                except Exception as e:
                     leave.delete()
-                    return Response(e, status = status.HTTP_400_BAD_REQUEST)
+                    return Response('Workschedule couldn\'t be found for that user.', status = status.HTTP_404_NOT_FOUND)
 
-                # Save the object
-                temp.save()
+                if days < 0:
+                    leave.delete()
+                    return Response('End date should come after start date.', status = status.HTTP_400_BAD_REQUEST)
 
-                # Convert object into a list because serializer needs a list
-                my_list.append({
-                    'id': temp.id,
-                    'created_at': temp.created_at,
-                    'updated_at': temp.updated_at,
-                    'leave': temp.leave_id,
-                    'timesheet': temp.timesheet_id,
-                    'starts_at': temp.starts_at,
-                    'ends_at': temp.ends_at
-                }) 
+                # Get timesheet, or create it
+                timesheet = models.Timesheet.objects.get_or_create(
+                    user=user,
+                    year=new_start.year,
+                    month=new_start.month
+                )[0]
 
-                #Set time to original end when second to last has run
-                if x <= days - 2:
+                my_list = list()
+
+                # Create all leavedates ranging from the start to the end
+                for x in range(0, days):
+
+                    # If not correct timesheet, get /create it and overwrite
+                    if not (timesheet.year == new_start.year and timesheet.month == new_start.month):
+                        timesheet = models.Timesheet.objects.get_or_create(
+                            user=user,
+                            year=new_start.year,
+                            month=new_start.month
+                        )[0]
+
+                    temp = models.LeaveDate(
+                        leave=leave,
+                        timesheet=timesheet,
+                        starts_at=new_start,
+                        ends_at=new_end
+                    )
+
+                    # Call validation on the object
                     try:
-                        new_start += timedelta(days=1)
-                        new_end = self.calculate_end(user, new_start, new_end + timedelta(days=1))
-                    except Exception as e:
+                        temp.full_clean()
+                    except ValidationError as e:
                         leave.delete()
-                        return Response('Workschedule couldn\'t be found for that user', status = status.HTTP_400_BAD_REQUEST)
+                        return Response(e, status = status.HTTP_400_BAD_REQUEST)
 
-            leave.status = 'PENDING'
-            leave.save()
+                    # Save the object
+                    temp.save()
 
-            return_dict = {
-                'leave': leave.id,
-                'description': leave.description,
-                'leave_type': leave.leave_type.id,
-                'starts_at': start,
-                'ends_at': end
-            }
-            return Response(return_dict, status = status.HTTP_201_CREATED)
+                    # Convert object into a list because serializer needs a list
+                    my_list.append({
+                        'id': temp.id,
+                        'created_at': temp.created_at,
+                        'updated_at': temp.updated_at,
+                        'leave': temp.leave_id,
+                        'timesheet': temp.timesheet_id,
+                        'starts_at': temp.starts_at,
+                        'ends_at': temp.ends_at
+                    }) 
+
+                    #Set time to original end when second to last has run
+                    if x <= days - 2:
+                        try:
+                            new_start += timedelta(days=1)
+                            new_end = self.calculate_end(user, new_start, new_end + timedelta(days=1))
+                        except Exception as e:
+                            leave.delete()
+                            return Response('Workschedule couldn\'t be found for that user', status = status.HTTP_400_BAD_REQUEST)
+
+                leave.status = 'PENDING'
+                leave.save()
+
+                return_dict = {
+                    'leave': leave.id,
+                    'description': leave.description,
+                    'leave_type': leave.leave_type.id,
+                    'full_day': data['full_day'],
+                    'starts_at': start,
+                    'ends_at': end
+                }
+                return Response(return_dict, status = status.HTTP_201_CREATED)
+
+            else:
+                return Response('The request can not be marked as full_day and only span a single day.', status = status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             leave.delete()
             return Response(e, status = status.HTTP_404_NOT_FOUND)
 
 
-class MyLeaveRequestCreateServiceAPIView(generics.CreateAPIView, MyLeaveRequestServiceAPIView):
+class MyLeaveRequestServiceAPIView(generics.CreateAPIView, MyLeaveRequestService):
     """
     Creates a leave and all its leavedates for a given range.
     """
@@ -650,7 +689,7 @@ class MyLeaveRequestCreateServiceAPIView(generics.CreateAPIView, MyLeaveRequestS
         return self.create_leavedates(self, request, leave)
 
 
-class MyLeaveRequestUpdateServiceAPIView(generics.UpdateAPIView, MyLeaveRequestServiceAPIView):
+class MyLeaveRequestUpdateServiceAPIView(generics.UpdateAPIView, MyLeaveRequestService):
     """
     Updates a leave's leavedates for a given range.
     """
