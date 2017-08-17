@@ -366,7 +366,7 @@ class MonthInfoServiceAPIView(APIView):
         try:
             data['hours_required'] = self.total_hours_required(user_id, month)
         except ObjectDoesNotExist as oe:
-            return Response('No employment contract found for user with id: ' + str(user_id), status=status.HTTP_400_BAD_REQUEST)
+            return Response(str(oe), status=status.HTTP_400_BAD_REQUEST)
         data['hours_performed'] = self.hours_performed(user_id, month)
         serializer = serializers.MonthInfoSerializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -377,7 +377,7 @@ class MonthInfoServiceAPIView(APIView):
         # Calculate total hours required.
         employmentcontract = models.EmploymentContract.objects.filter(user=int(user))
         if len(employmentcontract) == 0:
-            raise ObjectDoesNotExist
+            raise ObjectDoesNotExist('No EmploymentContract object found for user with id: %s' % (str(user),))
         work_schedule = models.WorkSchedule.objects.get(pk=employmentcontract[0].work_schedule.id)
 
         year = datetime.now().year
@@ -398,18 +398,15 @@ class MonthInfoServiceAPIView(APIView):
         total += work_schedule.friday * days_count['Friday']
         total += work_schedule.saturday * days_count['Saturday']
         total += work_schedule.sunday * days_count['Sunday']
-        logger.debug('total: ' + str(total))
         
         # Subtract holdays from total.
-        try:
-            user_country = models.UserInfo.objects.get(user_id=user).country
-        except ObjectDoesNotExist as oe:
-            return Response('Failed to get user country: ' + str(oe), status=status.HTTP_400_BAD_REQUEST)
+        user_info = models.UserInfo.objects.filter(user_id=user)
+        if len(user_info) == 0:
+            raise ObjectDoesNotExist("No UserInfo object found for user with id: %s" % (str(user),))
         
-        holidays = models.Holiday.objects.filter(country=user_country).filter(date__month=month)
+        holidays = models.Holiday.objects.filter(country=user_info[0].country).filter(date__month=month)
         for holiday in holidays:
             total -= 8
-        logger.debug('total after holidays: ' + str(total))
 
         DAY_START = '09:00'
         DAY_END = '17:30'
@@ -461,7 +458,6 @@ class MonthInfoServiceAPIView(APIView):
                     if leavedate.starts_at.weekday() < 5 and leavedate.starts_at > first_leavedate.starts_at and leavedate.starts_at  < last_leavedate.starts_at: 
                         total -= DAY_DURATION
 
-            logger.debug('total after leaves: ' + str(total))
         return Decimal(total)
 
     def hours_performed(self, user, month):
