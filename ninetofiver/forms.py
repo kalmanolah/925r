@@ -52,12 +52,9 @@ class EmploymentContractAdminForm(forms.ModelForm):
 
 class ProjectContractAdminForm(forms.ModelForm):
     redmine_choices = get_redmine_project_choices()
-    CHOICES=(
-        ('None', '-------'), 
-        *redmine_choices
-    )
+
     redmine_id = forms.ChoiceField(
-       choices=CHOICES
+       choices=redmine_choices
     )
     class Meta:
         model = models.ProjectContract
