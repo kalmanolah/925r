@@ -1482,7 +1482,7 @@ class RedmineAPITestCase(APITestCase):
 
     def test_redmine_user_time_entry_import(self):
         users = get_redmine_user_choices()
-        user = next(users)
+        user = next(iter(users))
         params = {
             'filter_imported': 'false'
         }
@@ -1491,14 +1491,9 @@ class RedmineAPITestCase(APITestCase):
 
     def test_redmine_user_time_entry_import_filter_imported(self):
         users = get_redmine_user_choices()
-        user = next(users)
+        user = next(iter(users))
         params = {
             'filter_imported': 'true'
         }
         time_entries = get_redmine_user_time_entries(user[0], params)
         self.assertIsNotNone(time_entries)
-
-    def test_redmine_get_projects(self):
-        redmine = Redmine(REDMINE_URL, key=REDMINE_API_KEY)
-        projects = redmine.project.all()
-        self.assertTrue(len(projects) > 0)
