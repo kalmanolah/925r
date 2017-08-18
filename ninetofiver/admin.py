@@ -15,6 +15,7 @@ from rangefilter.filter import DateTimeRangeFilter
 from django import forms
 from django.contrib.admin import widgets
 from ninetofiver.forms import *
+from django.core.mail import send_mail
 
 
 class EmploymentContractStatusFilter(admin.SimpleListFilter):
@@ -132,10 +133,14 @@ class LeaveAdmin(admin.ModelAdmin):
 
     def make_approved(self, request, queryset):
         queryset.update(status=models.Leave.STATUS.APPROVED)
+        for leave in queryset:
+            self.send_notification_email(leave, 'approved')
     make_approved.short_description = _('Approve selected leaves')
 
     def make_rejected(self, request, queryset):
         queryset.update(status=models.Leave.STATUS.REJECTED)
+        for leave in queryset:
+            self.send_notification_email(leave, 'rejected')
     make_rejected.short_description = _('Reject selected leaves')
 
     def leave_dates(self, obj):
@@ -144,6 +149,16 @@ class LeaveAdmin(admin.ModelAdmin):
     def attachment(self, obj):
         return format_html('<br>'.join('<a href="%s">%s</a>'
                            % (x.get_file_url(), str(x)) for x in list(obj.attachments.all())))
+
+    def send_notification_email(self, leave, status):
+        send_mail(
+            str(leave.leave_type) + ' - ' + str(leave.description),
+            'Dear %s\n\nyour %s from \n%s to %s\nhas been %s.\n\nKind regards\nAn inocent bot' % 
+            (str(leave.user.first_name), str(leave.leave_type), str(leave.leavedate_set.first().starts_at.date()), str(leave.leavedate_set.last().ends_at.date()), str(status)),
+            'we_approve_leaves@yahoo.com',
+            [leave.user.email],
+            fail_silently=False
+        )
 
     list_display = ('__str__', 'user', 'leave_type', 'leave_dates', 'status', 'description', 'attachment')
     list_filter = (
