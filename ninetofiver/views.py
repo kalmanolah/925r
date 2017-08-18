@@ -337,14 +337,26 @@ class TimeEntryImportServiceAPIView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, format=None):
-        # If Redmine credentials are provided
-        if settings.REDMINE_URL and settings.REDMINE_API_KEY:
+        try:
             redmine_id = models.UserInfo.objects.get(user_id=request.user.id).redmine_id
             if redmine_id:
-                redmine_time_entries = get_redmine_user_time_entries(user_id=redmine_id, params=request.query_params)
-                data = RedmineTimeEntrySerializer(
-                    instance=redmine_time_entries, many=True).data
-        return Response(data)
+                redmine_time_entries = get_redmine_user_time_entries(
+                    user_id=redmine_id, 
+                    params=request.query_params
+                )
+
+                serializer = RedmineTimeEntrySerializer(
+                    instance=redmine_time_entries, 
+                    many=True
+                )
+                serializer.is_valid(raise_exception=True)
+
+                return Response(serializer.data, status = status.HTTP_200_OK)
+            else:
+                return Response('Redmine_id for the current user has not been found.', status = status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response('Something went wrong: ' + str(e), status = status.HTTP_400_BAD_REQUEST)
 
 
 class MonthInfoServiceAPIView(APIView):
@@ -672,7 +684,7 @@ class MyLeaveRequestService(generics.GenericAPIView):
 
         except Exception as e:
             leave.delete()
-            return Response(e, status = status.HTTP_404_NOT_FOUND)
+            return Response(str(e), status = status.HTTP_404_NOT_FOUND)
 
 
 class MyLeaveRequestServiceAPIView(generics.CreateAPIView, MyLeaveRequestService):
