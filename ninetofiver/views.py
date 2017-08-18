@@ -37,6 +37,7 @@ import ninetofiver.settings as settings
 
 import logging
 logger = logging.getLogger(__name__)
+logging.basicConfig(filename='BONARRRRRRRRRRRRRrrr.log', filemode='w', level=logging.WARNING)
 
 def home_view(request):
     """Homepage."""
@@ -531,8 +532,17 @@ class MyLeaveRequestService(generics.GenericAPIView):
                 timezone.get_current_timezone()
             )
 
+            full_day = False
+            if type(data['full_day']) is not str:
+                full_day = data['full_day']
+            elif data['full_day'] == 'true':
+                full_day = True
+                
+            logging.warning(type(data['full_day']))
+            logging.warning(data)
+
             #If the leave isn't flagged as full_day
-            if not data['full_day'] and start.date() == end.date():
+            if  start.date() == end.date() and not full_day:
                 timesheet, created = models.Timesheet.objects.get_or_create(
                     user=user,
                     year=start.year,
@@ -565,7 +575,7 @@ class MyLeaveRequestService(generics.GenericAPIView):
                 return Response(return_dict, status = status.HTTP_201_CREATED)
 
             #If the leave is flagged as full_day
-            elif data['full_day'] and start.date() != end.date():
+            elif full_day and start.date() != end.date():
                 try:
                     new_start = start.replace(
                         year=start.year,
@@ -657,6 +667,7 @@ class MyLeaveRequestService(generics.GenericAPIView):
                 return Response(return_dict, status = status.HTTP_201_CREATED)
 
             else:
+                leave.delete()
                 return Response('The request can not be marked as full_day and only span a single day.', status = status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
