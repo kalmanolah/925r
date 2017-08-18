@@ -782,6 +782,45 @@ class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
         return self.create_data
 
 
+class TimeEntryImportServiceAPIViewTestCase(APITestCase):
+    def setUp(self):
+        self.user = factories.AdminFactory.create()
+        self.client.force_authenticate(self.user)
+
+        self.url = reverse('time_entry_import_service')
+
+    def test_user_info_not_found(self):
+        """Test scenario where contractuser's info is not found."""
+        user_info_error = self.client.get(self.url)
+        self.assertEqual(user_info_error.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_user_redmine_id_not_found(self):
+        """Test scenario where redmine_id for contractuser's info is not found."""
+        self.user_info = factories.UserInfoFactory(
+            user=self.user
+        ).save()
+
+        with self.assertRaises(Exception):
+            redmine_error = self.client.get(self.url)
+            self.assertEqual(redmine_error.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_success(self):
+        """Test scenario where everything goes by the books."""
+        redm_users = get_redmine_user_choices()
+        redm_user = next(iter(redm_users))
+
+        self.user_info = factories.UserInfoFactory(
+            user=self.user,
+            redmine_id=redm_user
+        ).save()
+
+        filter_params = {
+            'filter_imported' : 'true'
+        }
+        success_response = self.client.get(self.url, filter_params)
+        self.assertEqual(success_response.status_code, status.HTTP_200_OK)
+
+
 class MonthInfoServiceAPIViewTestcase(APITestCase): 
 
     def setUp(self):
@@ -901,6 +940,26 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
             'status': leave.status,
             'leave_type': ltype.id,
             'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 2, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 5, 0, 0, 0)
+        }
+
+        # Check for normal creation success
+        post_normal_response = self.client.post(self.create_url, create_data, format='json')
+        self.assertEqual(post_normal_response.status_code, status.HTTP_201_CREATED)
+
+    def test_normal_create_full_day_string_success(self):
+        """Test normal scenario where leave dates can be created with full_day param as a string instead of a boolean."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': ltype.id,
+            'full_day': 'true',
             'starts_at': datetime.datetime(now.year, now.month, 2, 0, 0, 0),
             'ends_at': datetime.datetime(now.year, now.month, 5, 0, 0, 0)
         }
@@ -1157,6 +1216,25 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         with self.assertRaises(ObjectDoesNotExist):
             put_leave_dates_error = self.client.put(self.update_url, update_data, format='json')
             self.assertEqual(put_leave_dates_error.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_post_invalid_leave_type_error(self):
+        """Test scenario where a non-existant leave_type is posted."""
+        ltype = factories.LeaveTypeFactory.create()
+        leave = factories.LeaveFactory.create(
+            user = self.user,
+            leave_type = ltype
+        )
+
+        create_data = {
+            'description' : leave.description,
+            'status': leave.status,
+            'leave_type': int(ltype.id) + 1,
+            'full_day': True,
+            'starts_at': datetime.datetime(now.year, now.month, 1, 0, 0, 0),
+            'ends_at': datetime.datetime(now.year, now.month, 18, 0, 0, 0)
+        }
+        with self.assertRaises(ObjectDoesNotExist):
+            post_leave_type_error = self.client.post(self.create_url, create_data, format='json')
 
     def test_patch_leave_error(self):
         """Test scenario where a newly created leave_request is updated with a new leave_id."""
