@@ -91,6 +91,7 @@ class EmploymentContractAdmin(admin.ModelAdmin):
 class WorkScheduleAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'label', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
     ordering = ('label',)
+    form = WorkScheduleAdminForm
 
 
 @admin.register(models.UserRelative)
