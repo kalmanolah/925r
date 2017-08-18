@@ -808,16 +808,12 @@ class TimeEntryImportServiceAPIViewTestCase(APITestCase):
         """Test scenario where everything goes by the books."""
         redm_users = get_redmine_user_choices()
         redm_user = next(iter(redm_users))
-
-        self.user_info = factories.UserInfoFactory(
+        redm_user_id = redm_user[0]
+        user_info = factories.UserInfoFactory(
             user=self.user,
-            redmine_id=redm_user
-        ).save()
-
-        filter_params = {
-            'filter_imported' : 'true'
-        }
-        success_response = self.client.get(self.url, filter_params)
+            redmine_id=redm_user[0]
+        )
+        success_response = self.client.get(self.url, {'filter_imported': 'true'})
         self.assertEqual(success_response.status_code, status.HTTP_200_OK)
 
 

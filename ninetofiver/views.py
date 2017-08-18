@@ -339,16 +339,19 @@ class TimeEntryImportServiceAPIView(APIView):
         try:
             redmine_id = models.UserInfo.objects.get(user_id=request.user.id).redmine_id
             if redmine_id:
+                logger.warning(request.query_params)
                 redmine_time_entries = get_redmine_user_time_entries(
                     user_id=redmine_id, 
                     params=request.query_params
                 )
-
+                logger.warning('post grute')
+                
                 serializer = RedmineTimeEntrySerializer(
                     instance=redmine_time_entries, 
                     many=True
                 )
-                serializer.is_valid(raise_exception=True)
+                if serializer.data != []:
+                    serializer.is_valid(raise_exception=True)
 
                 return Response(serializer.data, status = status.HTTP_200_OK)
             else:
