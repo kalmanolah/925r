@@ -347,7 +347,7 @@ class MonthInfoSerializer(serializers.Serializer):
 class LeaveRequestSerializer(serializers.Serializer):
     starts_at = serializers.DateTimeField()
     ends_at = serializers.DateTimeField()
-    full_day = serializers.BooleanField()
+    full_day = serializers.BooleanField(required=True)
 
     def validate_starts_at(self, val):
         """
@@ -365,7 +365,7 @@ class LeaveRequestSerializer(serializers.Serializer):
             return serializers.ValidationError("Ends_at is not a datetime object.")
         return val
 
-    def validate_boolean(self, val):
+    def validate_full_day(self, val):
         """
         Check that the full_day is a bool.
         """
