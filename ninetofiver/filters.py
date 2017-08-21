@@ -316,7 +316,12 @@ class PerformanceTypeFilter(FilterSet):
 
 
 class ContractFilter(FilterSet):
-    
+
+    def contract__user__id(self, queryset, name, value):
+        """Filters distinct leavedates linked to the provided timesheet."""
+        return queryset.filter(contractuser__user__id__iexact=value).distinct()
+
+    contract__user__id = django_filters.NumberFilter(method='leavedate_timesheet')
     order_fields = ('label', 'description', 'active', 'contractuser__user__username', 'contractuser__user__first_name',
         'contractuser__user__last_name', 'contractuser__user__groups', 'company__vat_identification_number', 'customer__vat_identification_number',
         'company__name', 'customer__name', 'company__country', 'customer_country', 'company__internal', 'customer__internal',
@@ -335,7 +340,6 @@ class ContractFilter(FilterSet):
 
             # User related fields
             'contractuser__user__username': ['exact', 'contains', 'icontains', ],
-            'contractuser__user__id': ['exact', ],
             'contractuser__user__first_name': ['exact', 'contains', 'icontains', ],
             'contractuser__user__last_name': ['exact', 'contains', 'icontains', ],
             'contractuser__user__groups': ['exact', 'contains', 'icontains', ],
