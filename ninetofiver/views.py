@@ -37,7 +37,6 @@ import ninetofiver.settings as settings
 
 import logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename='BONARRRRRRRRRRRRRrrr.log', filemode='w', level=logging.WARNING)
 
 def home_view(request):
     """Homepage."""
@@ -340,16 +339,19 @@ class TimeEntryImportServiceAPIView(APIView):
         try:
             redmine_id = models.UserInfo.objects.get(user_id=request.user.id).redmine_id
             if redmine_id:
+                logger.warning(request.query_params)
                 redmine_time_entries = get_redmine_user_time_entries(
                     user_id=redmine_id, 
                     params=request.query_params
                 )
-
+                logger.warning('post grute')
+                
                 serializer = RedmineTimeEntrySerializer(
                     instance=redmine_time_entries, 
                     many=True
                 )
-                serializer.is_valid(raise_exception=True)
+                if serializer.data != []:
+                    serializer.is_valid(raise_exception=True)
 
                 return Response(serializer.data, status = status.HTTP_200_OK)
             else:
@@ -401,17 +403,12 @@ class MonthInfoServiceAPIView(APIView):
         days_count = {}
 
         for i in range((end_date - start_date).days + 1):
-            day = day_name[(start_date + timedelta(days=i)).weekday()]
+            day = (start_date + timedelta(days=i)).weekday()
             days_count[day] = days_count[day] + 1 if day in days_count else 1
-
+            
         # Caluculate total hours required to work according to work schedule.
-        total += work_schedule.monday * days_count['Monday']
-        total += work_schedule.tuesday * days_count['Tuesday']
-        total += work_schedule.wednesday * days_count['Wednesday']
-        total += work_schedule.thursday * days_count['Thursday']
-        total += work_schedule.friday * days_count['Friday']
-        total += work_schedule.saturday * days_count['Saturday']
-        total += work_schedule.sunday * days_count['Sunday']
+        for weekday in range(7):
+            total+=(self.get_hours_of_weekday_from_workschedule(work_schedule, weekday) * days_count[weekday])
         
         # Subtract holdays from total.
         user_info = models.UserInfo.objects.filter(user_id=user)
@@ -422,9 +419,6 @@ class MonthInfoServiceAPIView(APIView):
         for holiday in holidays:
             total -= 8
 
-        DAY_START = '09:00'
-        DAY_END = '17:30'
-        DAY_DURATION = 8
         RANGE_START = timezone.make_aware(datetime(year, month, 1, 0, 0, 0, 0), timezone.get_current_timezone())
         RANGE_END = timezone.make_aware(datetime(year, month, monthrange(year, month)[1], 0, 0, 0), timezone.get_current_timezone())
 
@@ -436,43 +430,22 @@ class MonthInfoServiceAPIView(APIView):
         # Subtract leaves from total.
         for leave in result:
             leavedates = leave.leavedate_set.all()
-
             first_leavedate = leavedates.first()
             last_leavedate = leavedates.last()
 
-            for leavedate in leavedates:
-                if leavedate.starts_at >= RANGE_START:
-                    first_leavedate = leavedate
-                    break
-            for leavedate in leavedates:
-                if leavedate.ends_at >= RANGE_END:
-                    last_leavedate = leavedate
-                    break
-            # first leavedate time deltas
-            fld_day_start_delta = datetime.strptime(str(first_leavedate.starts_at.time()), '%H:%M:%S') - (datetime.strptime(DAY_START, '%H:%M'))
-            fld_day_end_delta = (datetime.strptime(DAY_END, '%H:%M')) - datetime.strptime(str(first_leavedate.ends_at.time()), '%H:%M:%S') 
-            # subtract first leavedate time deltas from total
-            hours_required = round(fld_day_start_delta.seconds/3600, 1) + round(fld_day_end_delta.seconds/3600, 1)
-            hours_required = hours_required if hours_required <= 8 else 8
-            total -= Decimal(hours_required)
-            
-            # if the leave spans more than one day: calculate last leavedate time deltas
-            if len(leavedates) > 1:
-                lld_day_start_delta = datetime.strptime(str(last_leavedate.starts_at.time()), '%H:%M:%S') - datetime.strptime(DAY_START, '%H:%M')
-                lld_day_end_delta = datetime.strptime(DAY_END, '%H:%M') - datetime.strptime(str(last_leavedate.ends_at.time()), '%H:%M:%S') 
-                # subtract last leavedate time deltas from total
-                hours_required = round(lld_day_start_delta.seconds/3600, 1) + round(lld_day_end_delta.seconds/3600, 1)
-                hours_required = hours_required if hours_required <= 8 else 8
-                total -= Decimal(hours_required)
-            
-            # Check if the leave spans more days than one.
-            if len(leavedates) > 1:
-                for leavedate in leavedates:
-                    # subtract a whole day if the leavedate is between the first leavedate and the last leavedate (of the specified month)
-                    if leavedate.starts_at.weekday() < 5 and leavedate.starts_at > first_leavedate.starts_at and leavedate.starts_at  < last_leavedate.starts_at: 
-                        total -= DAY_DURATION
-
-        return Decimal(total)
+            # check if leave is only one day
+            if first_leavedate == last_leavedate:
+                # calculate how many hours are in leave
+                hours = first_leavedate.ends_at - first_leavedate.starts_at
+                # get the weekday of the leave and subtract the leavehours from te corresponding day in worschedule
+                weekday = first_leavedate.starts_at.weekday()
+                total-=Decimal((hours.total_seconds() / 3600))
+            else:
+                for leave in leavedates:
+                    weekday = leave.starts_at.weekday()
+                    total-=(self.get_hours_of_weekday_from_workschedule(work_schedule, weekday))
+        
+        return Decimal(round(total, 1))
 
     def hours_performed(self, user, month):
         total = 0
@@ -484,6 +457,19 @@ class MonthInfoServiceAPIView(APIView):
             total += Decimal(performance.duration)
         return Decimal(total)
 
+    def get_hours_of_weekday_from_workschedule(self, work_schedule, weekday):
+        # gets a work_schedule and a weekday and returns the corresponding hours
+        work_schedule_list = [
+            work_schedule.monday,
+            work_schedule.tuesday,
+            work_schedule.wednesday,
+            work_schedule.thursday,
+            work_schedule.friday,
+            work_schedule.saturday,
+            work_schedule.sunday
+        ]
+        return work_schedule_list[weekday]
+            
 
 class MyUserServiceAPIView(APIView):
     """
