@@ -535,9 +535,6 @@ class MyLeaveRequestService(generics.GenericAPIView):
                 full_day = data['full_day']
             elif data['full_day'] == 'true':
                 full_day = True
-                
-            logging.warning(type(data['full_day']))
-            logging.warning(data)
 
             #If the leave isn't flagged as full_day
             if  start.date() == end.date() and not full_day:

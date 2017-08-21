@@ -14,7 +14,7 @@ from ninetofiver.redmine.views import get_redmine_user_time_entries
 from redminelib import exceptions, Redmine
 
 import logging
-logging.basicConfig(filename='BONARRRRRRRRRRRRRrrr.log', filemode='w', level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 import tempfile
 import datetime
@@ -822,7 +822,7 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
     def setUp(self):
         self.user = factories.AdminFactory.create()
         self.client.force_authenticate(self.user)
-        self.url = reverse('month_info_service')
+
         self.employmentcontract = factories.EmploymentContractFactory.create(
             company=factories.CompanyFactory.create(),
             employment_contract_type=factories.EmploymentContractTypeFactory.create(),
@@ -836,6 +836,7 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
             user=self.user,
             month=now.month
         )
+
         self.second_user = factories.UserFactory.create()
         self.second_userinfo = factories.UserInfoFactory.create(
             user=self.second_user
@@ -855,6 +856,8 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
             contract=self.contract,
             performance_type=factories.PerformanceTypeFactory.create()
         )
+
+        self.url = reverse('month_info_service')
         super().setUp()
 
     def test_get_required_hours(self):
@@ -879,9 +882,13 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
         leavedate = factories.LeaveDateFactory(
             leave=leave,
             timesheet=self.timesheet,
-            starts_at=timezone.make_aware(datetime.datetime(now.year, now.month, 1, 0, 0, 0), timezone.get_current_timezone()),
-            ends_at=timezone.make_aware(datetime.datetime(now.year, now.month, 1, 23, 59, 59), timezone.get_current_timezone())
+            starts_at=timezone.make_aware(datetime.datetime(now.year, now.month, 5, 0, 0, 0), timezone.get_current_timezone()),
+            ends_at=timezone.make_aware(datetime.datetime(now.year, now.month, 5, 12, 30, 0), timezone.get_current_timezone())
         )
+        leave.status = 'APPROVED'
+        leavedate.save()
+        leave.save()
+        
         get_response = self.client.get(self.url, {'month':now.month})
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
 
@@ -1028,7 +1035,6 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
             'ends_at': datetime.datetime(now.year, now.month, 18, 0, 0, 0)
         }
         temp_post = self.client.post(self.create_url, create_data, format='json')
-        logging.warning(temp_post)
 
         update_data = {
             'leave_id': temp_post.data['leave'],
@@ -1104,7 +1110,6 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
             'ends_at': datetime.datetime(now.year, now.month, 1, 23, 0, 0)
         }
         temp_post = self.client.post(self.create_url, create_data, format='json')
-        logging.warning(temp_post)
 
         update_data = {
             'leave_id': temp_post.data['leave'],
