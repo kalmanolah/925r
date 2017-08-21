@@ -114,6 +114,7 @@ class LeaveTypeFactory(factory.DjangoModelFactory):
         model = models.LeaveType
 
     label = factory.Sequence(lambda n: 'LeaveType%d' % n)
+    description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
 
 
 class LeaveFactory(factory.DjangoModelFactory):

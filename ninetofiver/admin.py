@@ -121,7 +121,7 @@ class HolidayAdmin(admin.ModelAdmin):
 
 @admin.register(models.LeaveType)
 class LeaveTypeAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'label')
+    list_display = ('__str__', 'label', 'description')
     ordering = ('label',)
 
 

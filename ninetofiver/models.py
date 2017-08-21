@@ -466,6 +466,7 @@ class LeaveType(BaseModel):
     """Leave type model."""
 
     label = models.CharField(unique=True, max_length=255)
+    description = models.TextField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         """Return a string representation."""
