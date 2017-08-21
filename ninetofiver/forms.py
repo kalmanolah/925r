@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.contrib.auth import models as auth_models
 from ninetofiver import models
 from ninetofiver.redmine.choices import *
+from ninetofiver import widgets
 
 class UserModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
@@ -51,8 +52,10 @@ class EmploymentContractAdminForm(forms.ModelForm):
 
 
 class ProjectContractAdminForm(forms.ModelForm):
+    redmine_choices = get_redmine_project_choices()
+
     redmine_id = forms.ChoiceField(
-       choices = get_redmine_project_choices()
+       choices=redmine_choices
     )
     class Meta:
         model = models.ProjectContract
@@ -75,3 +78,18 @@ class SupportContractAdminForm(forms.ModelForm):
     class Meta:
         model = models.SupportContract
         fields = ['label', 'description', 'customer', 'company', 'active', 'performance_types', 'contract_groups', 'attachments', 'redmine_id', 'day_rate', 'fixed_fee', 'fixed_fee_period', 'starts_at', 'ends_at']
+
+
+class WorkScheduleAdminForm(forms.ModelForm):
+    class Meta: 
+        model = models.WorkSchedule
+        fields = ['label', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        widgets = {
+            'monday': widgets.DurationInput(attrs={'min': '0', 'max': '24', 'step': '0.50'}),
+            'tuesday': widgets.DurationInput(attrs={'min': '0', 'max': '24', 'step': '0.50'}),
+            'wednesday': widgets.DurationInput(attrs={'min': '0', 'max': '24', 'step': '0.50'}),
+            'thursday': widgets.DurationInput(attrs={'min': '0', 'max': '24', 'step': '0.50'}),
+            'friday': widgets.DurationInput(attrs={'min': '0', 'max': '24', 'step': '0.50'}),
+            'saturday': widgets.DurationInput(attrs={'min': '0', 'max': '24', 'step': '0.50'}),
+            'sunday': widgets.DurationInput(attrs={'min': '0', 'max': '24', 'step': '0.50'})
+        }

@@ -6,7 +6,6 @@ from django.contrib.auth import models as auth_models
 from django.utils.timezone import utc
 from ninetofiver import models
 
-
 fake = Faker()
 
 
@@ -16,7 +15,7 @@ class UserFactory(factory.DjangoModelFactory):
 
     first_name = factory.LazyFunction(fake.first_name)
     last_name = factory.LazyFunction(fake.last_name)
-    username = factory.LazyFunction(fake.name)
+    username = factory.Sequence(lambda n: 'UserName%d' % n)
     email = factory.LazyFunction(fake.name)
     is_staff = False
     is_superuser = False
@@ -43,7 +42,7 @@ class CompanyFactory(factory.DjangoModelFactory):
     vat_identification_number = factory.LazyFunction(
         lambda: '%s%s' % (fake.language_code(), fake.md5()[:10])
     )
-    name = factory.LazyFunction(fake.company)
+    name = factory.Sequence(lambda n: 'CompanyName%d' % n)
     address = factory.LazyFunction(fake.address)
     country = factory.LazyFunction(fake.country_code)
     internal = factory.LazyFunction(fake.boolean)
@@ -57,7 +56,7 @@ class EmploymentContractTypeFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.EmploymentContractType
 
-    label = factory.LazyFunction(fake.word)
+    label = factory.Sequence(lambda n: 'EmploymentContractTypeLabel%d' % n)
 
 
 class EmploymentContractFactory(factory.DjangoModelFactory):
@@ -72,14 +71,14 @@ class WorkScheduleFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.WorkSchedule
 
-    label = factory.LazyFunction(fake.word)
-    monday = factory.LazyFunction(lambda: random.randint(0, 24))
-    tuesday = factory.LazyFunction(lambda: random.randint(0, 24))
-    wednesday = factory.LazyFunction(lambda: random.randint(0, 24))
-    thursday = factory.LazyFunction(lambda: random.randint(0, 24))
-    friday = factory.LazyFunction(lambda: random.randint(0, 24))
-    saturday = factory.LazyFunction(lambda: random.randint(0, 24))
-    sunday = factory.LazyFunction(lambda: random.randint(0, 24))
+    label = factory.Sequence(lambda n: 'WorkSchedule%d' % n)
+    monday = factory.LazyFunction(lambda: random.randint(0, 23))
+    tuesday = factory.LazyFunction(lambda: random.randint(0, 23))
+    wednesday = factory.LazyFunction(lambda: random.randint(0, 23))
+    thursday = factory.LazyFunction(lambda: random.randint(0, 23))
+    friday = factory.LazyFunction(lambda: random.randint(0, 23))
+    saturday = factory.LazyFunction(lambda: random.randint(0, 23))
+    sunday = factory.LazyFunction(lambda: random.randint(0, 23))
 
 
 class UserRelativeFactory(factory.DjangoModelFactory):
@@ -114,7 +113,8 @@ class LeaveTypeFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.LeaveType
 
-    label = factory.LazyFunction(fake.word)
+    label = factory.Sequence(lambda n: 'LeaveType%d' % n)
+    description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
 
 
 class LeaveFactory(factory.DjangoModelFactory):
@@ -136,7 +136,7 @@ class PerformanceTypeFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.PerformanceType
 
-    label = factory.LazyFunction(fake.word)
+    label = factory.Sequence(lambda n: 'PerformanceType%d' % n)
     description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
     multiplier = factory.LazyFunction(lambda: random.randint(0, 3))
 
@@ -145,7 +145,7 @@ class ContractGroupFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.ContractGroup
 
-    label = factory.LazyFunction(fake.word)
+    label = factory.Sequence(lambda n: 'ContractGroup%d' % n)
 
 
 class ContractFactory(factory.DjangoModelFactory):
@@ -196,7 +196,7 @@ class ContractRoleFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.ContractRole
 
-    label = factory.LazyFunction(fake.word)
+    label = factory.Sequence(lambda n: 'ContractRole%d' % n)
     description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
 
 
