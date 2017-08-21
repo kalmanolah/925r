@@ -13,23 +13,6 @@ from rest_framework.fields import SkipField
 
 logger = logging.getLogger(__name__)
 
-class UserSerializer(serializers.ModelSerializer):
-    display_label = serializers.SerializerMethodField()
-
-    country = serializers.CharField(source='userinfo.country')
-    gender = serializers.CharField(source='userinfo.gender')
-    birth_date = serializers.CharField(source='userinfo.birth_date')
-    join_date = serializers.CharField(source='userinfo.join_date')
-    redmine_id = serializers.CharField(source='userinfo.redmine_id')
-    
-    class Meta:
-        model = auth_models.User
-        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date', 'redmine_id')
-        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date', 'redmine_id')
-
-    def get_display_label(self, obj):
-        return str(obj)
-
 
 class GroupSerializer(serializers.ModelSerializer):
     display_label = serializers.SerializerMethodField()
@@ -38,6 +21,25 @@ class GroupSerializer(serializers.ModelSerializer):
         model = auth_models.Group
         fields = ('id', 'name', 'display_label')
         read_only_fields = ('id',)
+
+    def get_display_label(self, obj):
+        return str(obj)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    display_label = serializers.SerializerMethodField()
+
+    country = serializers.CharField(source='userinfo.country')
+    gender = serializers.CharField(source='userinfo.gender')
+    birth_date = serializers.CharField(source='userinfo.birth_date')
+    join_date = serializers.CharField(source='userinfo.join_date')
+    redmine_id = serializers.CharField(source='userinfo.redmine_id')
+    groups = GroupSerializer(many=True)
+    
+    class Meta:
+        model = auth_models.User
+        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date', 'redmine_id')
+        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date', 'redmine_id')
 
     def get_display_label(self, obj):
         return str(obj)
