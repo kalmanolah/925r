@@ -358,9 +358,14 @@ class MonthInfoServiceAPIView(APIView):
         user = request.query_params.get('user_id') or request.user
         # get month from params, defaults to the current month if month is omitted.
         month = int(request.query_params.get('month') or datetime.now().month)
+        year = int(request.query_params.get('year') or datetime.now().year)
+
         data = {}
-        data['hours_required'] = self.total_hours_required(user, month)
-        data['hours_performed'] = self.hours_performed(user, month)
+        try:
+            data['hours_required'] = self.total_hours_required(user_id, month)
+        except ObjectDoesNotExist as oe:
+            return Response(str(oe), status=status.HTTP_400_BAD_REQUEST)
+        data['hours_performed'] = self.hours_performed(user_id, month, year)
         serializer = serializers.MonthInfoSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
@@ -456,13 +461,10 @@ class MonthInfoServiceAPIView(APIView):
                     if leavedate.starts_at.weekday() < 5 and leavedate.starts_at > first_leavedate.starts_at and leavedate.starts_at  < last_leavedate.starts_at: 
                         total -= DAY_DURATION
 
-            logger.debug('total after leaves: ' + str(total))
-        return Decimal(total)
-
-    def hours_performed(self, user, month):
+    def hours_performed(self, user, month, year):
         total = 0
         try:
-            performances = models.ActivityPerformance.objects.filter(timesheet__user_id=user, timesheet__month=month)
+            performances = models.ActivityPerformance.objects.filter(timesheet__user_id=user, timesheet__month=month, timesheet__year=year)
         except ObjectDoesNotExist as oe:
             return Response('Performances not found: ' + str(oe), status=status.HTTP_404_BAD_REQUEST)
         for performance in performances:
