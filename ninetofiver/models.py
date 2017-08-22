@@ -812,20 +812,25 @@ class SupportContract(Contract):
                 )
 
         # Ensure we have either a day rate or a fixed fee + period, but never both
-        if day_rate:
-            if fixed_fee:
-                raise ValidationError(
-                    _('A contract can not have both a fixed fee and a day rate'),
-                )
-        elif fixed_fee:
+        # if day_rate:
+        #     if fixed_fee:
+        #         raise ValidationError(
+        #             _('A contract can not have both a fixed fee and a day rate'),
+        #         )
+        if fixed_fee:
             if not fixed_fee_period:
                 raise ValidationError(
                     _('A contract with a fixed fee requires a fixed fee period'),
                 )
-        else:
-            raise ValidationError(
-                _('A contract should have either a fixed fee or a day rate'),
-            )
+            if not day_rate:
+                raise ValidationError(
+                    _('A contract should have either a fixed fee or a day rate'),
+                )
+        elif day_rate:
+            if not fixed_fee and fixed_fee_period:
+                raise ValidationError(
+                    _('A contract can not have both a day rate and a fixed fee period')
+                )
 
     def get_validation_args(self):
         """Get a dict used for validation based on this instance."""
