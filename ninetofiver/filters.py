@@ -13,6 +13,8 @@ from rest_framework import generics
 from django.contrib.auth import models as auth_models
 from django.core.exceptions import ValidationError
 
+import logging
+logger = logging.getLogger(__name__)
 
 class IsNull(Func):
     template = '%(expressions)s IS NULL'
@@ -157,6 +159,20 @@ class EmploymentContractTypeFilter(FilterSet):
 
 
 class EmploymentContractFilter(FilterSet):
+    def is_empl_contr_active(self, queryset, name, value):
+        """Checks if the enddate is either null or gte now."""
+
+        if value:
+            return queryset.filter(
+                Q(ended_at__isnull = True) | Q(ended_at__gt = datetime.now())
+            )
+        else:
+            return queryset.filter(
+                Q(ended_at__isnull = False) & Q(ended_at__lte = datetime.now())
+            )
+
+    is_active = django_filters.BooleanFilter(method='is_empl_contr_active')
+
     order_fields = ('started_at', 'ended_at')
     order_by = NullLastOrderingFilter(fields=order_fields)
 
@@ -164,9 +180,8 @@ class EmploymentContractFilter(FilterSet):
         model = models.EmploymentContract
         fields = {
             'started_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
-            'ended_at': ['exact', 'gt', 'gte', 'lt', 'lte', 'isnull'],
+            'ended_at': ['exact', 'gt', 'gte', 'lt', 'lte',],
             'user': ['exact'],
-
         }
 
 
@@ -316,7 +331,12 @@ class PerformanceTypeFilter(FilterSet):
 
 
 class ContractFilter(FilterSet):
-    
+
+    def contract_user_id_distinct(self, queryset, name, value):
+        """Filters distinct contracts linked to the provided userid."""
+        return queryset.filter(contractuser__user__id__iexact=value).distinct()
+
+    contract__user__id = django_filters.NumberFilter(method='contract_user_id_distinct')
     order_fields = ('label', 'description', 'active', 'contractuser__user__username', 'contractuser__user__first_name',
         'contractuser__user__last_name', 'contractuser__user__groups', 'company__vat_identification_number', 'customer__vat_identification_number',
         'company__name', 'customer__name', 'company__country', 'customer_country', 'company__internal', 'customer__internal',
@@ -335,7 +355,6 @@ class ContractFilter(FilterSet):
 
             # User related fields
             'contractuser__user__username': ['exact', 'contains', 'icontains', ],
-            'contractuser__user__id': ['exact', ],
             'contractuser__user__first_name': ['exact', 'contains', 'icontains', ],
             'contractuser__user__last_name': ['exact', 'contains', 'icontains', ],
             'contractuser__user__groups': ['exact', 'contains', 'icontains', ],
