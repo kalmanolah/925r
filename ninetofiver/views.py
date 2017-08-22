@@ -419,7 +419,8 @@ class MonthInfoServiceAPIView(APIView):
         
         holidays = models.Holiday.objects.filter(country=user_info[0].country).filter(date__month=month)
         for holiday in holidays:
-            total -= 8
+            weekday_holiday = holiday.date.weekday()
+            total -= self.get_hours_of_weekday_from_workschedule(work_schedule, weekday_holiday)
 
         RANGE_START = timezone.make_aware(datetime(year, month, 1, 0, 0, 0, 0), timezone.get_current_timezone())
         RANGE_END = timezone.make_aware(datetime(year, month, monthrange(year, month)[1], 0, 0, 0), timezone.get_current_timezone())
