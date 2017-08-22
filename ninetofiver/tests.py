@@ -906,6 +906,11 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
   
     def test_get_hours_performed_month(self):
         get_response = self.client.get(self.url, {'month': now.month})
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+    
+    def test_get_hours_performed_month_year(self):
+        get_response = self.client.get(self.url, {'month': now.month, 'year': now.year})
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
 
     def test_get_required_hours_with_invalid_user(self):
         get_response = self.client.get(self.url, {'user_id': '999999999'})
