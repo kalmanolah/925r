@@ -14,37 +14,6 @@ from rest_framework.fields import SkipField
 logger = logging.getLogger(__name__)
 
 
-class GroupSerializer(serializers.ModelSerializer):
-    display_label = serializers.SerializerMethodField()
-
-    class Meta:
-        model = auth_models.Group
-        fields = ('id', 'name', 'display_label')
-        read_only_fields = ('id',)
-
-    def get_display_label(self, obj):
-        return str(obj)
-
-
-class UserSerializer(serializers.ModelSerializer):
-    display_label = serializers.SerializerMethodField()
-
-    country = serializers.CharField(source='userinfo.country')
-    gender = serializers.CharField(source='userinfo.gender')
-    birth_date = serializers.CharField(source='userinfo.birth_date')
-    join_date = serializers.CharField(source='userinfo.join_date')
-    redmine_id = serializers.CharField(source='userinfo.redmine_id')
-    groups = GroupSerializer(many=True)
-    
-    class Meta:
-        model = auth_models.User
-        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date', 'redmine_id')
-        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'country', 'gender', 'birth_date', 'join_date', 'redmine_id')
-
-    def get_display_label(self, obj):
-        return str(obj)
-
-
 class BaseSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
     display_label = serializers.SerializerMethodField()
@@ -66,11 +35,6 @@ class BaseSerializer(serializers.ModelSerializer):
     def get_display_label(self, obj):
         return str(obj)
 
-
-# class RelatedSerializableField(serializers.RelatedField):
-#     def to_representation(self, value):
-#         serializer = value.get_default_serializer()
-#         return serializer(value, context={'request': None}).data
 
 class CompanySerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
@@ -99,15 +63,53 @@ class WorkScheduleSerializer(BaseSerializer):
 
 
 class UserRelativeSerializer(BaseSerializer):
+
     class Meta(BaseSerializer.Meta):
         model = models.UserRelative
         fields = BaseSerializer.Meta.fields + ('name', 'relation', 'birth_date', 'gender', 'user')
 
 
 class UserInfoSerializer(BaseSerializer):
+    join_date = serializers.SerializerMethodField()
+
     class Meta(BaseSerializer.Meta):
         model = models.UserInfo
-        fields = BaseSerializer.Meta.fields + ('birth_date', 'gender', 'country', 'user', 'join_date')
+        fields = BaseSerializer.Meta.fields + ('user', 'birth_date', 'gender', 'country', 'join_date')
+        read_only_fields = ('join_date', )
+
+    def get_join_date(self, obj):
+        """Returns the date of the first employmentcontract for this user."""
+        try:
+            return models.EmploymentContract.objects.filter(user=obj.user).earliest('started_at').started_at
+        except:
+            return None
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    display_label = serializers.SerializerMethodField()
+
+    class Meta:
+        model = auth_models.Group
+        fields = ('id', 'name', 'display_label')
+        read_only_fields = ('id',)
+
+    def get_display_label(self, obj):
+        return str(obj)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    display_label = serializers.SerializerMethodField()
+
+    userinfo = UserInfoSerializer()
+    groups = GroupSerializer(many=True)
+    
+    class Meta:
+        model = auth_models.User
+        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'userinfo')
+        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'userinfo' )
+
+    def get_display_label(self, obj):
+        return str(obj)
 
 
 class AttachmentSerializer(BaseSerializer):
@@ -265,8 +267,10 @@ class StandbyPerformanceSerializer(PerformanceSerializer):
 
 
 class MyUserSerializer(UserSerializer):
+    userinfo = UserInfoSerializer()
+
     class Meta(UserSerializer.Meta):
-        fields = UserSerializer.Meta.fields + ('is_staff', 'is_superuser', 'user_permissions')
+        fields = UserSerializer.Meta.fields + ('is_staff', 'is_superuser', 'user_permissions', 'userinfo',)
         depth = 2
 
 
