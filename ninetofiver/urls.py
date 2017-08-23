@@ -24,6 +24,7 @@ router.register(r'employment_contract_types', views.EmploymentContractTypeViewSe
 router.register(r'employment_contracts', views.EmploymentContractViewSet)
 router.register(r'work_schedules', views.WorkScheduleViewSet)
 router.register(r'user_relatives', views.UserRelativeViewSet)
+router.register(r'user_infos', views.UserInfoViewSet)
 router.register(r'holidays', views.HolidayViewSet)
 router.register(r'leave_types', views.LeaveTypeViewSet)
 router.register(r'leaves', views.LeaveViewSet)

@@ -13,8 +13,11 @@ from ninetofiver.redmine.choices import get_redmine_project_choices, get_redmine
 from ninetofiver.redmine.views import get_redmine_user_time_entries
 from redminelib import exceptions, Redmine
 
+from ninetofiver import models
+
 import logging
 logger = logging.getLogger(__name__)
+logging.basicConfig(filemode='w', filename='BONARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR.log', level=logging.WARNING)
 
 import tempfile
 import datetime
@@ -66,6 +69,15 @@ class GenericViewTests(AuthenticatedAPITestCase):
 
     def test_my_user_service_api_view(self):
         """Test the 'My User' service API view."""
+        # self.employmentcontract = factories.EmploymentContractFactory.create(
+        #     company=factories.CompanyFactory.create(),
+        #     employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+        #     user=self.user,
+        #     work_schedule=factories.WorkScheduleFactory.create(),
+        # )
+        # self.employmentcontract.save()
+        # self.user_info = factories.UserInfoFactory.create(user=self.user)
+        # self.user_info.save()
         response = self.client.get(reverse('my_user_service'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['display_label'], str(self.user))
@@ -161,6 +173,32 @@ class WorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
         'saturday': Decimal('0'),
         'sunday': Decimal('3'),
     }
+
+
+class UserInfoAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'userinfo'
+    factory_class = factories.UserInfoFactory
+    update_data = {
+        'birth_date': datetime.date(now.year - 10, 1, 15),
+        'gender': 'f',
+        'country': 'UA'
+    }
+
+    def setUp(self):
+        self.user = factories.AdminFactory.create()
+        self.client.force_authenticate(self.user)
+
+        self.company = factories.CompanyFactory.create()
+        self.employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(user=self.user)
 
 
 class UserRelativeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):

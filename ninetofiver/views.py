@@ -234,6 +234,16 @@ class ContractRoleViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
 
+class UserInfoViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows user infos be viewed or edited.
+    """
+    queryset = models.UserInfo.objects.all()
+    serializer_class = serializers.UserInfoSerializer
+    filter_class = filters.UserInfoFilter
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+
+
 class ContractUserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows contract users to be viewed or edited.

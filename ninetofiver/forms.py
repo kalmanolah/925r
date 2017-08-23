@@ -16,7 +16,7 @@ class UserInfoAdminForm(forms.ModelForm):
         choices = get_redmine_user_choices())
     class Meta:
         model = models.UserInfo
-        fields = ['user', 'gender', 'birth_date', 'country', 'join_date', 'redmine_id']
+        fields = ['user', 'gender', 'birth_date', 'country', 'redmine_id']
 
 
 class TimesheetAdminForm(forms.ModelForm):

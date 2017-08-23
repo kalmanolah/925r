@@ -119,7 +119,6 @@ class UserFilter(FilterSet):
             'userinfo__gender': ['iexact', ],
             'userinfo__country': ['iexact', ],
             'userinfo__birth_date': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
-            'userinfo__join_date': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
 
             # Employmentcontract fields
             'employmentcontract__started_at': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
@@ -193,6 +192,23 @@ class WorkScheduleFilter(FilterSet):
         model = models.WorkSchedule
         fields = {
             'label': ['exact', 'contains', 'icontains'],
+        }
+
+
+class UserInfoFilter(FilterSet):
+    order_fields = ('user', 'gender', 'birth_date', 'country',)
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
+    class Meta:
+        model = models.UserInfo
+        fields = {
+            'redmine_id': ['exact',],
+            'birth_date': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'gender': ['exact'],
+            'country': ['iexact', ],
+            'user__username': ['exact', ],
+            'user__first_name': ['exact', 'contains', 'icontains', ],
+            'user__last_name': ['exact', 'contains', 'icontains', ],
         }
 
 

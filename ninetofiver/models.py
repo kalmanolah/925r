@@ -353,7 +353,6 @@ class UserInfo(BaseModel):
     birth_date = models.DateField()
     gender = models.CharField(max_length=2, choices=GENDER)
     country = CountryField()
-    join_date = models.DateField(_("Became Inuit on"), default=date.today)
     redmine_id = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
