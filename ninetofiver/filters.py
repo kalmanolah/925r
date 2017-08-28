@@ -470,7 +470,9 @@ class ContractUserFilter(FilterSet):
     class Meta:
         model = models.ContractUser
         fields = {
-            'contract': ['exact',]
+            'contract': ['exact',],
+            'user': ['exact'],
+            'user__is_active': ['exact']
         }
 
 
