@@ -26,8 +26,9 @@ def get_redmine_user_choices():
         try:
             redmine = Redmine(REDMINE_URL, key=REDMINE_API_KEY)
             users = redmine.user.all()
-            REDMINE_USER_CHOICES = ((user['id'], user['login']) for user in users)
-            return REDMINE_USER_CHOICES
+            redmine_user_choices = ((user['id'], user['login']) for user in users)
+            choices = itertools.chain([('None', '-------'),], redmine_user_choices)
+            return choices 
         except ConnectionError:
             logger.debug('Tried to connect to redmine but failed.')
         except Exception as e:
