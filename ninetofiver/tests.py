@@ -1353,6 +1353,7 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
 class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'mytimesheet'
     factory_class = factories.OpenTimesheetFactory
+    update_url = reverse('mytimesheet-list')
     user_factory = factories.AdminFactory
     create_data = {
         'status': "ACTIVE",
@@ -1368,6 +1369,22 @@ class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
     def get_object(self, factory):
         return factory.create(user=self.user)
 
+    def test_pending_to_active_update(self):
+        user = factories.UserFactory()
+        timesheet = factories.TimesheetFactory(
+            status="PENDING",
+            year=now.year,
+            month=now.month,
+            user=user
+        )
+        update_data = {
+            'status': "ACTIVE",
+            'year': now.year,
+            'month': now.month
+        }
+        patch_invalid_status = self.client.patch(self.update_url, self.update_data, format='json')
+        # patch_invalid_status = self.client.patch('/api/v1/my_timesheets/', self.update_data, format='json')
+        self.assertEqual(patch_invalid_status.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 class MyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'mycontract'
