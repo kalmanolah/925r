@@ -1605,6 +1605,10 @@ class MyWorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcas
         )
         return work_schedule
 
+    def test_get_current_work_schedule(self):
+        response = self.client.get(reverse('myworkschedule-list'), {'current':True})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
 
 class RedmineAPITestCase(APITestCase):
     def test_empty_redmine_url(self):
