@@ -371,42 +371,101 @@ class TimeEntryImportServiceAPIView(APIView):
             return Response('Something went wrong: ' + str(e), status = status.HTTP_400_BAD_REQUEST)
 
 
-class MonthlyAvailabilityServiceAPIView(generics.GenericAPIView):
+class MonthlyAvailabilityServiceAPIView(APIView):
     """
     Get all active users where each property of the user is the day of a 'special' event.
     Special events are: working from home, sickness leave, normal leave, nonWorkingDay based on workschedule.
     """
     permission_classes = (permissions.IsAuthenticated,)
-
-    def get_queryset(self):
-        pass
         
-    def determineWorkSchedule(self, user, period, emplContr, result_dict):
-        """Determines the workschedule and creates the array accordingly."""
-        work_schedule = models.WorkSchedule.objects.filter(pk=emplContr.work_schedule.id)
+    def determineWorkSchedule(self, user, period, employmentcontracts, result_dict):
+        """Determines the workschedule for each employmentcontract and creates the array accordingly."""
+        ec_length = len(employmentcontracts)
 
-        if len(work_schedule) > 0:
-            ws = work_schedule[0].__dict__
+        if ec_length > 0:
+            # Temp var to store days without ec
+            no_empl_contr = {}
 
+            for ec in employmentcontracts:
+                work_schedule = models.WorkSchedule.objects.filter(pk=ec.work_schedule.id)
+
+                if len(work_schedule) > 0:
+                    ws = work_schedule[0].__dict__
+
+                    for d in range(1, monthrange(period.year, period.month)[1] + 1):
+                        date = period.replace(day=d)
+                        dow = date.strftime('%A').lower()
+
+                        if date.date() >= ec.started_at and (not ec.ended_at or (date.date() <= ec.ended_at)):
+                            if ws[dow] <= 0:
+                                if user.id not in result_dict['nonWorkingday']:
+                                    result_dict['nonWorkingday'][user.id] = []
+
+                                result_dict['nonWorkingday'][user.id].append(d)
+                        else:
+                            if d not in no_empl_contr:
+                                no_empl_contr[d] = []
+
+                            no_empl_contr[d].append(ec.id)
+
+            # Days without empl_contr
+            for day in no_empl_contr:
+                
+                if ec_length > 1 and len(no_empl_contr[day]) > 1:
+                    if user.id not in result_dict['nonWorkingday']:
+                        result_dict['nonWorkingday'][user.id] = []
+
+                    result_dict['nonWorkingday'][user.id].append(day)
+                elif ec_length == 1:
+                    if user.id not in result_dict['nonWorkingday']:
+                        result_dict['nonWorkingday'][user.id] = []
+
+                    result_dict['nonWorkingday'][user.id].append(day)
+
+        else:
             for d in range(1, monthrange(period.year, period.month)[1] + 1):
-                date = period.replace(day=d)
-                dow = date.strftime('%A').lower()
+                if user.id not in result_dict['nonWorkingday']:
+                    result_dict['nonWorkingday'][user.id] = []
 
-                if (ws[dow] <= 0) or (emplContr.ended_at and (date.date() > emplContr.ended_at)):
-                    result_dict[d] = 'nonWorkingday'
+                result_dict['nonWorkingday'][user.id].append(d)
 
 
-    def determineSpecialDays(self, user, period, result_dict):
-        """Determines whether the user has a special event coming up this month."""
-        timesheet = models.Timesheet.objects.filter(user=user,year=period.year,month=period.month)
-    
+    def determineHoliday(self, user, period, employmentcontract, result_dict):
+        """Determines the holidays per country and checks the user's country."""
+        for ec in employmentcontract:
+            endOfMonth = period.replace(month=period.month + 1) - timedelta(days=1)
+            holidays_month = models.Holiday.objects.filter(date__range=(period, endOfMonth)).filter()
+
+            if len(holidays_month) > 0:
+                internal_company = models.Company.objects.get(pk=ec.company.id)
+                if internal_company:
+                    holidays_country = holidays_month.filter(country=internal_company.country)
+
+                    for h in holidays_country:
+                        if not user.id in result_dict['holiday']:
+                            result_dict['holiday'][user.id] = []
+
+                        result_dict['holiday'][user.id].append(int(h.date.strftime('%d')))
+
+
+    def determineHomeWork(self, user, period, timesheet, result_dict):
+        """Determines whether the user has a whereabout 'Home' scheduled this month."""
         if len(timesheet) > 0:
             ts = timesheet[0]
 
             # Finding whereabouts being home
             whereabouts = models.Whereabout.objects.filter(timesheet=ts).filter(location__icontains='home')
             for w in whereabouts:
-                result_dict[w.day] = 'homeWork'
+                if not user.id in result_dict['homeWork']:
+                    result_dict['homeWork'][user.id] = []
+
+                result_dict['homeWork'][user.id].append(w.day)
+
+
+    def determineLeaveDays(self, user, period, timesheet, result_dict):
+        """Determines whether the user has a leave coming up this month."""    
+        if len(timesheet) > 0:
+            ts = timesheet[0]
 
             # Finding leaves for the timesheet
             leaves = models.Leave.objects.filter(user=user,status='APPROVED',leavedate__timesheet=ts).distinct()
@@ -414,8 +473,18 @@ class MonthlyAvailabilityServiceAPIView(generics.GenericAPIView):
 
             for l in leaves:
                 for ld in l.leavedate_set.all():
-                    result_dict[ld.starts_at.day] = 'sickLeave' if l.leave_type == sick_type else 'leave'
 
+                    if l.leave_type == sick_type:
+                        if not user.id in result_dict['sickness']:
+                            result_dict['sickness'][user.id] = []
+
+                        result_dict['sickness'][user.id].append(ld.starts_at.day)
+
+                    else:
+                        if not user.id in result_dict['leave']:
+                            result_dict['leave'][user.id] = []
+
+                        result_dict['leave'][user.id].append(ld.starts_at.day)
 
     def get(self, request, format=None):
         """Defines the entrypoint of the retrieval."""
@@ -425,39 +494,32 @@ class MonthlyAvailabilityServiceAPIView(generics.GenericAPIView):
                 timezone.get_current_timezone()
         )
 
-        result = {}
+        result = {
+            'month': period.month,
+            'nonWorkingday': {},
+            'holiday': {},
+            'homeWork': {},
+            'sickness': {},
+            'leave': {}
+        }
 
         endOfMonth = period.replace(month=period.month + 1) - timedelta(days=1)
-        holidays_month = models.Holiday.objects.filter(date__range=(period, endOfMonth)).filter()
 
         for u in users:
-            result[u.id] = {}
-
-            employmentcontract = models.EmploymentContract.objects.filter(user=u)
-            # Workschedule
-            if len(employmentcontract) > 0:
-                emplcontr = employmentcontract.latest('started_at')
-                self.determineWorkSchedule(u, period, emplcontr, result[u.id])
-
-            else:
-                # If no employmentcontract is found, add each day as a nonWorkingday to the userobject.
-                for d in range(1, monthrange(period.year, period.month)[1] + 1):
-                    result[u.id][d] = 'nonWorkingDay'
 
             # Leaves and Home
-            self.determineSpecialDays(u, period, result[u.id])
+            timesheet = models.Timesheet.objects.filter(user=u,year=period.year,month=period.month)
+            self.determineLeaveDays(u, period, timesheet, result)
+            self.determineHomeWork(u, period, timesheet, result)
 
-            # Holidays
-            if employmentcontract:
-                emplcontr = employmentcontract.latest('started_at')
-
-                if len(holidays_month) > 0:
-                    internal_company = models.Company.objects.get(pk=emplcontr.company.id)
-                    if internal_company:
-                        holidays_country = holidays_month.filter(country=internal_company.country)
-
-                        for h in holidays_country:
-                            result[u.id][int(h.date.strftime('%d'))] = 'holiday'
+            # Workschedule and Holidays
+            employmentcontract = models.EmploymentContract.objects.filter(
+                Q(user = u),
+                Q(started_at__lte = endOfMonth),
+                Q(ended_at__isnull = True)  | Q(ended_at__gte = period)
+            )
+            self.determineWorkSchedule(u, period, employmentcontract, result)
+            self.determineHoliday(u, period, employmentcontract, result)
 
         return Response(result, status = status.HTTP_200_OK)
 
