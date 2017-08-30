@@ -349,20 +349,19 @@ class TimeEntryImportServiceAPIView(APIView):
         try:
             redmine_id = models.UserInfo.objects.get(user_id=request.user.id).redmine_id
             if redmine_id:
-                logger.warning(request.query_params)
                 redmine_time_entries = get_redmine_user_time_entries(
                     user_id=redmine_id, 
                     params=request.query_params
                 )
-                logger.warning('post grute')
                 
                 serializer = RedmineTimeEntrySerializer(
                     instance=redmine_time_entries, 
                     many=True
                 )
-                if serializer.data != []:
+                if serializer.data:
                     serializer.is_valid(raise_exception=True)
-
+                    return Response(serializer.data, status = status.HTTP_200_OK)
+                    
                 return Response(serializer.data, status = status.HTTP_200_OK)
             else:
                 return Response('Redmine_id for the current user has not been found.', status = status.HTTP_404_NOT_FOUND)
@@ -411,7 +410,7 @@ class MonthlyAvailabilityServiceAPIView(APIView):
             # Days without empl_contr
             for day in no_empl_contr:
                 
-                if ec_length > 1 and len(no_empl_contr[day]) > 1:
+                if ec_length > 1 and len(no_empl_contr[day]) == ec_length:
                     if user.id not in result_dict['nonWorkingday']:
                         result_dict['nonWorkingday'][user.id] = []
 
