@@ -69,15 +69,15 @@ class GenericViewTests(AuthenticatedAPITestCase):
 
     def test_my_user_service_api_view(self):
         """Test the 'My User' service API view."""
-        # self.employmentcontract = factories.EmploymentContractFactory.create(
-        #     company=factories.CompanyFactory.create(),
-        #     employment_contract_type=factories.EmploymentContractTypeFactory.create(),
-        #     user=self.user,
-        #     work_schedule=factories.WorkScheduleFactory.create(),
-        # )
-        # self.employmentcontract.save()
-        # self.user_info = factories.UserInfoFactory.create(user=self.user)
-        # self.user_info.save()
+        self.employmentcontract = factories.EmploymentContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user,
+            work_schedule=factories.WorkScheduleFactory.create(),
+        )
+        self.employmentcontract.save()
+        self.user_info = factories.UserInfoFactory.create(user=self.user)
+        self.user_info.save()
         response = self.client.get(reverse('my_user_service'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['display_label'], str(self.user))
@@ -853,6 +853,188 @@ class TimeEntryImportServiceAPIViewTestCase(APITestCase):
         )
         success_response = self.client.get(self.url, {'filter_imported': 'true'})
         self.assertEqual(success_response.status_code, status.HTTP_200_OK)
+
+
+class MonthlyAvailabilityServiceAPIViewTestcase(APITestCase):
+    """Tests the MonthlyAvailabilityServiceAPI endpoint."""
+    def setUp(self):
+        self.user = factories.AdminFactory.create()
+        self.client.force_authenticate(self.user)
+
+        self.company = factories.CompanyFactory.create()
+        self.workschedule = factories.WorkScheduleFactory.create(
+            monday=8.0,
+            tuesday=0,
+            wednesday=8.0,
+            thursday=0,
+            friday=8.0
+        )
+        self.holiday = factories.HolidayFactory.create(
+            country=self.company.country,
+            date=now.replace(month=now.month).strftime('%Y-%m-%d')
+        )
+
+        self.employmentcontract = factories.EmploymentContractFactory.create(
+            company=self.company,
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user,
+            work_schedule=self.workschedule,
+        )
+
+        self.timesheet = factories.TimesheetFactory.create(
+            user=self.user,
+            month=now.month,
+            year=now.year
+        )
+        self.leave = factories.LeaveFactory.create(
+            user=self.user,
+            leave_type=factories.LeaveTypeFactory.create(
+                label='sickysticky'
+            ),
+            status='APPROVED'
+        )
+        self.leavedate = factories.LeaveDateFactory(
+            leave=self.leave,
+            timesheet=self.timesheet,
+            starts_at=timezone.make_aware(datetime.datetime(now.year, now.month, 5, 0, 0, 0), timezone.get_current_timezone()),
+            ends_at=timezone.make_aware(datetime.datetime(now.year, now.month, 5, 12, 30, 0), timezone.get_current_timezone())
+        )
+        self.whereabout = factories.WhereaboutFactory.create(
+            timesheet=self.timesheet,
+            location='home'
+        )
+
+        self.url = reverse('monthly_availability_service')
+        super().setUp()
+
+    def test_normal_retrieval_success(self):
+        """Test normal scenario where everything goes according to plan."""
+        period = now.replace(day=1).strftime('%Y-%m-%dT%H:%M:%S')
+        get_response = self.client.get(self.url, { 'period':period })
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(get_response.data['nonWorkingday'])
+        self.assertIsNotNone(get_response.data['holiday'])
+        self.assertIsNotNone(get_response.data['homeWork'])
+        self.assertIsNotNone(get_response.data['sickness'])
+        self.assertIsNotNone(get_response.data['leave'])
+
+    def test_normal_retrieval_multiple_users_success(self):
+        """Test normal scenario with multiple users where everything goes according to plan."""
+        self.user_2 = factories.AdminFactory.create()
+
+        self.employmentcontract_2 = factories.EmploymentContractFactory.create(
+            company=self.company,
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user_2,
+            work_schedule=self.workschedule,
+        )
+
+        self.timesheet_2 = factories.TimesheetFactory.create(
+            user=self.user_2,
+            month=now.month
+        )
+        self.leave_2 = factories.LeaveFactory.create(
+            user=self.user_2,
+            leave_type=factories.LeaveTypeFactory.create(),
+            status='APPROVED'
+        )
+        self.leavedate_2 = factories.LeaveDateFactory(
+            leave=self.leave_2,
+            timesheet=self.timesheet_2,
+            starts_at=timezone.make_aware(datetime.datetime(now.year, now.month, 4, 0, 0, 0), timezone.get_current_timezone()),
+            ends_at=timezone.make_aware(datetime.datetime(now.year, now.month, 4, 12, 30, 0), timezone.get_current_timezone())
+        )
+        self.whereabout_2 = factories.WhereaboutFactory.create(
+            timesheet=self.timesheet_2
+        )
+
+        period = now.replace(day=1).strftime('%Y-%m-%dT%H:%M:%S')
+        get_response = self.client.get(self.url, { 'period':period })
+
+        #Normal status, sickness, holiday, homework and nonworkingdays
+        #No normal leaves
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(get_response.data['leave']), 0)
+
+        self.assertNotEqual(len(get_response.data['nonWorkingday']), 0)
+        self.assertNotEqual(len(get_response.data['holiday']), 0)
+        self.assertNotEqual(len(get_response.data['homeWork']), 0)
+        self.assertNotEqual(len(get_response.data['sickness']), 0)
+
+    def test_no_employmentcontract_retrieval_success(self):
+        """Test scenario where a user has no employmentcontract."""
+        self.user_2 = factories.AdminFactory.create()
+
+        self.timesheet_2 = factories.TimesheetFactory.create(
+            user=self.user_2,
+            month=now.month
+        )
+        self.leave_2 = factories.LeaveFactory.create(
+            user=self.user_2,
+            leave_type=factories.LeaveTypeFactory.create(),
+            status='APPROVED'
+        )
+        self.leavedate = factories.LeaveDateFactory(
+            leave=self.leave_2,
+            timesheet=self.timesheet_2,
+            starts_at=timezone.make_aware(datetime.datetime(now.year, now.month, 4, 0, 0, 0), timezone.get_current_timezone()),
+            ends_at=timezone.make_aware(datetime.datetime(now.year, now.month, 4, 12, 30, 0), timezone.get_current_timezone())
+        )
+        self.whereabout = factories.WhereaboutFactory.create(
+            location='home',
+            timesheet=self.timesheet_2
+        )
+
+        period = now.replace(day=1).strftime('%Y-%m-%dT%H:%M:%S')
+        get_response = self.client.get(self.url, { 'period':period })
+
+        #Normal status, sickness, holiday, homework and nonworkingdays
+        #No normal leaves
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(get_response.data['leave']), 0)
+
+        self.assertNotEqual(len(get_response.data['nonWorkingday']), 0)
+        self.assertNotEqual(len(get_response.data['holiday']), 0)
+        self.assertNotEqual(len(get_response.data['homeWork']), 0)
+        self.assertNotEqual(len(get_response.data['sickness']), 0)
+
+    def test_double_employmentcontract_retrieval_success(self):
+        """Test scenario where a user has no employmentcontract."""
+        period = now.replace(day=1).strftime('%Y-%m-%dT%H:%M:%S')
+        self.employmentcontract.ended_at = now.replace(day=10)
+        self.employmentcontract_2 = factories.EmploymentContractFactory.create(
+            company=self.company,
+            employment_contract_type=factories.EmploymentContractTypeFactory.create(),
+            user=self.user,
+            work_schedule=self.workschedule,
+            started_at = now.replace(day=15)
+        )
+        self.leave_2 = factories.LeaveFactory.create(
+            user=self.user,
+            leave_type=factories.LeaveTypeFactory.create(label='hellup, ek peize datr een euve up mi kop es gevolln'),
+            status='APPROVED'
+        )
+        self.leavedate_2 = factories.LeaveDateFactory(
+            leave=self.leave_2,
+            timesheet=self.timesheet,
+            starts_at=timezone.make_aware(datetime.datetime(now.year, now.month, 7, 0, 0, 0), timezone.get_current_timezone()),
+            ends_at=timezone.make_aware(datetime.datetime(now.year, now.month, 7, 12, 30, 0), timezone.get_current_timezone())
+        )
+        
+
+        period = now.replace(day=1).strftime('%Y-%m-%dT%H:%M:%S')
+        get_response = self.client.get(self.url, { 'period':period })
+
+        #Normal status, leaves, holiday, homework and nonworkingdays
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+
+        self.assertNotEqual(len(get_response.data['nonWorkingday']), 0)
+        self.assertNotEqual(len(get_response.data['holiday']), 0)
+        self.assertNotEqual(len(get_response.data['homeWork']), 0)
+        self.assertNotEqual(len(get_response.data['sickness']), 0)
+        self.assertNotEqual(len(get_response.data['leave']), 0)
+
+
 
 
 class MonthInfoServiceAPIViewTestcase(APITestCase): 
