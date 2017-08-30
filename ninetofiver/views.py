@@ -454,7 +454,7 @@ class MonthlyAvailabilityServiceAPIView(APIView):
             ts = timesheet[0]
 
             # Finding whereabouts being home
-            whereabouts = models.Whereabout.objects.filter(timesheet=ts).filter(location__icontains='home')
+            whereabouts = models.Whereabout.objects.filter(timesheet=ts,location__icontains='home')
             for w in whereabouts:
                 if not user.id in result_dict['homeWork']:
                     result_dict['homeWork'][user.id] = []
@@ -469,12 +469,13 @@ class MonthlyAvailabilityServiceAPIView(APIView):
 
             # Finding leaves for the timesheet
             leaves = models.Leave.objects.filter(user=user,status='APPROVED',leavedate__timesheet=ts).distinct()
-            sick_type = models.LeaveType.objects.get(label__icontains='sick')
+            sick_types = models.LeaveType.objects.filter(label__icontains='sick')
+            sick_len = len(sick_types)
 
             for l in leaves:
                 for ld in l.leavedate_set.all():
 
-                    if l.leave_type == sick_type:
+                    if sick_len > 0 and l.leave_type == sick_types[0]:
                         if not user.id in result_dict['sickness']:
                             result_dict['sickness'][user.id] = []
 
