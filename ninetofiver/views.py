@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from decimal import Decimal
 from datetime import datetime, timedelta, time
+from dateutil.relativedelta import relativedelta
 from calendar import monthcalendar, weekday, monthrange, day_name
 from collections import Counter
 from django.utils import timezone
@@ -432,7 +433,7 @@ class MonthlyAvailabilityServiceAPIView(APIView):
     def determineHoliday(self, user, period, employmentcontract, result_dict):
         """Determines the holidays per country and checks the user's country."""
         for ec in employmentcontract:
-            endOfMonth = period.replace(month=period.month + 1) - timedelta(days=1)
+            endOfMonth = (period.replace(month=period.month) + relativedelta(months=1) ) - timedelta(days=1)
             holidays_month = models.Holiday.objects.filter(date__range=(period, endOfMonth)).filter()
 
             if len(holidays_month) > 0:
@@ -492,7 +493,7 @@ class MonthlyAvailabilityServiceAPIView(APIView):
         period = timezone.make_aware(
                 (datetime.strptime(request.query_params['period'], "%Y-%m-%dT%H:%M:%S")),
                 timezone.get_current_timezone()
-        )
+        ).replace(day=1)
 
         result = {
             'month': period.month,
@@ -503,7 +504,7 @@ class MonthlyAvailabilityServiceAPIView(APIView):
             'leave': {}
         }
 
-        endOfMonth = period.replace(month=period.month + 1) - timedelta(days=1)
+        endOfMonth = (period.replace(month=period.month) + relativedelta(months=1) ) - timedelta(days=1)
 
         for u in users:
 
