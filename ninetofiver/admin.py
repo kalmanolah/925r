@@ -98,6 +98,7 @@ class WorkScheduleAdmin(admin.ModelAdmin):
 class UserRelativeAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'user', 'relation', 'gender', 'birth_date', )
     ordering = ('name',)
+    form = UserRelativeAdminForm
 
 
 @admin.register(models.Attachment)
@@ -206,6 +207,7 @@ class PerformanceTypeAdmin(admin.ModelAdmin):
 
 class ContractUserInline(admin.TabularInline):
     model = models.ContractUser
+    ordering = ("user__first_name", "user__last_name",)
 
 @admin.register(models.ContractGroup)
 class ContractGroupAdmin(admin.ModelAdmin):

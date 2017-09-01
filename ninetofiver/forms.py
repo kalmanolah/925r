@@ -19,6 +19,14 @@ class UserInfoAdminForm(forms.ModelForm):
         fields = ['user', 'gender', 'birth_date', 'country', 'redmine_id']
 
 
+class UserRelativeAdminForm(forms.ModelForm):
+    user = UserModelChoiceField(
+        queryset = auth_models.User.objects.order_by('first_name', 'last_name'))
+    class Meta:
+        model = models.UserRelative
+        fields = ['user', 'gender', 'birth_date', 'name', 'relation']
+
+
 class TimesheetAdminForm(forms.ModelForm):
     user = UserModelChoiceField(
         queryset = auth_models.User.objects.order_by('first_name', 'last_name'))
