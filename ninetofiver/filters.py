@@ -361,11 +361,31 @@ class PerformanceTypeFilter(FilterSet):
 
 class ContractFilter(FilterSet):
 
+    def contract_range_distinct(self, queryset, name, value):
+        """Filters distinct contracts between a given range."""
+        
+        # Validate input.
+        try:
+            # Split value.
+            values = value.split(',')
+            start_date = datetime.strptime(values[0], "%Y-%m-%d")
+            end_date = datetime.strptime(values[1], "%Y-%m-%d")
+        except:
+            # Raise validation error.
+            raise ValidationError('Datetimes have to be in the correct \'YYYY-MM-DD\' format.')
+
+        # Filter distinct using range.
+        # return queryset.filter(consultancycontract__starts_at__range=(start_date, end_date))
+        return queryset.filter(
+            Q(consultancycontract__starts_at__range=(start_date, end_date)) | Q(projectcontract__starts_at__range=(start_date, end_date)) | Q(supportcontract__starts_at__range=(start_date, end_date))
+        )
+
     def contract_user_id_distinct(self, queryset, name, value):
         """Filters distinct contracts linked to the provided userid."""
         return queryset.filter(contractuser__user__id__iexact=value).distinct()
 
     contractuser__user__id = django_filters.NumberFilter(method='contract_user_id_distinct')
+    contract_date__range=django_filters.CharFilter(method='contract_range_distinct')
     order_fields = ('label', 'description', 'active', 'contractuser__user__username', 'contractuser__user__first_name',
         'contractuser__user__last_name', 'contractuser__user__groups', 'company__vat_identification_number', 'customer__vat_identification_number',
         'company__name', 'customer__name', 'company__country', 'customer_country', 'company__internal', 'customer__internal',
