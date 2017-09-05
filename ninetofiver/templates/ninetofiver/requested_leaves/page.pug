@@ -1,0 +1,32 @@
+extends ninetofiver/base/page.pug
+- load static
+
+block content
+  .container
+    h1 leaves
+    table.table-bordered.table-striped
+      thead
+        tr
+          td
+            strong Leave
+          td
+            strong From
+          td
+            strong To
+          td
+            strong Request Date
+          td 
+            strong Accept
+          td
+            strong Reject
+      {% for leave in pending_leaves %}
+      tr
+        td {{ leave }} 
+        td {{ leave.leavedate_set.first.starts_at }}
+        td {{ leave.leavedate_set.last.ends_at }}
+        td {{ leave.created_at }}
+        td 
+          a(href="{% url 'requestedleave_accept' leave.id %}") V 
+        td 
+          a(href="{% url 'requestedleave_reject' leave.id %}") X
+      {% endfor %}

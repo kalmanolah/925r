@@ -1,0 +1,28 @@
+extends ninetofiver/base/page.pug
+- load static
+
+block content
+  .container
+    h1 Contracts
+    hr
+    br
+    table.table-bordered.table-striped
+      thead
+        tr
+          td
+            strong Contract
+          td
+            strong Customer
+          td
+            strong Ends at
+          td
+            strong Link to admin
+      tbody
+      {% for contract in contracts %}
+      tr
+        td {{ contract }} 
+        td {{ contract.customer }}
+        td {{ contract.ends_at }}
+        td 
+          a(href='{% url "admin:ninetofiver_contract_change" contract.id %}') link
+      {% endfor %}

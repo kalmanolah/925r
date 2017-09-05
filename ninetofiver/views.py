@@ -1,7 +1,7 @@
 from django.contrib.auth import models as auth_models
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from decimal import Decimal
 from datetime import datetime, timedelta, time
 from dateutil.relativedelta import relativedelta
@@ -44,6 +44,49 @@ def home_view(request):
     context = {}
     return render(request, 'ninetofiver/home/index.pug', context)
 
+@login_required
+def management_contracts_view(request):
+    """Displays relevant information about contracts that are about to end."""
+    today = datetime.today()
+    target_date = today.replace(month=today.month) + relativedelta(months=3)
+    contracts = models.Contract.objects.filter(
+        Q(active=True)
+        & ((Q(projectcontract__ends_at__lte=target_date) & Q(projectcontract__ends_at__gte=today))
+           | (Q(consultancycontract__ends_at__lte=target_date) & Q(consultancycontract__ends_at__gte=today))
+           | (Q(supportcontract__ends_at__lte=target_date) & Q(supportcontract__ends_at__gte=today))
+          )
+        ).order_by('customer', 'projectcontract__ends_at', 'consultancycontract__ends_at', 'supportcontract__ends_at')
+    context = {
+        'contracts': contracts
+    }
+    return render(request, 'ninetofiver/management/contracts.pug', context)
+
+@login_required
+def requested_leaves_view(request):
+    """Displays all the requested leaves that need to be processed."""
+    today = datetime.today()
+    pending_leaves = models.Leave.objects.filter(status='PENDING')
+    context = {
+        'pending_leaves': pending_leaves,
+        'today': today    
+    }
+    return render(request, 'ninetofiver/requested_leaves/page.pug', context)
+
+@login_required
+def requested_leave_accept_view(request, pk):
+    """Accepts the leave given in the params."""
+    leave = models.Leave.objects.get(pk=pk)
+    leave.status = models.Leave.STATUS.ACCEPTED
+    leave.save()
+    return redirect('requestedleaves')
+
+@login_required
+def requested_leave_reject_view(request, pk):
+    """Rejects the leave given in the params."""
+    leave = models.Leave.objects.get(pk=pk)
+    leave.status = models.Leave.STATUS.REJECTED
+    leave.save()
+    return redirect('requestedleaves')
 
 @login_required
 def account_view(request):
