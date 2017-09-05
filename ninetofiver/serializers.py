@@ -237,7 +237,7 @@ class AdminSupportContractSerializer(ContractSerializer):
 class SupportContractSerializer(ContractSerializer):
     class Meta(ContractSerializer.Meta):
         model = models.SupportContract
-        fields = ContractSerializer.Meta.fields + ('starts_at', 'ends_at', 'day_rate', 'fixed_fee_period')
+        fields = ContractSerializer.Meta.fields + ('starts_at', 'ends_at',)
 
 
 class ContractRoleSerializer(BaseSerializer):
