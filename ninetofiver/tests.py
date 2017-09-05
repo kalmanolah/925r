@@ -400,6 +400,7 @@ class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
     def setUp(self):
         self.company = factories.InternalCompanyFactory.create()
         self.customer = factories.CompanyFactory.create()
+        self.url = reverse('projectcontract-list')
         super().setUp()
 
     def get_object(self, factory):
@@ -413,6 +414,17 @@ class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
 
         return self.create_data
 
+    def test_non_admin_user(self):
+        user = factories.UserFactory()
+        self.client.force_authenticate(user)
+        response = self.client.get(self.url)
+        self.assertNotIn('fixed_fee', response.data['results'][0])
+
+    def test_admin_user(self):
+        user = factories.AdminFactory()
+        self.client.force_authenticate(user)
+        response = self.client.get(self.url)
+        self.assertIn('fixed_fee', response.data['results'][0])
 
 class ProjectEstimateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'projectestimate'
@@ -465,6 +477,7 @@ class ConsultancyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
     def setUp(self):
         self.company = factories.InternalCompanyFactory.create()
         self.customer = factories.CompanyFactory.create()
+        self.url = reverse('consultancycontract-list')
         super().setUp()
 
     def get_object(self, factory):
@@ -478,6 +491,18 @@ class ConsultancyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
 
         return self.create_data
 
+    def test_non_admin_user(self):
+        user = factories.UserFactory()
+        self.client.force_authenticate(user)
+        response = self.client.get(self.url)
+        self.assertNotIn('day_rate', response.data['results'][0])
+
+    def test_admin_user(self):
+        user = factories.AdminFactory()
+        self.client.force_authenticate(user)
+        response = self.client.get(self.url)
+        self.assertIn('day_rate', response.data['results'][0])
+    
 
 class SupportContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'supportcontract'
@@ -499,6 +524,7 @@ class SupportContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
     def setUp(self):
         self.company = factories.InternalCompanyFactory.create()
         self.customer = factories.CompanyFactory.create()
+        self.url = reverse('supportcontract-list')
         super().setUp()
 
     def get_object(self, factory):
@@ -512,6 +538,20 @@ class SupportContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
 
         return self.create_data
 
+    def test_non_admin_user(self):
+        user = factories.UserFactory()
+        self.client.force_authenticate(user)
+        response = self.client.get(self.url)
+        self.assertNotIn('day_rate', response.data['results'][0])
+        self.assertNotIn('fixed_fee_period', response.data['results'][0])
+        self.assertNotIn('fixed_fee', response.data['results'][0])
+
+    def test_admin_user(self):
+        user = factories.AdminFactory()
+        self.client.force_authenticate(user)
+        response = self.client.get(self.url)
+        self.assertIn('day_rate', response.data['results'][0])
+    
 
 class ContractRoleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'contractrole'
