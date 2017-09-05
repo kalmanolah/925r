@@ -214,7 +214,6 @@ class ProjectContractViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         user = auth_models.User.objects.get(pk=self.request.user.id)
-        logging.info(user.__dict__)
         if user.is_superuser or user.is_staff:
             return serializers.AdminProjectSerializer
         return serializers.ProjectContractSerializer
@@ -230,10 +229,9 @@ class ConsultancyContractViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         user = auth_models.User.objects.get(pk=self.request.user.id)
-        logging.info(user.__dict__)
         if user.is_superuser or user.is_staff:
             return serializers.AdminConsultancyContractSerializer
-        return serializers.AdminConsultancyContractSerializer
+        return serializers.ConsultancyContractSerializer
 
 
 class SupportContractViewSet(viewsets.ModelViewSet):
@@ -241,15 +239,13 @@ class SupportContractViewSet(viewsets.ModelViewSet):
     API endpoint that allows support contracts to be viewed or edited.
     """
     queryset = models.SupportContract.objects.all()
-    serializer_class = serializers.SupportContractSerializer
     filter_class = filters.SupportContractFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
     def get_serializer_class(self):
         user = auth_models.User.objects.get(pk=self.request.user.id)
-        logging.info(user.__dict__)
         if user.is_superuser or user.is_staff:
-            return serializers.SupportContractSerializer
+            return serializers.AdminSupportContractSerializer
         return serializers.SupportContractSerializer
 
 
