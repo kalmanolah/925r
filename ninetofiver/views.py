@@ -185,23 +185,13 @@ class ContractViewSet(GenericHierarchicalReadOnlyViewSet):
     API endpoint that allows contracts to be viewed or edited.
     """
     queryset = models.Contract.objects.all()
-    serializer_class = serializers.ContractSerializer
+    serializer_classes = {
+        models.ProjectContract: serializers.ProjectContractSerializer,
+        models.ConsultancyContract: serializers.ConsultancyContractSerializer,
+        models.SupportContract: serializers.SupportContractSerializer,
+    }
     filter_class = filters.ContractFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
-
-    def get_serializer_classes(self):
-        if self.request.user.is_admin:
-            return {
-                models.ProjectContract: serializers.AdminProjectContractSerializer,
-                models.ConsultancyContract: serializers.AdminConsultancyContractSerializer,
-                models.SupportContract: serializers.AdminSupportContractSerializer,
-            }
-        else:
-            return {
-                models.ProjectContract: serializers.ProjectContractSerializer,
-                models.ConsultancyContract: serializers.ConsultancyContractSerializer,
-                models.SupportContract: serializers.SupportContractSerializer,
-            }
 
 
 class ProjectContractViewSet(viewsets.ModelViewSet):
@@ -213,9 +203,8 @@ class ProjectContractViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
     def get_serializer_class(self):
-        user = auth_models.User.objects.get(pk=self.request.user.id)
-        if user.is_superuser or user.is_staff:
-            return serializers.AdminProjectSerializer
+        if self.request.user.is_superuser or self.request.user.is_staff:
+            return serializers.AdminProjectContractSerializer
         return serializers.ProjectContractSerializer
 
 
@@ -228,8 +217,7 @@ class ConsultancyContractViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
     def get_serializer_class(self):
-        user = auth_models.User.objects.get(pk=self.request.user.id)
-        if user.is_superuser or user.is_staff:
+        if self.user.is_superuser or self.user.is_staff:
             return serializers.AdminConsultancyContractSerializer
         return serializers.ConsultancyContractSerializer
 
@@ -243,8 +231,7 @@ class SupportContractViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
 
     def get_serializer_class(self):
-        user = auth_models.User.objects.get(pk=self.request.user.id)
-        if user.is_superuser or user.is_staff:
+        if self.user.is_superuser or self.user.is_staff:
             return serializers.AdminSupportContractSerializer
         return serializers.SupportContractSerializer
 
