@@ -189,7 +189,7 @@ class ContractSerializer(BaseSerializer):
                                                'active', 'contract_groups', 'hours_spent', 'attachments')
 
 
-class AdminProjectSerializer(ContractSerializer):
+class AdminProjectContractSerializer(ContractSerializer):
     # Serializer that shows classified information.
     hours_estimated = serializers.SerializerMethodField()
 
