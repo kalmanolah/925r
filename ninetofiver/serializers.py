@@ -7,6 +7,7 @@ import datetime
 from django.db.models import Q
 from collections import OrderedDict
 
+from rest_framework import status
 from rest_framework.fields import SkipField
 
 
@@ -280,6 +281,20 @@ class PerformanceSerializer(BaseSerializer):
         model = models.Performance
         fields = BaseSerializer.Meta.fields + ('timesheet', 'day', 'redmine_id', 'contract')
 
+    def update(self, instance, validated_data):
+        user = self.context['request'].user
+        if not user.is_staff and not user.is_superuser:
+            if instance.timesheet.status == models.Timesheet.STATUS.PENDING:
+                raise serializers.MethodNotAllowed('Only admins are allowed to update performances attached to pending timesheets')
+        return super().update(instance, validated_data)
+
+    def partial_update(self, instance, validated_data):
+        user = self.context['request'].user
+        if not user.is_staff and not user.is_superuser:
+            if instance.timesheet.status == models.Timesheet.STATUS.PENDING:
+                raise serializers.MethodNotAllowed('Only admins are allowed to update performances attached to pending timesheets.')
+        return super().partial_update(instance, validated_data)
+
 
 class ActivityPerformanceSerializer(PerformanceSerializer):
     class Meta(PerformanceSerializer.Meta):
@@ -348,20 +363,6 @@ class MyPerformanceSerializer(PerformanceSerializer):
         if value.user != self.context['request'].user:
             raise serializers.ValidationError('You can only manipulate performances attached to your own timesheets')
         return value
-
-    def update(self, instance, validated_data):
-        user = self.context['request'].user
-        if not user.is_staff and not user.is_superuser:
-            if instance.timesheet.status == models.Timesheet.STATUS.PENDING:
-                raise serializers.ValidationError('Only admins are allowed to update performances attached to pending timesheets')
-        return super().update(instance, validated_data)
-
-    def partial_update(self, instance, validated_data):
-        user = self.context['request'].user
-        if not user.is_staff and not user.is_superuser:
-            if instance.timesheet.status == models.Timesheet.STATUS.PENDING:
-                raise serializers.ValidationError('Only admins are allowed to update performances attached to pending timesheets')
-        return super().partial_update(instance, validated_data)
 
 
 class MyActivityPerformanceSerializer(MyPerformanceSerializer, ActivityPerformanceSerializer):

@@ -694,6 +694,9 @@ class ActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
             company=factories.InternalCompanyFactory.create(),
             customer=factories.CompanyFactory.create()
         )
+        self.admin = factories.AdminFactory.create()
+        self.admin.set_password('password')
+        self.admin.save()
         super().setUp()
 
     def get_object(self, factory):
@@ -707,6 +710,18 @@ class ActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
         })
 
         return self.create_data
+
+    def test_non_admin_update(self):
+        performance = factories.ActivityPerformanceFactory.create(
+            timesheet=factories.OpenTimesheetFactory(
+                user=self.user
+            ),
+            contract=self.contract,
+            performance_type=self.performance_type
+        )
+        performance.save()
+        update_response = self.client.patch(reverse('activityperformance-list'), {'description': 'updated description'}, format='json')
+        self.assertEqual(update_response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class StandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
@@ -1600,7 +1615,7 @@ class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
         return factory.create(user=self.user)
 
     def test_pending_to_active_update(self):
-        user = factories.UserFactory()
+        user = factories.UserFactory.create()
         timesheet = factories.TimesheetFactory(
             status="PENDING",
             year=now.year,
