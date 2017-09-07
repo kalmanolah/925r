@@ -333,7 +333,7 @@ class MyTimesheetSerializer(TimesheetSerializer):
 
     def update(self, instance, validated_data):
         user = self.context['request'].user
-        if not user.groups.filter(name='admin').exists():
+        if not user.is_staff and not user.is_superuser:
             if instance.status == models.Timesheet.STATUS.PENDING and validated_data['status'] == models.Timesheet.STATUS.ACTIVE:
                 raise serializers.ValidationError('DA MAG NIE HE MENNEKE') 
         return super().update(instance, validated_data)
