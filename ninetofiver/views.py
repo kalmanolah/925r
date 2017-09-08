@@ -33,6 +33,8 @@ from rest_framework_swagger.renderers import SwaggerUIRenderer
 from ninetofiver.redmine.views import get_redmine_user_time_entries
 from ninetofiver.redmine.serializers import RedmineTimeEntrySerializer
 from django.db.models import Q
+from django.db import DatabaseError
+from django.core.mail import send_mail
 
 import ninetofiver.settings as settings
 
@@ -77,15 +79,40 @@ def requested_leave_accept_view(request, pk):
     """Accepts the leave given in the params."""
     leave = models.Leave.objects.get(pk=pk)
     leave.status = models.Leave.STATUS.APPROVED
-    leave.save()
-    return redirect('requestedleaves')
+    try:
+        leave.save()
+    except DatabaseError as e:
+        return redirect('requestedleaves', status=status.HTTP_400_BAD_REQUEST, error='Something went wrong trying to save the leave to the database.: %s' % e)
+    finally:
+        send_mail(
+            str(leave.leave_type) + ' - ' + str(leave.description),
+            'Dear %s\n\nyour %s from \n%s to %s\nhas been %s.\n\nKind regards\nAn inocent bot' % 
+            (str(leave.user.first_name), str(leave.leave_type), str(leave.leavedate_set.first().starts_at.date()), str(leave.leavedate_set.last().ends_at.date()), str(leave.status)),
+            'we_approve_leaves@yahoo.com',
+            [leave.user.email],
+            fail_silently=False
+        )
+        return redirect('requestedleaves')
+        
 
 @login_required
 def requested_leave_reject_view(request, pk):
     """Rejects the leave given in the params."""
     leave = models.Leave.objects.get(pk=pk)
     leave.status = models.Leave.STATUS.REJECTED
-    leave.save()
+    try:
+        leave.save()
+    except DatabaseError as e:
+        return redirect('requestedleaves', status=status.HTTP_400_BAD_REQUEST, error='Something went wrong trying to save the leave to the database.: %s' % e)
+    finally:
+        send_mail(
+            str(leave.leave_type) + ' - ' + str(leave.description),
+            'Dear %s\n\nyour %s from \n%s to %s\nhas been %s.\n\nKind regards\nAn inocent bot' % 
+            (str(leave.user.first_name), str(leave.leave_type), str(leave.leavedate_set.first().starts_at.date()), str(leave.leavedate_set.last().ends_at.date()), str(leave.status)),
+            'we_approve_leaves@yahoo.com',
+            [leave.user.email],
+            fail_silently=False
+        )
     return redirect('requestedleaves')
 
 @login_required
