@@ -83,7 +83,7 @@ class UserInfoSerializer(BaseSerializer):
         try:
             return models.EmploymentContract.objects.filter(user=obj.user).earliest('started_at').started_at
         except:
-            return None
+            return datetime.date.today()
 
 
 class GroupSerializer(serializers.ModelSerializer):
