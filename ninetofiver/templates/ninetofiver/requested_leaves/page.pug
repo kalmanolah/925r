@@ -29,8 +29,8 @@ block content
         {% else %}
         td {{ leave.created_at }}
         {% endif %}
-        td
-          a.btn.btn-success(href="{% url 'requestedleave_accept' leave.id %}", style='text-decoration:none; color:white') V 
-        td
-          a.btn.btn-danger(href="{% url 'requestedleave_reject' leave.id %}", style='text-decoration:none; color:white') X
+        td(style='text-align:center')
+          a.btn.btn-success(href="{% url 'requestedleave_accept' leave.id %}", style='text-decoration:none; color:white;') V 
+        td(style='text-align:center')
+          a.btn.btn-danger(href="{% url 'requestedleave_reject' leave.id %}", style='text-decoration:none; color:white;') X
       {% endfor %}
