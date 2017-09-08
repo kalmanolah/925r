@@ -4,7 +4,7 @@ extends ninetofiver/base/page.pug
 block content
   .container
     h1 leaves
-    table.table-bordered.table-striped
+    table.table-bordered.table-striped(style='width:100%')
       thead
         tr
           td
@@ -24,9 +24,13 @@ block content
         td {{ leave }} 
         td {{ leave.leavedate_set.first.starts_at }}
         td {{ leave.leavedate_set.last.ends_at }}
+        {% if leave.created_at|date:"m-d-Y" >= leave.leavedate_set.first.starts_at|date:"m-d-Y" %}
+        td.bg-warning {{ leave.created_at }}
+        {% else %}
         td {{ leave.created_at }}
-        td 
-          a(href="{% url 'requestedleave_accept' leave.id %}") V 
-        td 
-          a(href="{% url 'requestedleave_reject' leave.id %}") X
+        {% endif %}
+        td
+          a.btn.btn-success(href="{% url 'requestedleave_accept' leave.id %}", style='text-decoration:none; color:white') V 
+        td
+          a.btn.btn-danger(href="{% url 'requestedleave_reject' leave.id %}", style='text-decoration:none; color:white') X
       {% endfor %}
