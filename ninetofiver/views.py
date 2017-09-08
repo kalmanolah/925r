@@ -76,7 +76,7 @@ def requested_leaves_view(request):
 def requested_leave_accept_view(request, pk):
     """Accepts the leave given in the params."""
     leave = models.Leave.objects.get(pk=pk)
-    leave.status = models.Leave.STATUS.ACCEPTED
+    leave.status = models.Leave.STATUS.APPROVED
     leave.save()
     return redirect('requestedleaves')
 
