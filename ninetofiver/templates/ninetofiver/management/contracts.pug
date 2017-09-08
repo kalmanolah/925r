@@ -6,7 +6,7 @@ block content
     h1 Contracts
     hr
     br
-    table.table-bordered.table-striped
+    table.table-bordered.table-striped(style='width:100%')
       thead
         tr
           td
@@ -22,7 +22,11 @@ block content
       tr
         td {{ contract }} 
         td {{ contract.customer }}
+        {% if contract.ends_at|date:"Y-m-d" == today|date:"Y-m-d" %}
+        td.bg-warning {{ contract.ends_at }}
+        {% else %}
         td {{ contract.ends_at }}
+        {% endif %}
         td 
           a(href='{% url "admin:ninetofiver_contract_change" contract.id %}') link
       {% endfor %}

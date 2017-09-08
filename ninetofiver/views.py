@@ -59,7 +59,8 @@ def management_contracts_view(request):
           )
         ).order_by('customer', 'projectcontract__ends_at', 'consultancycontract__ends_at', 'supportcontract__ends_at')
     context = {
-        'contracts': contracts
+        'contracts': contracts,
+        'today': today
     }
     return render(request, 'ninetofiver/management/contracts.pug', context)
 
