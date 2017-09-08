@@ -559,7 +559,7 @@ class MonthInfoServiceAPIView(APIView):
         data = {}
 
         try:
-            data['hours_required'] = self.total_hours_required(user_id, month)
+            data['hours_required'] = self.total_hours_required(user_id, month, year)
         except ObjectDoesNotExist as oe:
             return Response(str(oe), status=status.HTTP_400_BAD_REQUEST)
 
@@ -569,7 +569,7 @@ class MonthInfoServiceAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 
-    def total_hours_required(self, user, month):
+    def total_hours_required(self, user, month, year):
         total = 0
 
         # Calculate total hours required.
@@ -577,8 +577,6 @@ class MonthInfoServiceAPIView(APIView):
         if len(employmentcontract) == 0:
             raise ObjectDoesNotExist('No EmploymentContract object found for user with id: %s' % (str(user),))
         work_schedule = models.WorkSchedule.objects.get(pk=employmentcontract[0].work_schedule.id)
-
-        year = datetime.now().year
 
         # List that contains the amount of weekdays of the given month.
         start_date = datetime(year, month, 1)
@@ -598,7 +596,7 @@ class MonthInfoServiceAPIView(APIView):
         if len(user_info) == 0:
             raise ObjectDoesNotExist("No UserInfo object found for user with id: %s" % (str(user),))
         
-        holidays = models.Holiday.objects.filter(country=user_info[0].country).filter(date__month=month)
+        holidays = models.Holiday.objects.filter(country=user_info[0].country).filter(date__month=month, date__year=year)
         for holiday in holidays:
             weekday_holiday = holiday.date.weekday()
             total -= self.get_hours_of_weekday_from_workschedule(work_schedule, weekday_holiday)
