@@ -157,7 +157,6 @@ class LeaveAdmin(admin.ModelAdmin):
             str(leave.leave_type) + ' - ' + str(leave.description),
             'Dear %s\n\nyour %s from \n%s to %s\nhas been %s.\n\nKind regards\nAn inocent bot' % 
             (str(leave.user.first_name), str(leave.leave_type), str(leave.leavedate_set.first().starts_at.date()), str(leave.leavedate_set.last().ends_at.date()), str(status)),
-            'we_approve_leaves@yahoo.com',
             [leave.user.email],
             fail_silently=False
         )
