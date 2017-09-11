@@ -286,20 +286,14 @@ class Base(Configuration):
     REDMINE_URL = None 
     REDMINE_API_KEY = None
 
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST_USER = 'no-reply@inuits.eu'
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 class Dev(Base):
-
+  
     """Dev configuration."""
-
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    # EMAIL_USE_TLS = True
-    # EMAIL_HOST = 'localhost'
-    # EMAIL_PORT = None
-    EMAIL_HOST_USER = 'no-reply@inuits.eu'
-    # EMAIL_HOST_PASSWORD = None
-    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
     # Logging
     LOGGING = {
@@ -343,14 +337,6 @@ class Prod(Base):
   
     """Prod configuration."""
 
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_USE_TLS = True
-    EMAIL_HOST = None
-    EMAIL_PORT = None
-    EMAIL_HOST_USER = None
-    EMAIL_HOST_PASSWORD = None
-    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-    
     DEBUG = False
     ALLOWED_HOSTS = ['localhost']
 
