@@ -362,17 +362,20 @@ class TimeEntryImportServiceAPIView(APIView):
         try:
             redmine_id = models.UserInfo.objects.get(user_id=request.user.id).redmine_id
             if redmine_id:
-                redmine_time_entries = get_redmine_user_time_entries(
-                    user_id=redmine_id, 
-                    params=request.query_params
-                )
-                
+                try:
+                    redmine_time_entries = get_redmine_user_time_entries(
+                        user_id=redmine_id, 
+                        params=request.query_params
+                    )
+                except Exception as e:
+                    return Response('Something went wrong: ' + str(e), status = status.HTTP_400_BAD_REQUEST)
+
                 serializer = RedmineTimeEntrySerializer(
                     instance=redmine_time_entries, 
                     many=True
                 )
                 if serializer.data:
-                    serializer.is_valid(raise_exception=True)
+                    # serializer.is_valid(raise_exception=True)
                     return Response(serializer.data, status = status.HTTP_200_OK)
                     
                 return Response(serializer.data, status = status.HTTP_200_OK)
