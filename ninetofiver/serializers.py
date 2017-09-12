@@ -179,7 +179,7 @@ class ContractSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Contract
         fields = BaseSerializer.Meta.fields + ('label', 'description', 'company', 'customer', 'performance_types',
-                                               'active', 'contract_groups', 'hours_spent', 'attachments')
+                                               'active', 'contract_groups', 'hours_spent', 'starts_at', 'ends_at', 'attachments')
 
 
 class AdminProjectContractSerializer(ContractSerializer):
@@ -217,20 +217,20 @@ class AdminConsultancyContractSerializer(ContractSerializer):
 class ConsultancyContractSerializer(ContractSerializer):
     class Meta(ContractSerializer.Meta):
         model = models.ConsultancyContract
-        fields = ContractSerializer.Meta.fields + ('starts_at', 'ends_at', 'duration')
+        fields = ContractSerializer.Meta.fields + ('duration',)
 
 
 class AdminSupportContractSerializer(ContractSerializer):
     # Serializer that shows classified information.
     class Meta(ContractSerializer.Meta):
         model = models.SupportContract
-        fields = ContractSerializer.Meta.fields + ('starts_at', 'ends_at', 'day_rate', 'fixed_fee', 'fixed_fee_period')
+        fields = ContractSerializer.Meta.fields + ('day_rate', 'fixed_fee', 'fixed_fee_period')
 
 
 class SupportContractSerializer(ContractSerializer):
     class Meta(ContractSerializer.Meta):
         model = models.SupportContract
-        fields = ContractSerializer.Meta.fields + ('starts_at', 'ends_at',)
+        fields = ContractSerializer.Meta.fields
 
 
 class ContractRoleSerializer(BaseSerializer):

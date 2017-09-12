@@ -1638,11 +1638,14 @@ class MyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.B
         'label': 'Cool contract',
         'description': 'This is a very cool contract. B-)',
         'active': True,
+        'starts_at': now
     }
     update_data = {
         'label': 'Stupid contract',
         'description': 'This is a very stupid contract. :(',
         'active': True,
+        'starts_at': now,
+        'ends_at': datetime.date(now.year + 10, now.month, 1),
     }
 
     def setUp(self):
@@ -1655,15 +1658,19 @@ class MyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.B
         super().setUp()
 
     def get_object(self, factory):
+        logging.warning('AAAAAAAAAAALLL GUUUUUUUUUUUUUUUDDDD')
         contract = factory.create(company=self.company, customer=self.customer)
+        logging.warning('HOEZEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE')
         factories.ContractUserFactory.create(user=self.user, contract=contract, contract_role=factories.ContractRoleFactory.create())
         return contract
 
     def get_create_data(self):
+        logging.warn('Misschiene hiere?')
         self.create_data.update({
             'company': self.company.id,
             'customer': self.customer.id,
         })
+        logging.warn('OFFFFFFFFFFF hiere?')
 
         return self.create_data
 

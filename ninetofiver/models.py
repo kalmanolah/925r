@@ -641,6 +641,8 @@ class Contract(BaseModel):
     description = models.TextField(max_length=255, blank=True, null=True)
     customer = models.ForeignKey(Company, on_delete=models.PROTECT, related_name='customercontact_set')
     company = models.ForeignKey(Company, on_delete=models.PROTECT, limit_choices_to=company_choices)
+    starts_at = models.DateField()
+    ends_at = models.DateField(blank=True, null=True)
     active = models.BooleanField(default=True)
     performance_types = models.ManyToManyField(PerformanceType, blank=True)
     contract_groups = models.ManyToManyField(ContractGroup, blank=True)
@@ -665,8 +667,6 @@ class ProjectContract(Contract):
             validators.MaxValueValidator(9999999),
         ]
     )
-    starts_at = models.DateField()
-    ends_at = models.DateField()
 
     #To get the contractlabel as a var, doesn't save in model
     label = Contract.label
@@ -704,8 +704,6 @@ class ConsultancyContract(Contract):
 
     """Consultancy contract model."""
 
-    starts_at = models.DateField()
-    ends_at = models.DateField(blank=True, null=True)
     duration = models.DecimalField(
         blank=True,
         null=True,
@@ -791,8 +789,6 @@ class SupportContract(Contract):
         ]
     )
     fixed_fee_period = models.CharField(blank=True, null=True, max_length=10, choices=FIXED_FEE_PERIOD)
-    starts_at = models.DateField()
-    ends_at = models.DateField(blank=True, null=True)
 
     #To get the contractlabel as a var
     label = Contract.label
