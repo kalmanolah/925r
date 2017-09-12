@@ -524,7 +524,7 @@ class ProjectEstimateFilter(FilterSet):
 
 
 class TimesheetFilter(FilterSet):
-    order_fields = ('year', 'month', 'status')
+    order_fields = ('year', 'month', 'status', 'user')
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
@@ -533,6 +533,7 @@ class TimesheetFilter(FilterSet):
             'year': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'month': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'status': ['exact'],
+            'user__id': ['exact'],
         }
 
 
