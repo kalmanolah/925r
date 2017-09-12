@@ -194,7 +194,7 @@ class UserInfoAdmin(admin.ModelAdmin):
     def user_groups(obj):
         return format_html('<br>'.join(str(x) for x in list(obj.user.groups.all())))
 
-    list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country')
+    list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country', 'join_date')
     ordering = ('user',)
     form = UserInfoAdminForm
 

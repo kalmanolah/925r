@@ -359,6 +359,14 @@ class UserInfo(BaseModel):
         """Return a string representation."""
         return '%s [%s]' % (self.user, self.birth_date)
 
+    @property
+    def join_date(self):
+        """Returns the date of the first employmentcontract for this user."""
+        try:
+            return EmploymentContract.objects.filter(user=self.user).earliest('started_at').started_at
+        except:
+            return date.today()
+
     @classmethod
     def perform_additional_validation(cls, data, instance=None):
         """Perform additional validation on the object."""

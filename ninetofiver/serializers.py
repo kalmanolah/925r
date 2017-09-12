@@ -71,19 +71,11 @@ class UserRelativeSerializer(BaseSerializer):
 
 
 class UserInfoSerializer(BaseSerializer):
-    join_date = serializers.SerializerMethodField()
 
     class Meta(BaseSerializer.Meta):
         model = models.UserInfo
         fields = BaseSerializer.Meta.fields + ('user', 'birth_date', 'gender', 'country', 'join_date')
         read_only_fields = ('join_date', )
-
-    def get_join_date(self, obj):
-        """Returns the date of the first employmentcontract for this user."""
-        try:
-            return models.EmploymentContract.objects.filter(user=obj.user).earliest('started_at').started_at
-        except:
-            return datetime.date.today()
 
 
 class GroupSerializer(serializers.ModelSerializer):

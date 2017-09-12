@@ -209,7 +209,7 @@ class WorkScheduleFilter(FilterSet):
     
 
 class UserInfoFilter(FilterSet):
-    order_fields = ('user', 'gender', 'birth_date', 'country',)
+    order_fields = ('user', 'gender', 'birth_date', 'country',  )
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
