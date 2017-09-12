@@ -37,7 +37,7 @@ class EmploymentContractStatusFilter(admin.SimpleListFilter):
         elif self.value() == 'future':
             return queryset.filter(started_at__gte=date.today())
 
-class ConsultancyContractStatusFilter(admin.SimpleListFilter):
+class ContractStatusFilter(admin.SimpleListFilter):
     title = 'Status'
     parameter_name = 'status'
 
@@ -222,7 +222,7 @@ class ContractChildAdmin(PolymorphicChildModelAdmin):
     ]
 
 
-@admin.register(models.ProjectContract)
+# @admin.register(models.ProjectContract)
 class ProjectContractChildAdmin(ContractChildAdmin):
     base_model = models.ProjectContract
     form = ProjectContractAdminForm
@@ -234,7 +234,7 @@ class ConsultancyContractChildAdmin(ContractChildAdmin):
     form = ConsultancyContractAdminForm
 
 
-@admin.register(models.SupportContract)
+# @admin.register(models.SupportContract)
 class SupportContractChildAdmin(ContractChildAdmin):
     base_model = models.SupportContract
     form = SupportContractAdminForm
@@ -270,12 +270,40 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
 
 
 @admin.register(models.ConsultancyContract)
-class ConsultancyContract(admin.ModelAdmin):
+class ConsultancyContractAdmin(admin.ModelAdmin):
     def contract_users(self, obj):
         return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
 
     list_display = ('label', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'duration')
-    list_filter = (ConsultancyContractStatusFilter, ('company', RelatedDropdownFilter),
+    list_filter = (ContractStatusFilter, ('company', RelatedDropdownFilter),
+                   ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
+
+    inlines = [
+        ContractUserInline,
+    ]
+
+
+@admin.register(models.SupportContract)
+class SupportContractAdmin(admin.ModelAdmin):
+    def contract_users(self, obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
+
+    list_display = ('label', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'day_rate', 'fixed_fee', 'fixed_fee_period')
+    list_filter = (ContractStatusFilter, ('company', RelatedDropdownFilter),
+                   ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
+
+    inlines = [
+        ContractUserInline,
+    ]
+
+
+@admin.register(models.ProjectContract)
+class ProjectContractAdmin(admin.ModelAdmin):
+    def contract_users(self, obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
+
+    list_display = ('label', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'fixed_fee')
+    list_filter = (ContractStatusFilter, ('company', RelatedDropdownFilter),
                    ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
 
     inlines = [
