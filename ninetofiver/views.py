@@ -291,7 +291,7 @@ class TimesheetViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows timesheets to be viewed or edited.
     """
-    queryset = models.Timesheet.objects.all()
+    queryset = models.Timesheet.objects.exclude(status = models.Timesheet.STATUS.CLOSED)
     serializer_class = serializers.TimesheetSerializer
     filter_class = filters.TimesheetFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
