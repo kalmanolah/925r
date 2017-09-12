@@ -266,7 +266,7 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
     )
     search_fields = ('label', 'description', 'company__name', 'customer__name', 'contractuser__user__first_name',
                      'contractuser__user__last_name', 'contractuser__user__username', 'performance_types__label')
-    ordering = ('label', 'company', 'starts_at', 'ends_at', '-customer', 'contractuser__user__first_name', 'contractuser__user__last_name')
+    ordering = ('label', 'company', 'starts_at', 'ends_at', '-customer',)
 
 
 @admin.register(models.ConsultancyContract)
