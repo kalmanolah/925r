@@ -25,4 +25,5 @@ def get_redmine_user_time_entries(user_id, params):
         except Exception as e:
             logger.debug('Something went wrong when trying to connect to redmine: ')
             logger.debug(e)
+            raise Exception(e)
     return []
