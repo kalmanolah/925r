@@ -155,6 +155,8 @@ class ContractFactory(factory.DjangoModelFactory):
     label = factory.LazyFunction(fake.word)
     description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
     active = factory.LazyFunction(fake.boolean)
+    starts_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
+    ends_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=False, after_now=True))
 
 
 class ProjectContractFactory(ContractFactory):
@@ -162,9 +164,6 @@ class ProjectContractFactory(ContractFactory):
         model = models.ProjectContract
 
     fixed_fee = factory.LazyFunction(lambda: random.randint(0, 9999))
-    starts_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
-    ends_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=False, after_now=True))
-
 
 class ProjectEstimateFactory(factory.DjangoModelFactory):
     class Meta:
@@ -177,8 +176,6 @@ class ConsultancyContractFactory(ContractFactory):
     class Meta:
         model = models.ConsultancyContract
 
-    starts_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
-    ends_at = None
     duration = factory.LazyFunction(lambda: random.randint(0, 9999))
     day_rate = factory.LazyFunction(lambda: random.randint(0, 9999))
 
@@ -187,8 +184,6 @@ class SupportContractFactory(ContractFactory):
     class Meta:
         model = models.SupportContract
 
-    starts_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
-    ends_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=False, after_now=True))
     day_rate = factory.LazyFunction(lambda: random.randint(0, 9999))
 
 

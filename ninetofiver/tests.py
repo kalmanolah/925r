@@ -17,7 +17,7 @@ from ninetofiver import models
 
 import logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(filemode='w', filename='BONARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR.log', level=logging.WARNING)
+# logging.basicConfig(filemode='w', filename='BONARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR.log', level=logging.WARNING)
 
 import tempfile
 import datetime
@@ -1638,11 +1638,14 @@ class MyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.B
         'label': 'Cool contract',
         'description': 'This is a very cool contract. B-)',
         'active': True,
+        'starts_at': now
     }
     update_data = {
         'label': 'Stupid contract',
         'description': 'This is a very stupid contract. :(',
         'active': True,
+        'starts_at': now,
+        'ends_at': datetime.date(now.year + 10, now.month, 1),
     }
 
     def setUp(self):

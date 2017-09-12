@@ -37,7 +37,7 @@ class EmploymentContractStatusFilter(admin.SimpleListFilter):
         elif self.value() == 'future':
             return queryset.filter(started_at__gte=date.today())
 
-class ConsultancyContractStatusFilter(admin.SimpleListFilter):
+class ContractStatusFilter(admin.SimpleListFilter):
     title = 'Status'
     parameter_name = 'status'
 
@@ -194,7 +194,7 @@ class UserInfoAdmin(admin.ModelAdmin):
     def user_groups(obj):
         return format_html('<br>'.join(str(x) for x in list(obj.user.groups.all())))
 
-    list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country')
+    list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country', 'join_date')
     ordering = ('user',)
     form = UserInfoAdminForm
 
@@ -222,7 +222,7 @@ class ContractChildAdmin(PolymorphicChildModelAdmin):
     ]
 
 
-@admin.register(models.ProjectContract)
+# @admin.register(models.ProjectContract)
 class ProjectContractChildAdmin(ContractChildAdmin):
     base_model = models.ProjectContract
     form = ProjectContractAdminForm
@@ -234,7 +234,7 @@ class ConsultancyContractChildAdmin(ContractChildAdmin):
     form = ConsultancyContractAdminForm
 
 
-@admin.register(models.SupportContract)
+# @admin.register(models.SupportContract)
 class SupportContractChildAdmin(ContractChildAdmin):
     base_model = models.SupportContract
     form = SupportContractAdminForm
@@ -254,8 +254,8 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
 
     base_model = models.Contract
     child_models = (models.ProjectContract, models.ConsultancyContract, models.SupportContract)
-    list_display = ('__str__', 'label', 'company', 'customer', 'contract_users',
-                    performance_types, 'description', 'active', 'attachment')
+    list_display = ('active', '__str__', 'label', 'company', 'customer', 'contract_users',
+                    performance_types, 'starts_at', 'ends_at', 'description', 'attachment')
     list_filter = (
         PolymorphicChildModelFilter, 
         ('company', RelatedDropdownFilter),
@@ -266,16 +266,44 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
     )
     search_fields = ('label', 'description', 'company__name', 'customer__name', 'contractuser__user__first_name',
                      'contractuser__user__last_name', 'contractuser__user__username', 'performance_types__label')
-    ordering = ('label', 'company', '-customer', 'contractuser__user__first_name', 'contractuser__user__last_name')
+    ordering = ('label', 'company', 'starts_at', 'ends_at', '-customer', 'contractuser__user__first_name', 'contractuser__user__last_name')
 
 
 @admin.register(models.ConsultancyContract)
-class ConsultancyContract(admin.ModelAdmin):
+class ConsultancyContractAdmin(admin.ModelAdmin):
     def contract_users(self, obj):
         return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
 
     list_display = ('label', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'duration')
-    list_filter = (ConsultancyContractStatusFilter, ('company', RelatedDropdownFilter),
+    list_filter = (ContractStatusFilter, ('company', RelatedDropdownFilter),
+                   ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
+
+    inlines = [
+        ContractUserInline,
+    ]
+
+
+@admin.register(models.SupportContract)
+class SupportContractAdmin(admin.ModelAdmin):
+    def contract_users(self, obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
+
+    list_display = ('label', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'day_rate', 'fixed_fee', 'fixed_fee_period')
+    list_filter = (ContractStatusFilter, ('company', RelatedDropdownFilter),
+                   ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
+
+    inlines = [
+        ContractUserInline,
+    ]
+
+
+@admin.register(models.ProjectContract)
+class ProjectContractAdmin(admin.ModelAdmin):
+    def contract_users(self, obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
+
+    list_display = ('label', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'fixed_fee')
+    list_filter = (ContractStatusFilter, ('company', RelatedDropdownFilter),
                    ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
 
     inlines = [
