@@ -17,7 +17,7 @@ from ninetofiver import models
 
 import logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(filemode='w', filename='BONARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR.log', level=logging.WARNING)
+# logging.basicConfig(filemode='w', filename='BONARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR.log', level=logging.WARNING)
 
 import tempfile
 import datetime
@@ -1658,19 +1658,15 @@ class MyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.B
         super().setUp()
 
     def get_object(self, factory):
-        logging.warning('AAAAAAAAAAALLL GUUUUUUUUUUUUUUUDDDD')
         contract = factory.create(company=self.company, customer=self.customer)
-        logging.warning('HOEZEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE')
         factories.ContractUserFactory.create(user=self.user, contract=contract, contract_role=factories.ContractRoleFactory.create())
         return contract
 
     def get_create_data(self):
-        logging.warn('Misschiene hiere?')
         self.create_data.update({
             'company': self.company.id,
             'customer': self.customer.id,
         })
-        logging.warn('OFFFFFFFFFFF hiere?')
 
         return self.create_data
 
