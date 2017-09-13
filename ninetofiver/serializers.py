@@ -276,13 +276,17 @@ class PerformanceSerializer(BaseSerializer):
     def update(self, instance, validated_data):
         user = self.context['request'].user
         if not user.is_staff and not user.is_superuser:
+            if instance.timesheet.user != user.id:
+                raise serializers.ValidationError('Only admins are allowed to update performances from other users.')
             if instance.timesheet.status == models.Timesheet.STATUS.PENDING:
-                raise serializers.ValidationError('Only admins are allowed to update performances attached to pending timesheets')
+                raise serializers.ValidationError('Only admins are allowed to update performances attached to pending timesheets.')
         return super().update(instance, validated_data)
 
     def partial_update(self, instance, validated_data):
         user = self.context['request'].user
         if not user.is_staff and not user.is_superuser:
+            if instance.timesheet.user != user.id:
+                raise serializers.ValidationError('Only admins are allowed to update performances from other users.')
             if instance.timesheet.status == models.Timesheet.STATUS.PENDING:
                 raise serializers.ValidationError('Only admins are allowed to update performances attached to pending timesheets.')
         return super().partial_update(instance, validated_data)
