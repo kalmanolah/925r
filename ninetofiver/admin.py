@@ -254,7 +254,7 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
 
     base_model = models.Contract
     child_models = (models.ProjectContract, models.ConsultancyContract, models.SupportContract)
-    list_display = ('active', '__str__', 'label', 'company', 'customer', 'contract_users',
+    list_display = ('label', 'active', '__str__', 'company', 'customer', 'contract_users',
                     performance_types, 'starts_at', 'ends_at', 'description', 'attachment')
     list_filter = (
         PolymorphicChildModelFilter, 
