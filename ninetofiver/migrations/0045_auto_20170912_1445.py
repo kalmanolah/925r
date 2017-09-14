@@ -12,40 +12,83 @@ class Migration(migrations.Migration):
         ('ninetofiver', '0044_remove_userinfo_join_date'),
     ]
 
+    def move_info_to_class_contract(apps, schema_editor):
+        consultancycontract = apps.get_model('ninetofiver', 'consultancycontract')
+        supportcontract = apps.get_model('ninetofiver', 'supportcontract')
+        projectcontract = apps.get_model('ninetofiver', 'projectcontract')
+
+        contract = apps.get_model('ninetofiver', 'contract')
+
+        consult_objs = consultancycontract.objects.all()
+
+        for consult_obj in consult_objs:
+            d = contract.objects.get(pk=consult_obj.id)
+            d.starts_at_temp=consult_obj.starts_at 
+            d.ends_at_temp=consult_obj.ends_at
+            d.save()
+
+        support_objs = supportcontract.objects.all()
+
+        for support_obj in support_objs:
+            d = contract.objects.get(pk=support_obj.id)
+            d.starts_at_temp=support_obj.starts_at 
+            d.ends_at_temp=support_obj.ends_at
+            d.save()
+
+        project_objs = projectcontract.objects.all()
+
+        for project_obj in project_objs:
+            d = contract.objects.get(pk=project_obj.id)
+            d.starts_at_temp=project_obj.starts_at 
+            d.ends_at_temp=project_obj.ends_at
+            d.save()
+
+
     operations = [
-        migrations.RemoveField(
-            model_name='consultancycontract',
-            name='ends_at',
-        ),
-        migrations.RemoveField(
-            model_name='consultancycontract',
-            name='starts_at',
-        ),
-        migrations.RemoveField(
-            model_name='projectcontract',
-            name='ends_at',
-        ),
-        migrations.RemoveField(
-            model_name='projectcontract',
-            name='starts_at',
-        ),
-        migrations.RemoveField(
-            model_name='supportcontract',
-            name='ends_at',
-        ),
-        migrations.RemoveField(
-            model_name='supportcontract',
-            name='starts_at',
-        ),
         migrations.AddField(
             model_name='contract',
-            name='ends_at',
+            name='ends_at_temp',
             field=models.DateField(blank=True, null=True),
         ),
         migrations.AddField(
             model_name='contract',
-            name='starts_at',
-            field=models.DateField(default=datetime.date(2017, 9, 12)),
+            name='starts_at_temp',
+            field=models.DateField(default=datetime.date(2000, 9, 12)),
             preserve_default=False,
         ),
+        migrations.RunPython(move_info_to_class_contract),
+        migrations.RemoveField(
+            model_name='consultancycontract',
+            name='ends_at',
+        ),
+        migrations.RemoveField(
+            model_name='consultancycontract',
+            name='starts_at',
+        ),
+        migrations.RemoveField(
+            model_name='projectcontract',
+            name='ends_at',
+        ),
+        migrations.RemoveField(
+            model_name='projectcontract',
+            name='starts_at',
+        ),
+        migrations.RemoveField(
+            model_name='supportcontract',
+            name='ends_at',
+        ),
+        migrations.RemoveField(
+            model_name='supportcontract',
+            name='starts_at',
+        ),
+        migrations.RenameField(
+            model_name='contract',
+            old_name='starts_at_temp',
+            new_name='starts_at'
+        ),
+        migrations.RenameField(
+            model_name='contract',
+            old_name='ends_at_temp',
+            new_name='ends_at'
+        )
     ]
