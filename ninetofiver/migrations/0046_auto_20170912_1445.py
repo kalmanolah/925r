@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
     def assign_users_to_group(apps, schema_editor):
         from django.contrib.auth.models import Group
         from django.contrib.auth.models import User
-        g = Group.objects.get_or_create(name='everyone')
+        g, created = Group.objects.get_or_create(name='everyone')
         users = User.objects.all()
 
         for user in users:
