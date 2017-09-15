@@ -281,6 +281,7 @@ class ConsultancyContractAdmin(admin.ModelAdmin):
     inlines = [
         ContractUserInline,
     ]
+    form = ConsultancyContractAdminForm
 
 
 @admin.register(models.SupportContract)
@@ -295,6 +296,7 @@ class SupportContractAdmin(admin.ModelAdmin):
     inlines = [
         ContractUserInline,
     ]
+    form = SupportContractAdminForm
 
 
 @admin.register(models.ProjectContract)
@@ -309,6 +311,8 @@ class ProjectContractAdmin(admin.ModelAdmin):
     inlines = [
         ContractUserInline,
     ]
+    form = ProjectContractAdminForm
+
 
 @admin.register(models.ContractRole)
 class ContractRoleAdmin(admin.ModelAdmin):
