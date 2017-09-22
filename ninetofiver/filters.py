@@ -396,7 +396,7 @@ class ContractFilter(FilterSet):
         return queryset.filter(contractuser__user__id__iexact=value).distinct()
 
     contractuser__user__id = django_filters.NumberFilter(method='contract_user_id_distinct')
-    contract_date__range=django_filters.CharFilter(method='contract_range_distinct')
+    contract__ends_at__range=django_filters.CharFilter(method='contract_range_distinct')
     order_fields = ('label', 'description', 'active', 'contractuser__user__username', 'contractuser__user__first_name',
         'contractuser__user__last_name', 'contractuser__user__groups', 'company__vat_identification_number', 'customer__vat_identification_number',
         'company__name', 'customer__name', 'company__country', 'customer_country', 'company__internal', 'customer__internal',
