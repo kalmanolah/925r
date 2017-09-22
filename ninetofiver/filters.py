@@ -67,12 +67,12 @@ class NullLastOrderingFilter(django_filters.OrderingFilter):
         return qs
 
 
-class UserFilter(FilterSet):    
-    
+class UserFilter(FilterSet):
+
     # Custom method to see if user is active on specific day
     def filter_active_day(self, queryset, name, value):
         fl = 'gt' if value else 'lte'
-    
+
         lookup = '__'.join(['employmentcontract', 'work_schedule', name, fl])
         return queryset.filter(**{lookup: 0})
 
@@ -90,7 +90,7 @@ class UserFilter(FilterSet):
     active_saturday = django_filters.BooleanFilter(name='saturday', method='filter_active_day')
     active_sunday = django_filters.BooleanFilter(name='sunday', method='filter_active_day')
 
-    order_fields = ('username', 'email', 'first_name', 'last_name', 'groups', 'userrelative__name', 
+    order_fields = ('username', 'email', 'first_name', 'last_name', 'groups', 'userrelative__name',
         'userinfo__gender', 'userinfo__country', 'userinfo__birth_date', 'employmentcontract__started_at',
         'employmentcontract__ended_at', 'employmentcontract__company__name', 'employmentcontract__work_schedule__label',
         'employmentcontract__employment_contract_type__label', 'leave__leavedate__starts_at', 'leave__leavedate__ends_at',
@@ -161,14 +161,16 @@ class EmploymentContractFilter(FilterSet):
     def is_empl_contr_active(self, queryset, name, value):
         """Checks if the enddate is either null or gte now."""
 
-        if value:
+        if value is True:
             return queryset.filter(
-                Q(ended_at__isnull = True) | Q(ended_at__gt = datetime.now())
+                Q(ended_at__isnull=True) | Q(ended_at__gt=datetime.now())
+            )
+        elif value is False:
+            return queryset.filter(
+                Q(ended_at__isnull=False) & Q(ended_at__lte=datetime.now())
             )
         else:
-            return queryset.filter(
-                Q(ended_at__isnull = False) & Q(ended_at__lte = datetime.now())
-            )
+            return queryset
 
     is_active = django_filters.BooleanFilter(method='is_empl_contr_active')
 
@@ -206,7 +208,7 @@ class WorkScheduleFilter(FilterSet):
         fields = {
             'label': ['exact', 'contains', 'icontains'],
         }
-    
+
 
 class UserInfoFilter(FilterSet):
     order_fields = ('user', 'gender', 'birth_date', 'country',  )
@@ -282,7 +284,7 @@ class LeaveFilter(FilterSet):
 
     def leavedate_range_distinct(self, queryset, name, value):
         """Filters distinct leavedates between a given range."""
-        
+
         # Validate input.
         try:
             # Split value.
@@ -363,7 +365,7 @@ class ContractFilter(FilterSet):
 
     def contract_range_distinct(self, queryset, name, value):
         """Filters distinct contracts between a given range."""
-        
+
         # Validate input.
         try:
             # Split value.
@@ -431,7 +433,7 @@ class ContractFilter(FilterSet):
 class ProjectContractFilter(ContractFilter):
     order_fields = ContractFilter.order_fields + ('fixed_fee', 'starts_at', 'ends_at')
     order_by = NullLastOrderingFilter(fields = order_fields)
-    
+
     class Meta(ContractFilter.Meta):
         model = models.ProjectContract
         fields = merge_dicts(ContractFilter.Meta.fields, {
@@ -515,7 +517,7 @@ class ProjectEstimateFilter(FilterSet):
 
     class Meta:
         model = models.ProjectEstimate
-        fields = {            
+        fields = {
             'hours_estimated': ['exact', 'gt', 'gte', 'lt', 'lte', ],
             'role__label': ['exact', 'contains', 'icontains', ],
             'project__label': ['exact', 'contains', 'icontains', ],
