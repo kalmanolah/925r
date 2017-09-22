@@ -648,6 +648,7 @@ class Contract(BaseModel):
     contract_groups = models.ManyToManyField(ContractGroup, blank=True)
     attachments = models.ManyToManyField(Attachment, blank=True)
     redmine_id = models.CharField(max_length=255, blank=True, null=True)
+    external_only = models.BooleanField(default=False)
     
     def __str__(self):
         """Return a string representation."""

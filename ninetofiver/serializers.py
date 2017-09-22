@@ -179,7 +179,8 @@ class ContractSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Contract
         fields = BaseSerializer.Meta.fields + ('label', 'description', 'company', 'customer', 'performance_types',
-                                               'active', 'contract_groups', 'hours_spent', 'starts_at', 'ends_at', 'attachments')
+                                               'active', 'contract_groups', 'hours_spent', 'starts_at', 'ends_at',
+                                               'attachments', 'redmine_id', 'external_only', )
 
 
 class AdminProjectContractSerializer(ContractSerializer):
