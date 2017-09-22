@@ -1,6 +1,6 @@
 import django_filters
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from django.db.models import Q
 
 from collections import Counter
@@ -15,6 +15,7 @@ from django.core.exceptions import ValidationError
 
 import logging
 logger = logging.getLogger(__name__)
+
 
 class IsNull(Func):
     template = '%(expressions)s IS NULL'
@@ -164,11 +165,11 @@ class EmploymentContractFilter(FilterSet):
         if value is True:
             return queryset.filter(
                 Q(ended_at__isnull=True) | Q(ended_at__gt=datetime.now())
-            )
+            ).distinct()
         elif value is False:
             return queryset.filter(
                 Q(ended_at__isnull=False) & Q(ended_at__lte=datetime.now())
-            )
+            ).distinct()
         else:
             return queryset
 
@@ -181,7 +182,7 @@ class EmploymentContractFilter(FilterSet):
         model = models.EmploymentContract
         fields = {
             'started_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
-            'ended_at': ['exact', 'gt', 'gte', 'lt', 'lte',],
+            'ended_at': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'user': ['exact'],
         }
 
@@ -190,18 +191,24 @@ class WorkScheduleFilter(FilterSet):
     order_fields = ('label',)
     order_by = NullLastOrderingFilter(fields=order_fields)
 
-    def get_current_work_schedule(self, queryset, name, value):
-        """Checks if the workschedule is the one that is currently active."""
-        if value:
-            return queryset.filter(
-                Q(employmentcontract__ended_at__isnull=True) | Q(employmentcontract__ended_at__gt=datetime.now())
-            ).distinct()
-        else:
-            return queryset.filter(
-                Q(employmentcontract__ended_at__isnull=False) & Q(employmentcontract__ended_at__lte=datetime.now())
-            ).distinct()
+    # def get_current_work_schedule(self, queryset, name, value):
+    #     """Checks if the workschedule is the one that is currently active."""
+    #
+    #     if value is True:
+    #         return queryset.filter(
+    #             Q(employmentcontract__ended_at__isnull=True)
+    #             or
+    #             Q(employmentcontract__ended_at__gt=datetime.now())
+    #         ).distinct()
+    #     elif value is False:
+    #         return queryset.filter(
+    #             Q(employmentcontract__ended_at__isnull=False)
+    #             & Q(employmentcontract__ended_at__lte=datetime.now())
+    #         ).distinct()
+    #     else:
+    #         return queryset
 
-    current = django_filters.BooleanFilter(method='get_current_work_schedule')
+    # current = django_filters.BooleanFilter(method='get_current_work_schedule')
 
     class Meta:
         model = models.WorkSchedule
@@ -211,13 +218,13 @@ class WorkScheduleFilter(FilterSet):
 
 
 class UserInfoFilter(FilterSet):
-    order_fields = ('user', 'gender', 'birth_date', 'country',  )
+    order_fields = ('user', 'gender', 'birth_date', 'country', )
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
         model = models.UserInfo
         fields = {
-            'redmine_id': ['exact',],
+            'redmine_id': ['exact'],
             'birth_date': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'gender': ['exact'],
             'country': ['iexact', ],
@@ -291,7 +298,7 @@ class LeaveFilter(FilterSet):
             values = value.split(',')
             start_date = datetime.strptime(values[0], "%Y-%m-%dT%H:%M:%S")
             end_date = datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S")
-        except:
+        except Exception as e:
             # Raise validation error.
             raise ValidationError('Datetimes have to be in the correct \'YYYY-MM-DDTHH:mm:ss\' format.')
 
@@ -379,7 +386,9 @@ class ContractFilter(FilterSet):
         # Filter distinct using range.
         # return queryset.filter(consultancycontract__starts_at__range=(start_date, end_date))
         return queryset.filter(
-            Q(consultancycontract__starts_at__range=(start_date, end_date)) | Q(projectcontract__starts_at__range=(start_date, end_date)) | Q(supportcontract__starts_at__range=(start_date, end_date))
+            Q(consultancycontract__starts_at__range=(start_date, end_date))
+            | Q(projectcontract__starts_at__range=(start_date, end_date))
+            | Q(supportcontract__starts_at__range=(start_date, end_date))
         )
 
     def contract_user_id_distinct(self, queryset, name, value):
@@ -505,14 +514,14 @@ class ContractUserFilter(FilterSet):
     class Meta:
         model = models.ContractUser
         fields = {
-            'contract': ['exact',],
+            'contract': ['exact'],
             'user': ['exact'],
             'user__is_active': ['exact']
         }
 
 
 class ProjectEstimateFilter(FilterSet):
-    order_fields = ( 'hours_estimated', 'role__label', 'project__label', 'project__description', )
+    order_fields = ('hours_estimated', 'role__label', 'project__label', 'project__description',)
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
