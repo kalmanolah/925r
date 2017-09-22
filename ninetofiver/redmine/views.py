@@ -2,7 +2,8 @@ import logging
 
 from redminelib import Redmine
 from ninetofiver.settings import REDMINE_URL, REDMINE_API_KEY
-from ninetofiver.models import Performance
+from django.contrib.auth import models as auth_models
+from ninetofiver.models import Performance, Timesheet
 from datetime import datetime
 from requests.exceptions import ConnectionError
 
@@ -15,7 +16,7 @@ def get_redmine_user_time_entries(user_id, params):
             redmine_time_entries = redmine.time_entry.filter(user_id=user_id)
             today = datetime.now()
             # Filter out time entries not in the current month.
-            redmine_time_entries = list(filter(lambda x: x['spent_on'].month == int(today.month), redmine_time_entries))
+            redmine_time_entries = list(filter(lambda x: x['spent_on'].month == int(today.month) or x['spent_on'].month == int(today.month - 1), redmine_time_entries))
             # Filter out time entries that are already imported.
             if params['filter_imported'] == 'true':
                 redmine_time_entries = list(filter(lambda x: not Performance.objects.filter(redmine_id=x.id).first(), redmine_time_entries))

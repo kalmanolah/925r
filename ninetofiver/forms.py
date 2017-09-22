@@ -67,7 +67,7 @@ class ProjectContractAdminForm(forms.ModelForm):
     )
     class Meta:
         model = models.ProjectContract
-        fields = ['label', 'description', 'customer', 'company', 'active', 'performance_types', 'contract_groups', 'attachments', 'redmine_id', 'fixed_fee', 'starts_at', 'ends_at']
+        fields = ['label', 'description', 'customer', 'company', 'active', 'performance_types', 'contract_groups', 'attachments', 'redmine_id', 'external_only', 'fixed_fee', 'starts_at', 'ends_at']
 
 
 class ConsultancyContractAdminForm(forms.ModelForm):
@@ -76,7 +76,7 @@ class ConsultancyContractAdminForm(forms.ModelForm):
     )
     class Meta:
         model = models.ConsultancyContract
-        fields = ['label', 'description', 'customer', 'company', 'active', 'performance_types', 'contract_groups', 'attachments', 'redmine_id', 'starts_at', 'ends_at', 'duration', 'day_rate']
+        fields = ['label', 'description', 'customer', 'company', 'active', 'performance_types', 'contract_groups', 'attachments', 'redmine_id', 'external_only', 'starts_at', 'ends_at', 'duration', 'day_rate']
 
 
 class SupportContractAdminForm(forms.ModelForm):
@@ -85,7 +85,7 @@ class SupportContractAdminForm(forms.ModelForm):
     )
     class Meta:
         model = models.SupportContract
-        fields = ['label', 'description', 'customer', 'company', 'active', 'performance_types', 'contract_groups', 'attachments', 'redmine_id', 'day_rate', 'fixed_fee', 'fixed_fee_period', 'starts_at', 'ends_at']
+        fields = ['label', 'description', 'customer', 'company', 'active', 'performance_types', 'contract_groups', 'attachments', 'redmine_id', 'external_only', 'day_rate', 'fixed_fee', 'fixed_fee_period', 'starts_at', 'ends_at']
 
 
 class WorkScheduleAdminForm(forms.ModelForm):
