@@ -364,20 +364,20 @@ class TimeEntryImportServiceAPIView(APIView):
             if redmine_id:
                 try:
                     redmine_time_entries = get_redmine_user_time_entries(
-                        user_id=redmine_id, 
+                        user_id=redmine_id,
                         params=request.query_params
                     )
                 except Exception as e:
                     return Response('Something went wrong: ' + str(e), status = status.HTTP_400_BAD_REQUEST)
 
                 serializer = RedmineTimeEntrySerializer(
-                    instance=redmine_time_entries, 
+                    instance=redmine_time_entries,
                     many=True
                 )
                 if serializer.data:
                     # serializer.is_valid(raise_exception=True)
                     return Response(serializer.data, status = status.HTTP_200_OK)
-                    
+
                 return Response(serializer.data, status = status.HTTP_200_OK)
             else:
                 return Response('Redmine_id for the current user has not been found.', status = status.HTTP_404_NOT_FOUND)
@@ -392,7 +392,7 @@ class MonthlyAvailabilityServiceAPIView(APIView):
     Special events are: working from home, sickness leave, normal leave, nonWorkingDay based on workschedule.
     """
     permission_classes = (permissions.IsAuthenticated,)
-        
+
     def determineWorkSchedule(self, user, period, employmentcontracts, result_dict):
         """Determines the workschedule for each employmentcontract and creates the array accordingly."""
         ec_length = len(employmentcontracts)
@@ -425,7 +425,7 @@ class MonthlyAvailabilityServiceAPIView(APIView):
 
             # Days without empl_contr
             for day in no_empl_contr:
-                
+
                 if ec_length > 1 and len(no_empl_contr[day]) == ec_length:
                     if user.id not in result_dict['nonWorkingday']:
                         result_dict['nonWorkingday'][user.id] = []
@@ -478,7 +478,7 @@ class MonthlyAvailabilityServiceAPIView(APIView):
 
 
     def determineLeaveDays(self, user, period, timesheet, result_dict):
-        """Determines whether the user has a leave coming up this month."""    
+        """Determines whether the user has a leave coming up this month."""
         if len(timesheet) > 0:
             ts = timesheet[0]
 
@@ -579,7 +579,8 @@ class MonthInfoServiceAPIView(APIView):
         employmentcontract = models.EmploymentContract.objects.filter(user=int(user))
         if len(employmentcontract) == 0:
             raise ObjectDoesNotExist('No EmploymentContract object found for user with id: %s' % (str(user),))
-        work_schedule = models.WorkSchedule.objects.get(pk=employmentcontract[0].work_schedule.id)
+
+        wschedule = models.WorkSchedule.objects.get(pk=employmentcontract[0].work_schedule.id)
 
         # List that contains the amount of weekdays of the given month.
         start_date = datetime(year, month, 1)
@@ -589,29 +590,38 @@ class MonthInfoServiceAPIView(APIView):
         for i in range((end_date - start_date).days + 1):
             day = (start_date + timedelta(days=i)).weekday()
             days_count[day] = days_count[day] + 1 if day in days_count else 1
-            
+
         # Caluculate total hours required to work according to work schedule.
         for weekday in range(7):
-            total+=(self.get_hours_of_weekday_from_workschedule(work_schedule, weekday) * days_count[weekday])
-        
+            total += (self.get_weekday_whours(wschedule, weekday) * days_count[weekday])
+
         # Subtract holdays from total.
         user_info = models.UserInfo.objects.filter(user_id=user)
         if len(user_info) == 0:
             raise ObjectDoesNotExist("No UserInfo object found for user with id: %s" % (str(user),))
-        
+
         holidays = models.Holiday.objects.filter(country=user_info[0].country).filter(date__month=month, date__year=year)
         for holiday in holidays:
             weekday_holiday = holiday.date.weekday()
-            total -= self.get_hours_of_weekday_from_workschedule(work_schedule, weekday_holiday)
+            total -= self.get_weekday_whours(wschedule, weekday_holiday)
 
         RANGE_START = timezone.make_aware(datetime(year, month, 1, 0, 0, 0, 0), timezone.get_current_timezone())
         RANGE_END = timezone.make_aware(datetime(year, month, monthrange(year, month)[1], 0, 0, 0), timezone.get_current_timezone())
 
         # Get all approved leaves of the user.
         leaves = models.Leave.objects.filter(user_id=user, status=models.Leave.STATUS.APPROVED)
+
         # Filter out those who don't start or end in the current month.
-        result = list(filter(lambda x: (x.leavedate_set.first().starts_at >= RANGE_START and x.leavedate_set.first().starts_at <= RANGE_END) or (x.leavedate_set.last().starts_at >= RANGE_START and x.leavedate_set.last().starts_at <= RANGE_END), leaves))
-        
+        result = list(filter(
+            lambda x: (
+                x.leavedate_set.first().starts_at >= RANGE_START
+                and x.leavedate_set.first().starts_at <= RANGE_END
+            ) or (
+                x.leavedate_set.last().starts_at >= RANGE_START
+                and x.leavedate_set.last().starts_at <= RANGE_END
+            ), leaves
+        ))
+
         # Subtract leaves from total.
         for leave in result:
             leavedates = leave.leavedate_set.all()
@@ -620,16 +630,22 @@ class MonthInfoServiceAPIView(APIView):
 
             # check if leave is only one day
             if first_leavedate == last_leavedate:
-                # calculate how many hours are in leave
+
+                # Calculate hours in leave and set max to workschedule
                 hours = first_leavedate.ends_at - first_leavedate.starts_at
+                whours_ldate = self.get_weekday_whours(wschedule, first_leavedate.starts_at.weekday())
+
+                if hours.total_seconds() > whours_ldate * 3600:
+                    hours = timedelta(seconds=int(whours_ldate*3600))
+
                 # get the weekday of the leave and subtract the leavehours from te corresponding day in worschedule
                 weekday = first_leavedate.starts_at.weekday()
-                total-=Decimal((hours.total_seconds() / 3600))
+                total -= Decimal((hours.total_seconds() / 3600))
             else:
                 for leave in leavedates:
                     weekday = leave.starts_at.weekday()
-                    total-=(self.get_hours_of_weekday_from_workschedule(work_schedule, weekday))
-        
+                    total -= (self.get_weekday_whours(wschedule, weekday))
+
         return Decimal(round(total, 1))
 
     def hours_performed(self, user, month, year):
@@ -642,19 +658,19 @@ class MonthInfoServiceAPIView(APIView):
             total += Decimal(performance.duration)
         return Decimal(total)
 
-    def get_hours_of_weekday_from_workschedule(self, work_schedule, weekday):
-        # gets a work_schedule and a weekday and returns the corresponding hours
+    # Gets a work_schedule and a weekday and returns the corresponding hours
+    def get_weekday_whours(self, ws, weekday):
         work_schedule_list = [
-            work_schedule.monday,
-            work_schedule.tuesday,
-            work_schedule.wednesday,
-            work_schedule.thursday,
-            work_schedule.friday,
-            work_schedule.saturday,
-            work_schedule.sunday
+            ws.monday,
+            ws.tuesday,
+            ws.wednesday,
+            ws.thursday,
+            ws.friday,
+            ws.saturday,
+            ws.sunday
         ]
         return work_schedule_list[weekday]
-            
+
 
 class MyUserServiceAPIView(APIView):
     """
@@ -676,31 +692,36 @@ class MyLeaveRequestService(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def calculate_end(self, user, start, end):
-        """Calculcate the end_date's time, based off of the workschedule's hours & minutes for that day."""
+        """
+        Calculcate the end_date's time, based off of the workschedule's hours & minutes for that day.
+        """
 
-        #Get the current workschedule, based off of the active employmentcontract
+        # Get current workschedule, based off of the active employmentcontract
         ec = models.EmploymentContract.objects.get(
-            Q(user = user),
-            Q(ended_at__isnull = True)  | Q(ended_at__gte = datetime.now())
+            Q(user=user),
+            Q(ended_at__isnull=True)
+            | Q(ended_at__gte=datetime.now())
         )
-        ws = models.WorkSchedule.objects.get(employmentcontract = ec).__dict__
+        ws = models.WorkSchedule.objects.get(employmentcontract=ec).__dict__
 
-        #Get the hours of required work, count from midnight to those hours
+        # Get the hours of required work, count from midnight to those hours
         working_day = ws[start.strftime('%A').lower()]
-        working_hours = int(working_day) 
+        working_hours = int(working_day)
         working_minutes = (working_day - working_hours) * 60
 
         return end.replace(
-            year=(start.year), 
-            month=(start.month), 
-            day=(start.day), 
-            hour=working_hours, 
+            year=(start.year),
+            month=(start.month),
+            day=(start.day),
+            hour=working_hours,
             minute=working_minutes,
             second=(1)
         )
 
     def create_leavedates(self, this, request, leave):
-        """ Used to handle logic and return the correct response. """
+        """
+        Used to handle logic and return the correct response.
+        """
         user = request.user
         data = request.data
 
@@ -721,23 +742,23 @@ class MyLeaveRequestService(generics.GenericAPIView):
             elif data['full_day'] == 'true':
                 full_day = True
 
-            #If the leave isn't flagged as full_day
-            if  start.date() == end.date() and not full_day:
+            # If the leave isn't flagged as full_day
+            if start.date() == end.date() and not full_day:
                 timesheet, created = models.Timesheet.objects.get_or_create(
                     user=user,
                     year=start.year,
                     month=start.month
                 )
 
-                #Create leavedate
+                # Create leavedate
                 ld = models.LeaveDate(
-                    leave = leave,
-                    timesheet = timesheet,
-                    starts_at = start,
-                    ends_at = end
+                    leave=leave,
+                    timesheet=timesheet,
+                    starts_at=start,
+                    ends_at=end
                 )
 
-                #Validate & save
+                # Validate & save
                 ld.full_clean()
                 ld.save()
 
@@ -752,9 +773,9 @@ class MyLeaveRequestService(generics.GenericAPIView):
                     'starts_at': start,
                     'ends_at': end
                 }
-                return Response(return_dict, status = status.HTTP_201_CREATED)
+                return Response(return_dict, status=status.HTTP_201_CREATED)
 
-            #If the leave is flagged as full_day
+            # If the leave is flagged as full_day
             elif full_day and start.date() != end.date():
                 try:
                     new_start = start.replace(
@@ -822,9 +843,9 @@ class MyLeaveRequestService(generics.GenericAPIView):
                         'timesheet': temp.timesheet_id,
                         'starts_at': temp.starts_at,
                         'ends_at': temp.ends_at
-                    }) 
+                    })
 
-                    #Set time to original end when second to last has run
+                    # Set time to original end when second to last has run
                     if x <= days - 2:
                         try:
                             new_start += timedelta(days=1)
