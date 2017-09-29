@@ -942,7 +942,7 @@ class Performance(BaseModel):
         ]
     )
     redmine_id = models.CharField(max_length=255, blank=True, null=True)
-    contract = models.ForeignKey(Contract, on_delete=models.PROTECT)
+    contract = models.ForeignKey(Contract, on_delete=models.PROTECT, null=True)
 
     def __str__(self):
         """Return a string representation."""
