@@ -284,7 +284,6 @@ class ContractUserInline(admin.TabularInline):
 @admin.register(models.ContractGroup)
 class ContractGroupAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'label', )
-    ordering = ('label', )
 
 
 class ContractChildAdmin(PolymorphicChildModelAdmin):
@@ -334,6 +333,8 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
         ('customer', RelatedDropdownFilter),
         ('contractuser', RelatedDropdownFilter),
         ('performance_types', RelatedDropdownFilter),
+        ('starts_at', DateRangeFilter),
+        ('ends_at', DateRangeFilter),
         'active'
     )
     search_fields = ('label', 'description', 'company__name', 'customer__name', 'contractuser__user__first_name',

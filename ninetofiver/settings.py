@@ -119,6 +119,7 @@ class Base(Configuration):
                 ],
                 'loaders': [
                     ('pypugjs.ext.django.Loader', (
+                        'apptemplates.Loader',
                         'django.template.loaders.filesystem.Loader',
                         'django.template.loaders.app_directories.Loader',
                     )),
