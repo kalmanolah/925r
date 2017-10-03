@@ -74,7 +74,7 @@ class UserInfoSerializer(BaseSerializer):
 
     class Meta(BaseSerializer.Meta):
         model = models.UserInfo
-        fields = BaseSerializer.Meta.fields + ('user', 'birth_date', 'gender', 'country', 'join_date')
+        fields = BaseSerializer.Meta.fields + ('user', 'birth_date', 'gender', 'country', 'join_date', 'redmine_id')
         read_only_fields = ('join_date', )
 
 
