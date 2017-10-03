@@ -91,6 +91,14 @@ urlpatterns += [
     url(r'^accounts/password/change/$', auth_views.password_change, {'template_name': 'ninetofiver/account/password_change.pug'}, name='password_change'),
     url(r'^accounts/password/change/done/$', auth_views.password_change_done, {'template_name': 'ninetofiver/account/password_change_done.pug'}, name='password_change_done'),
 
+    # Requested Leaves
+    url(r'^requestedleaves/$', views.requested_leaves_view, name='requestedleaves'),
+    url(r'^requestedLeave/accept/(?P<pk>\d+)$', views.requested_leave_accept_view, name='requestedleave_accept'),
+    url(r'^requestedLeave/reject/(?P<pk>\d+)$', views.requested_leave_reject_view, name='requestedleave_reject'),
+
+    # Management
+    url(r'^management/contracts/$', views.management_contracts_view, name='managementcontracts'),
+
     # Auth
     url(r'^auth/login/$', auth_views.login, {'template_name': 'ninetofiver/authentication/login.pug'}, name='login'),
     url(r'^auth/logout/$', auth_views.logout, {'template_name': 'ninetofiver/authentication/logout.pug'}, name='logout'),

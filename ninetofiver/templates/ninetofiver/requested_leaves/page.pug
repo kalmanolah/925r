@@ -1,0 +1,36 @@
+extends ninetofiver/base/page.pug
+- load static
+
+block content
+  .container
+    h1 leaves
+    table.table-bordered.table-striped(style='width:100%')
+      thead
+        tr
+          td
+            strong Leave
+          td
+            strong From
+          td
+            strong To
+          td
+            strong Request Date
+          td 
+            strong Accept
+          td
+            strong Reject
+      {% for leave in pending_leaves %}
+      tr
+        td {{ leave }} 
+        td {{ leave.leavedate_set.first.starts_at }}
+        td {{ leave.leavedate_set.last.ends_at }}
+        {% if leave.created_at|date:"m-d-Y" >= leave.leavedate_set.first.starts_at|date:"m-d-Y" %}
+        td.bg-warning {{ leave.created_at }}
+        {% else %}
+        td {{ leave.created_at }}
+        {% endif %}
+        td(style='text-align:center')
+          a.btn.btn-success(href="{% url 'requestedleave_accept' leave.id %}", style='text-decoration:none; color:white;') V 
+        td(style='text-align:center')
+          a.btn.btn-danger(href="{% url 'requestedleave_reject' leave.id %}", style='text-decoration:none; color:white;') X
+      {% endfor %}
