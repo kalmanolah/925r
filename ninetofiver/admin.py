@@ -17,7 +17,49 @@ from django.contrib.admin import widgets
 from ninetofiver.forms import *
 from django.core.mail import send_mail
 
+from django.contrib.auth.admin import GroupAdmin
 
+import logging
+logger = logging.getLogger(__name__)
+
+
+class GroupForm(forms.ModelForm):
+    users = forms.ModelMultipleChoiceField(
+        label=_('Users'),
+        required=False,
+        queryset=auth_models.User.objects.all(),
+        widget=admin.widgets.FilteredSelectMultiple(
+            "users",
+            is_stacked=False
+        )
+    )
+
+    class Meta:
+        model = auth_models.Group
+        fields = '__all__'
+
+
+class MyGroupAdmin(GroupAdmin):
+    form = GroupForm
+
+    def save_model(self, request, obj, form, change):
+        # save first to obtain id
+        super(GroupAdmin, self).save_model(request, obj, form, change)
+        obj.user_set.clear()
+        for user in form.cleaned_data['users']:
+            obj.user_set.add(user)
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj:
+            self.form.base_fields['users'].initial = [o.pk for o in obj.user_set.all()]
+        else:
+            self.form.base_fields['users'].initial = []
+        return GroupForm
+
+
+# unregister and register again
+admin.site.unregister(auth_models.Group)
+admin.site.register(auth_models.Group, MyGroupAdmin)
 class EmploymentContractStatusFilter(admin.SimpleListFilter):
     title = 'Status'
     parameter_name = 'Status'
@@ -74,10 +116,10 @@ class EmploymentContractTypeAdmin(admin.ModelAdmin):
 class EmploymentContractAdmin(admin.ModelAdmin):
     list_display = ('user', 'company', 'employment_contract_type', 'work_schedule', 'started_at', 'ended_at')
     list_filter = (
-        EmploymentContractStatusFilter, 
-        ('user', RelatedDropdownFilter), 
+        EmploymentContractStatusFilter,
+        ('user', RelatedDropdownFilter),
         ('company', RelatedDropdownFilter),
-        ('employment_contract_type', RelatedDropdownFilter), 
+        ('employment_contract_type', RelatedDropdownFilter),
         ('started_at', DateRangeFilter),
         ('ended_at', DateRangeFilter)
     )
@@ -155,7 +197,7 @@ class LeaveAdmin(admin.ModelAdmin):
     def send_notification_email(self, leave, status):
         send_mail(
             str(leave.leave_type) + ' - ' + str(leave.description),
-            'Dear %s\n\nyour %s from \n%s to %s\nhas been %s.\n\nKind regards\nAn inocent bot' % 
+            'Dear %s\n\nyour %s from \n%s to %s\nhas been %s.\n\nKind regards\nAn inocent bot' %
             (str(leave.user.first_name), str(leave.leave_type), str(leave.leavedate_set.first().starts_at.date()), str(leave.leavedate_set.last().ends_at.date()), str(status)),
             'no-reply@inuits.eu',
             [leave.user.email],
@@ -164,10 +206,10 @@ class LeaveAdmin(admin.ModelAdmin):
 
     list_display = ('__str__', 'user', 'leave_type', 'leave_dates', 'status', 'description', 'attachment')
     list_filter = (
-        'status', 
-        ('leave_type', RelatedDropdownFilter), 
+        'status',
+        ('leave_type', RelatedDropdownFilter),
         ('user', RelatedDropdownFilter),
-        ('leavedate__starts_at', DateTimeRangeFilter), 
+        ('leavedate__starts_at', DateTimeRangeFilter),
         ('leavedate__ends_at', DateTimeRangeFilter)
     )
     search_fields = ('user__username', 'user__first_name', 'user__last_name', 'leave_type__label', 'status',
@@ -209,6 +251,36 @@ class ContractUserInline(admin.TabularInline):
     model = models.ContractUser
     ordering = ("user__first_name", "user__last_name",)
 
+
+# class GroupInline(admin.TabularInline):
+#     form = forms.ModelMultipleChoiceField(
+#         label=_('Users'),
+#         required=False,
+#         queryset=auth_models.User.objects.all(),
+#         widget=admin.widgets.FilteredSelectMultiple(
+#             "users",
+#             is_stacked=False
+#         )
+#     )
+#     model = models.ContractUser
+#
+#     def save_model(self, request, obj, form, change):
+#         # Save first to obtain the id
+#         logging.warning('henlo')
+#         logging.warning(request)
+#         logging.warning(obj)
+#         logging.warning(change)
+#
+#     def get_form(self, request, obj=None, **kwargs):
+#         # if obj:
+#         #     self.form.base_fields['users'].initial = [o.pk for o in obj.user_set.all()]
+#         # else:
+#         #     self.form.base_fields['users'].initial = []
+#
+#         self.form.base_fields['users'].initial = []
+#         return self.form
+#
+
 @admin.register(models.ContractGroup)
 class ContractGroupAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'label', )
@@ -228,7 +300,7 @@ class ProjectContractChildAdmin(ContractChildAdmin):
     form = ProjectContractAdminForm
 
 
-#@admin.register(models.ConsultancyContract)
+# @admin.register(models.ConsultancyContract)
 class ConsultancyContractChildAdmin(ContractChildAdmin):
     base_model = models.ConsultancyContract
     form = ConsultancyContractAdminForm
@@ -257,11 +329,11 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
     list_display = ('label', 'active', '__str__', 'company', 'customer', 'contract_users',
                     performance_types, 'starts_at', 'ends_at', 'description', 'attachment')
     list_filter = (
-        PolymorphicChildModelFilter, 
+        PolymorphicChildModelFilter,
         ('company', RelatedDropdownFilter),
-        ('customer', RelatedDropdownFilter), 
+        ('customer', RelatedDropdownFilter),
         ('contractuser', RelatedDropdownFilter),
-        ('performance_types', RelatedDropdownFilter), 
+        ('performance_types', RelatedDropdownFilter),
         'active'
     )
     search_fields = ('label', 'description', 'company__name', 'customer__name', 'contractuser__user__first_name',
@@ -363,7 +435,7 @@ class TimesheetAdmin(admin.ModelAdmin):
 @admin.register(models.Whereabout)
 class WhereaboutAdmin(admin.ModelAdmin):
     list_display = ('__str__', )
-    ordering = ('-day', )    
+    ordering = ('-day', )
 
 
 class PerformanceChildAdmin(PolymorphicChildModelAdmin):
