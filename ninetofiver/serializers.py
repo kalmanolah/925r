@@ -1,15 +1,12 @@
 """ninetofiver serializers."""
 from django.contrib.auth import models as auth_models
-from ninetofiver import models
+from django.core.exceptions import ValidationError
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
+from django.db.models import Q
 import logging
 import datetime
-from django.db.models import Q
-from collections import OrderedDict
-
-from rest_framework import status
-from rest_framework.fields import SkipField
-
+from ninetofiver import models
 
 
 logger = logging.getLogger(__name__)
@@ -21,14 +18,20 @@ class BaseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = None
-        fields = ('id', 'created_at', 'updated_at', 'type', 'display_label')
-        read_only_fields = ('id', 'created_at', 'updated_at', 'type', 'display_label')
-
-    def validate(self, data):
-        super().validate(data)
-        self.Meta.model.perform_additional_validation(data, instance=self.instance)
-
-        return data
+        fields = (
+            'id',
+            'created_at',
+            'updated_at',
+            'type',
+            'display_label',
+        )
+        read_only_fields = (
+            'id',
+            'created_at',
+            'updated_at',
+            'type',
+            'display_label',
+        )
 
     def get_type(self, obj):
         return obj.__class__.__name__
@@ -37,16 +40,94 @@ class BaseSerializer(serializers.ModelSerializer):
         return str(obj)
 
 
+class BasePolymorphicSerializer(serializers.Serializer):
+
+    """Serializer to handle polymorphic child model serialization."""
+
+    def get_serializer_map(self):
+        """
+        Return a dict to map class names to their respective serializer classes.
+
+        To be implemented by all BasePolymorphicSerializer subclasses.
+
+        """
+        raise NotImplementedError()
+
+    def to_representation(self, obj):
+        """
+        Translate object to internal data representation
+
+        Override to allow polymorphism.
+
+        """
+        type_str = obj.__class__.__name__
+
+        try:
+            serializer = self.get_serializer_map()[type_str]
+        except KeyError:
+            raise ValueError(
+                'Serializer for "{}" does not exist'.format(type_str),
+            )
+
+        data = serializer(obj, context=self.context).to_representation(obj)
+        data['type'] = type_str
+
+        return data
+
+    def to_internal_value(self, data):
+        """
+        Validate data and initialize primitive types.
+
+        Override to allow polymorphism.
+
+        """
+        try:
+            type_str = data['type']
+        except KeyError:
+            raise ValidationError({'type': _('This field is required')})
+
+        try:
+            serializer = self.get_serializer_map()[type_str]
+        except KeyError:
+            raise ValidationError({'type': ValidationError(_('Serializer for "%(type)s" does not exist'),
+                                  params={'type': type_str})})
+
+        validated_data = serializer(context=self.context).to_internal_value(data)
+        validated_data['type'] = type_str
+
+        return validated_data
+
+    def create(self, validated_data):
+        """
+        Translate validated data representation to object.
+
+        Override to allow polymorphism.
+
+        """
+        serializer = self.get_serializer_map()[validated_data.pop('type')]
+        return serializer(context=self.context).create(validated_data)
+
+    def update(self, instance, validated_data):
+        """
+        Translate validated data representation to object.
+
+        Override to allow polymorphism.
+
+        """
+        serializer = self.get_serializer_map()[instance.__class__.__name__]
+        return serializer(context=self.context).update(instance, validated_data)
+
+
 class CompanySerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Company
-        fields = BaseSerializer.Meta.fields + ('vat_identification_number', 'name', 'address', 'country', 'internal', )
+        fields = BaseSerializer.Meta.fields + ('vat_identification_number', 'name', 'address', 'country', 'internal',)
 
 
 class EmploymentContractTypeSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.EmploymentContractType
-        fields = BaseSerializer.Meta.fields + ('label',)
+        fields = BaseSerializer.Meta.fields + ('name',)
 
 
 class EmploymentContractSerializer(BaseSerializer):
@@ -59,7 +140,7 @@ class EmploymentContractSerializer(BaseSerializer):
 class WorkScheduleSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.WorkSchedule
-        fields = BaseSerializer.Meta.fields + ('label', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
+        fields = BaseSerializer.Meta.fields + ('name', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
                                                'saturday', 'sunday')
 
 
@@ -71,11 +152,14 @@ class UserRelativeSerializer(BaseSerializer):
 
 
 class UserInfoSerializer(BaseSerializer):
+    join_date = serializers.SerializerMethodField()
 
     class Meta(BaseSerializer.Meta):
         model = models.UserInfo
         fields = BaseSerializer.Meta.fields + ('user', 'birth_date', 'gender', 'country', 'join_date', 'redmine_id')
-        read_only_fields = ('join_date', )
+
+    def get_join_date(self, obj):
+        return obj.get_join_date()
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -95,7 +179,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     userinfo = UserInfoSerializer()
     groups = GroupSerializer(many=True)
-    
+
     class Meta:
         model = auth_models.User
         fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'userinfo')
@@ -110,7 +194,7 @@ class AttachmentSerializer(BaseSerializer):
 
     class Meta(BaseSerializer.Meta):
         model = models.Attachment
-        fields = BaseSerializer.Meta.fields + ('label', 'description', 'file', 'slug', 'user', 'file_url')
+        fields = BaseSerializer.Meta.fields + ('name', 'description', 'file', 'slug', 'user', 'file_url')
         read_only_fields = BaseSerializer.Meta.read_only_fields + ('file_url',)
 
     def get_file_url(self, obj):
@@ -126,7 +210,7 @@ class HolidaySerializer(BaseSerializer):
 class LeaveTypeSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.LeaveType
-        fields = BaseSerializer.Meta.fields + ('label', 'description',)
+        fields = BaseSerializer.Meta.fields + ('name', 'description',)
 
 
 class LeaveDateSerializer(BaseSerializer):
@@ -164,7 +248,7 @@ class LeaveSerializer(BaseSerializer):
 class PerformanceTypeSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.PerformanceType
-        fields = BaseSerializer.Meta.fields + ('label', 'description', 'multiplier')
+        fields = BaseSerializer.Meta.fields + ('name', 'description', 'multiplier')
 
 
 class ContractSerializer(BaseSerializer):
@@ -178,7 +262,7 @@ class ContractSerializer(BaseSerializer):
 
     class Meta(BaseSerializer.Meta):
         model = models.Contract
-        fields = BaseSerializer.Meta.fields + ('label', 'description', 'company', 'customer', 'performance_types',
+        fields = BaseSerializer.Meta.fields + ('name', 'description', 'company', 'customer', 'performance_types',
                                                'active', 'contract_groups', 'hours_spent', 'starts_at', 'ends_at',
                                                'attachments', 'redmine_id', 'external_only', )
 
@@ -194,7 +278,7 @@ class AdminProjectContractSerializer(ContractSerializer):
     class Meta(ContractSerializer.Meta):
         model = models.ProjectContract
         fields = ContractSerializer.Meta.fields + ('redmine_id', 'starts_at', 'ends_at', 'fixed_fee', 'hours_estimated',)
-    
+
 
 class ProjectContractSerializer(ContractSerializer):
     hours_estimated = serializers.SerializerMethodField()
@@ -206,14 +290,14 @@ class ProjectContractSerializer(ContractSerializer):
     class Meta(ContractSerializer.Meta):
         model = models.ProjectContract
         fields = ContractSerializer.Meta.fields + ('redmine_id', 'starts_at', 'ends_at', 'hours_estimated',)
-        
+
 
 class AdminConsultancyContractSerializer(ContractSerializer):
     # Serializer that shows classified information.
     class Meta(ContractSerializer.Meta):
         model = models.ConsultancyContract
         fields = ContractSerializer.Meta.fields + ('starts_at', 'ends_at', 'day_rate', 'duration')
-    
+
 
 class ConsultancyContractSerializer(ContractSerializer):
     class Meta(ContractSerializer.Meta):
@@ -237,7 +321,7 @@ class SupportContractSerializer(ContractSerializer):
 class ContractRoleSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.ContractRole
-        fields = BaseSerializer.Meta.fields + ('label', 'description')
+        fields = BaseSerializer.Meta.fields + ('name', 'description')
 
 
 class ContractUserSerializer(BaseSerializer):
@@ -249,7 +333,7 @@ class ContractUserSerializer(BaseSerializer):
 class ContractGroupSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.ContractGroup
-        fields = BaseSerializer.Meta.fields + ('label', )
+        fields = BaseSerializer.Meta.fields + ('name', )
 
 
 class ProjectEstimateSerializer(BaseSerializer):
@@ -279,7 +363,7 @@ class PerformanceSerializer(BaseSerializer):
         if not user.is_staff and not user.is_superuser:
             if instance.timesheet.user != user.id:
                 raise serializers.ValidationError('Only admins are allowed to update performances from other users.')
-            if instance.timesheet.status == models.Timesheet.STATUS.PENDING:
+            if instance.timesheet.status == models.STATUS_PENDING:
                 raise serializers.ValidationError('Only admins are allowed to update performances attached to pending timesheets.')
         return super().update(instance, validated_data)
 
@@ -288,7 +372,7 @@ class PerformanceSerializer(BaseSerializer):
         if not user.is_staff and not user.is_superuser:
             if instance.timesheet.user != user.id:
                 raise serializers.ValidationError('Only admins are allowed to update performances from other users.')
-            if instance.timesheet.status == models.Timesheet.STATUS.PENDING:
+            if instance.timesheet.status == models.STATUS_PENDING:
                 raise serializers.ValidationError('Only admins are allowed to update performances attached to pending timesheets.')
         return super().partial_update(instance, validated_data)
 
@@ -314,7 +398,7 @@ class MyUserSerializer(UserSerializer):
 
 
 class MyLeaveSerializer(LeaveSerializer):
-    status = serializers.ChoiceField(choices=(models.Leave.STATUS.DRAFT, models.Leave.STATUS.PENDING))
+    status = serializers.ChoiceField(choices=(models.STATUS_DRAFT, models.STATUS_PENDING))
 
     class Meta(LeaveSerializer.Meta):
         read_only_fields = LeaveSerializer.Meta.read_only_fields + ('user',)
@@ -326,7 +410,7 @@ class MyLeaveSerializer(LeaveSerializer):
 
 class MyLeaveDateSerializer(LeaveDateSerializer):
     def validate_leave(self, value):
-        if value.status != models.Leave.STATUS.DRAFT:
+        if value.status != models.STATUS_DRAFT:
             raise serializers.ValidationError('You can only manipulate leave dates attached to draft leaves')
 
         if value.user != self.context['request'].user:
@@ -346,8 +430,8 @@ class MyTimesheetSerializer(TimesheetSerializer):
     def update(self, instance, validated_data):
         user = self.context['request'].user
         if not user.is_staff and not user.is_superuser:
-            if instance.status == models.Timesheet.STATUS.PENDING and validated_data['status'] == models.Timesheet.STATUS.ACTIVE:
-                raise serializers.ValidationError('DA MAG NIE HE MENNEKE') 
+            if instance.status == models.STATUS_PENDING and validated_data['status'] == models.STATUS_ACTIVE:
+                raise serializers.ValidationError('DA MAG NIE HE MENNEKE')
         return super().update(instance, validated_data)
 
 class MyContractSerializer(ContractSerializer):
@@ -435,7 +519,7 @@ class LeaveRequestCreateSerializer(LeaveRequestSerializer):
         if type(val) is not str:
             raise serializers.ValidationError("Description is not a string.")
         return val
-        
+
     def validate_leave_type(self, val):
         """
         Check that the description is indeed a string.

@@ -12,3 +12,5 @@ ninetofiver_venv/
 docs/_build/
 /media/
 *.log
+.tox/
+.env

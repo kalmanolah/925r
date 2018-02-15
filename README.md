@@ -3,7 +3,6 @@ ninetofiver
 
 [![Build Status](https://travis-ci.org/kalmanolah/925r.svg?branch=master)](https://travis-ci.org/kalmanolah/925r)
 [![Coverage Status](https://coveralls.io/repos/github/kalmanolah/925r/badge.svg?branch=master)](https://coveralls.io/github/kalmanolah/925r?branch=master)
-[![Documentation Status](https://readthedocs.org/projects/925r/badge/?version=latest)](http://925r.readthedocs.io/en/latest/?badge=latest)
 [![GitHub issues](https://img.shields.io/github/issues/kalmanolah/925r.svg)](https://shields.io)
 [![license](https://img.shields.io/github/license/kalmanolah/925r.svg)](https://shields.io)
 
@@ -11,44 +10,32 @@ ninetofiver (or 925r) is a free and open source time and leave tracking applicat
 
 ## Installation
 
-Create and activate a virtual environment:
-
-```bash
-python3 -m virtualenv -p python3 ninetofiver_venv
-source ninetofiver_venv/bin/activate
-```
-
 Install build dependencies:
 
 ```bash
 apt-get install -y python-dev libldap2-dev libsasl2-dev libssl-dev
 ```
 
-Install the application:
+You'll need [pipenv](https://docs.pipenv.org/). Installing it is super simple:
 
+```bash
+pip install pipenv
 ```
-python setup.py install
-pip install -r requirements.txt
+
+After that, installing the application is smooth sailing:
+
+```bash
+pipenv install
 ```
+
+Once your pipenv is set up, you can use `pipenv shell` to get a shell, or
+just prefix additional commands with `pipenv run`.
 
 ## Usage
 
 1. Run `python manage.py migrate` to create the models.
 
 2. Run `python manage.py createsuperuser` to create an admin user
-
-### Running (Docker)
-
-Running the command below starts linked docker containers
-running OpenLDAP and ninetofiver at `http://127.0.0.1:8888`.
-You may need to install docker and docker-compose first.
-
-Note: Running this application using Docker should only be done when
-developing locally, if at all.
-
-```bash
-docker-compose -f ./scripts/docker/docker-compose.yml up
-```
 
 ### Running (development)
 
@@ -95,22 +82,8 @@ SECRET_KEY: mae3fo4dooJaiteth2emeaNga1biey9ia8FaiQuooYoac8phohee7r
 Run the test suite:
 
 ```bash
-python manage.py testninetofiver
+tox
 ```
-
-## Documentation
-
-Generate the docs:
-
-```bash
-pip install sphinx
-sphinx-apidoc -e -f -a -d 2 -o docs ninetofiver ninetofiver/migrations
-cd docs && make html && cd ../
-```
-
-## Database Structure  
-
-![Database ERD](http://i.imgur.com/T11pQN3.png)
 
 ## License
 
@@ -118,7 +91,7 @@ See [LICENSE](LICENSE)
 
 ```
 ninetofiver (925r): a free and open source time and leave tracking application.
-Copyright (C) 2016-2017 Kalman Olah
+Copyright (C) 2016-2018 Kalman Olah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

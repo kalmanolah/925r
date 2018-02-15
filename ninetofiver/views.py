@@ -293,7 +293,7 @@ class TimesheetViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows timesheets to be viewed or edited.
     """
-    queryset = models.Timesheet.objects.exclude(status = models.Timesheet.STATUS.CLOSED)
+    queryset = models.Timesheet.objects.exclude(status = models.STATUS_CLOSED)
     serializer_class = serializers.TimesheetSerializer
     filter_class = filters.TimesheetFilter
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
@@ -486,7 +486,7 @@ class MonthlyAvailabilityServiceAPIView(APIView):
 
             # Finding leaves for the timesheet
             leaves = models.Leave.objects.filter(user=user,status='APPROVED',leavedate__timesheet=ts).distinct()
-            sick_types = models.LeaveType.objects.filter(label__icontains='sick')
+            sick_types = models.LeaveType.objects.filter(name__icontains='sick')
             sick_len = len(sick_types)
 
             for l in leaves:
@@ -611,7 +611,7 @@ class MonthInfoServiceAPIView(APIView):
         RANGE_END = timezone.make_aware(datetime(year, month, monthrange(year, month)[1], 0, 0, 0), timezone.get_current_timezone())
 
         # Get all approved leaves of the user.
-        leaves = models.Leave.objects.filter(user_id=user, status=models.Leave.STATUS.APPROVED)
+        leaves = models.Leave.objects.filter(user_id=user, status=models.STATUS_APPROVED)
 
         # Filter out those who don't start or end in the current month.
         result = list(filter(
@@ -764,7 +764,7 @@ class MyLeaveRequestService(generics.GenericAPIView):
                 ld.full_clean()
                 ld.save()
 
-                leave.status = 'PENDING'
+                leave.status = models.STATUS_PENDING
                 leave.save()
 
                 return_dict = {
@@ -856,7 +856,7 @@ class MyLeaveRequestService(generics.GenericAPIView):
                             leave.delete()
                             return Response('Workschedule couldn\'t be found for that user', status = status.HTTP_400_BAD_REQUEST)
 
-                leave.status = 'PENDING'
+                leave.status = models.STATUS_PENDING
                 leave.save()
 
                 return_dict = {
@@ -895,7 +895,7 @@ class MyLeaveRequestServiceAPIView(generics.CreateAPIView, MyLeaveRequestService
             user = request.user,
             description = request.data['description'],
             leave_type = lt,
-            status = 'DRAFT',
+            status = models.STATUS_DRAFT,
         )
 
     def post(self, request, format=None):
@@ -970,7 +970,7 @@ class MyTimesheetViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return user.timesheet_set.exclude(status = models.Timesheet.STATUS.CLOSED)
+        return user.timesheet_set.exclude(status = models.STATUS_CLOSED)
 
 
 class MyContractViewSet(viewsets.ModelViewSet):

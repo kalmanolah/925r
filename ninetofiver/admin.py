@@ -13,25 +13,23 @@ from polymorphic.admin import PolymorphicParentModelAdmin
 from rangefilter.filter import DateRangeFilter
 from rangefilter.filter import DateTimeRangeFilter
 from django import forms
-from django.contrib.admin import widgets
-from ninetofiver.forms import *
 from django.core.mail import send_mail
-
-from django.contrib.auth.admin import GroupAdmin
-
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 import logging
-logger = logging.getLogger(__name__)
+
+
+log = logging.getLogger(__name__)
 
 
 class GroupForm(forms.ModelForm):
+
+    """Group form."""
+
     users = forms.ModelMultipleChoiceField(
         label=_('Users'),
         required=False,
         queryset=auth_models.User.objects.all(),
-        widget=admin.widgets.FilteredSelectMultiple(
-            "users",
-            is_stacked=False
-        )
+        widget=admin.widgets.FilteredSelectMultiple('users', is_stacked=False)
     )
 
     class Meta:
@@ -39,47 +37,34 @@ class GroupForm(forms.ModelForm):
         fields = '__all__'
 
 
-class MyGroupAdmin(GroupAdmin):
+class GroupAdmin(BaseGroupAdmin):
+
+    """Group admin."""
+
     form = GroupForm
 
     def save_model(self, request, obj, form, change):
-        # save first to obtain id
+        """Save the given model."""
         super(GroupAdmin, self).save_model(request, obj, form, change)
-        obj.user_set.clear()
-        for user in form.cleaned_data['users']:
-            obj.user_set.add(user)
+        obj.user_set.set(form.cleaned_data['users'])
 
     def get_form(self, request, obj=None, **kwargs):
-        if obj:
-            self.form.base_fields['users'].initial = [o.pk for o in obj.user_set.all()]
-        else:
-            self.form.base_fields['users'].initial = []
+        """Get the form."""
+        pks = [x.pk for x in obj.user_set.all()] if obj else []
+        self.form.base_fields['users'].initial = pks
+
         return GroupForm
 
 
-# unregister and register again
+# Unregister previous admin to register current one
 admin.site.unregister(auth_models.Group)
-admin.site.register(auth_models.Group, MyGroupAdmin)
+admin.site.register(auth_models.Group, GroupAdmin)
+
+
 class EmploymentContractStatusFilter(admin.SimpleListFilter):
-    title = 'Status'
-    parameter_name = 'Status'
 
-    def lookups(self, request, model_admin):
-        return (
-            ('active', _('Active')),
-            ('ended', _('Ended')),
-            ('future', _('Future')),
-        )
+    """Employment contract status filter."""
 
-    def queryset(self, request, queryset):
-        if self.value() == 'active':
-            return queryset.filter(Q(started_at__lte=date.today()) & ( Q(ended_at__gte=date.today()) | Q(ended_at__isnull=True)) )
-        elif self.value() == 'ended':
-            return queryset.filter(ended_at__lte=date.today())
-        elif self.value() == 'future':
-            return queryset.filter(started_at__gte=date.today())
-
-class ContractStatusFilter(admin.SimpleListFilter):
     title = 'Status'
     parameter_name = 'status'
 
@@ -92,7 +77,37 @@ class ContractStatusFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'active':
-            return queryset.filter(Q(starts_at__lte=date.today()) & ( Q(ends_at__gte=date.today()) | Q(ends_at__isnull=True)) & Q(active=True) )
+            return queryset.filter(
+                Q(started_at__lte=date.today()) &
+                (Q(ended_at__gte=date.today()) | Q(ended_at__isnull=True))
+            )
+        elif self.value() == 'ended':
+            return queryset.filter(ended_at__lte=date.today())
+        elif self.value() == 'future':
+            return queryset.filter(started_at__gte=date.today())
+
+
+class ContractStatusFilter(admin.SimpleListFilter):
+
+    """Contract status filter."""
+
+    title = 'Status'
+    parameter_name = 'status'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('active', _('Active')),
+            ('ended', _('Ended')),
+            ('future', _('Future')),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'active':
+            return queryset.filter(
+                Q(starts_at__lte=date.today()) &
+                (Q(ends_at__gte=date.today()) | Q(ends_at__isnull=True)) &
+                Q(active=True)
+            )
         elif self.value() == 'ended':
             return queryset.filter(Q(ends_at__lte=date.today()) | Q(active=False))
         elif self.value() == 'future':
@@ -107,9 +122,9 @@ class CompanyAdmin(admin.ModelAdmin):
 
 @admin.register(models.EmploymentContractType)
 class EmploymentContractTypeAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'label')
-    search_fields = ('label',)
-    ordering = ('label',)
+    list_display = ('__str__', 'name')
+    search_fields = ('name',)
+    ordering = ('name',)
 
 
 @admin.register(models.EmploymentContract)
@@ -123,32 +138,28 @@ class EmploymentContractAdmin(admin.ModelAdmin):
         ('started_at', DateRangeFilter),
         ('ended_at', DateRangeFilter)
     )
-    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'employment_contract_type__label',
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'employment_contract_type__name',
                      'started_at', 'ended_at')
     ordering = ('user__first_name', 'user__last_name')
-    form = EmploymentContractAdminForm
 
 
 @admin.register(models.WorkSchedule)
 class WorkScheduleAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'label', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
-    ordering = ('label',)
-    form = WorkScheduleAdminForm
+    list_display = ('__str__', 'name', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
+    ordering = ('name',)
 
 
 @admin.register(models.UserRelative)
 class UserRelativeAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'user', 'relation', 'gender', 'birth_date', )
     ordering = ('name',)
-    form = UserRelativeAdminForm
 
 
 @admin.register(models.Attachment)
 class AttachmentAdmin(admin.ModelAdmin):
     def link(self, obj):
         return format_html('<a href="%s">%s</a>' % (obj.get_file_url(), str(obj)))
-
-    list_display = ('__str__', 'user', 'label', 'description', 'file', 'slug', 'link')
+    list_display = ('__str__', 'user', 'name', 'description', 'file', 'slug', 'link')
 
 
 @admin.register(models.Holiday)
@@ -164,8 +175,8 @@ class HolidayAdmin(admin.ModelAdmin):
 
 @admin.register(models.LeaveType)
 class LeaveTypeAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'label', 'description')
-    ordering = ('label',)
+    list_display = ('__str__', 'name', 'description')
+    ordering = ('name',)
 
 
 class LeaveDateInline(admin.TabularInline):
@@ -174,6 +185,8 @@ class LeaveDateInline(admin.TabularInline):
 
 @admin.register(models.Leave)
 class LeaveAdmin(admin.ModelAdmin):
+
+    """Leave admin."""
 
     def make_approved(self, request, queryset):
         queryset.update(status=models.Leave.STATUS.APPROVED)
@@ -212,7 +225,7 @@ class LeaveAdmin(admin.ModelAdmin):
         ('leavedate__starts_at', DateTimeRangeFilter),
         ('leavedate__ends_at', DateTimeRangeFilter)
     )
-    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'leave_type__label', 'status',
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'leave_type__name', 'status',
                      'leavedate__starts_at', 'leavedate__ends_at', 'description')
     inlines = [
         LeaveDateInline,
@@ -222,7 +235,6 @@ class LeaveAdmin(admin.ModelAdmin):
         'make_rejected',
     ]
     ordering = ('-status',)
-    form = LeaveAdminForm
 
 
 @admin.register(models.LeaveDate)
@@ -233,17 +245,19 @@ class LeaveDateAdmin(admin.ModelAdmin):
 
 @admin.register(models.UserInfo)
 class UserInfoAdmin(admin.ModelAdmin):
+    def join_date(obj):
+        return obj.get_join_date()
+
     def user_groups(obj):
         return format_html('<br>'.join(str(x) for x in list(obj.user.groups.all())))
 
     list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country', 'join_date')
     ordering = ('user',)
-    form = UserInfoAdminForm
 
 
 @admin.register(models.PerformanceType)
 class PerformanceTypeAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'label', 'description', 'multiplier')
+    list_display = ('__str__', 'name', 'description', 'multiplier')
     ordering = ('multiplier',)
 
 
@@ -252,38 +266,9 @@ class ContractUserInline(admin.TabularInline):
     ordering = ("user__first_name", "user__last_name",)
 
 
-# class GroupInline(admin.TabularInline):
-#     form = forms.ModelMultipleChoiceField(
-#         label=_('Users'),
-#         required=False,
-#         queryset=auth_models.User.objects.all(),
-#         widget=admin.widgets.FilteredSelectMultiple(
-#             "users",
-#             is_stacked=False
-#         )
-#     )
-#     model = models.ContractUser
-#
-#     def save_model(self, request, obj, form, change):
-#         # Save first to obtain the id
-#         logging.warning('henlo')
-#         logging.warning(request)
-#         logging.warning(obj)
-#         logging.warning(change)
-#
-#     def get_form(self, request, obj=None, **kwargs):
-#         # if obj:
-#         #     self.form.base_fields['users'].initial = [o.pk for o in obj.user_set.all()]
-#         # else:
-#         #     self.form.base_fields['users'].initial = []
-#
-#         self.form.base_fields['users'].initial = []
-#         return self.form
-#
-
 @admin.register(models.ContractGroup)
 class ContractGroupAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'label', )
+    list_display = ('__str__', 'name', )
 
 
 class ContractChildAdmin(PolymorphicChildModelAdmin):
@@ -296,19 +281,16 @@ class ContractChildAdmin(PolymorphicChildModelAdmin):
 # @admin.register(models.ProjectContract)
 class ProjectContractChildAdmin(ContractChildAdmin):
     base_model = models.ProjectContract
-    form = ProjectContractAdminForm
 
 
 # @admin.register(models.ConsultancyContract)
 class ConsultancyContractChildAdmin(ContractChildAdmin):
     base_model = models.ConsultancyContract
-    form = ConsultancyContractAdminForm
 
 
 # @admin.register(models.SupportContract)
 class SupportContractChildAdmin(ContractChildAdmin):
     base_model = models.SupportContract
-    form = SupportContractAdminForm
 
 
 @admin.register(models.Contract)
@@ -325,7 +307,7 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
 
     base_model = models.Contract
     child_models = (models.ProjectContract, models.ConsultancyContract, models.SupportContract)
-    list_display = ('label', 'active', '__str__', 'company', 'customer', 'contract_users',
+    list_display = ('name', 'active', '__str__', 'company', 'customer', 'contract_users',
                     performance_types, 'starts_at', 'ends_at', 'description', 'attachment')
     list_filter = (
         PolymorphicChildModelFilter,
@@ -337,9 +319,9 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
         ('ends_at', DateRangeFilter),
         'active'
     )
-    search_fields = ('label', 'description', 'company__name', 'customer__name', 'contractuser__user__first_name',
-                     'contractuser__user__last_name', 'contractuser__user__username', 'performance_types__label')
-    ordering = ('label', 'company', 'starts_at', 'ends_at', '-customer',)
+    search_fields = ('name', 'description', 'company__name', 'customer__name', 'contractuser__user__first_name',
+                     'contractuser__user__last_name', 'contractuser__user__username', 'performance_types__name')
+    ordering = ('name', 'company', 'starts_at', 'ends_at', '-customer',)
 
 
 @admin.register(models.ConsultancyContract)
@@ -347,14 +329,13 @@ class ConsultancyContractAdmin(admin.ModelAdmin):
     def contract_users(self, obj):
         return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
 
-    list_display = ('label', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'duration')
+    list_display = ('name', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'duration')
     list_filter = (ContractStatusFilter, ('company', RelatedDropdownFilter),
                    ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
 
     inlines = [
         ContractUserInline,
     ]
-    form = ConsultancyContractAdminForm
 
 
 @admin.register(models.SupportContract)
@@ -362,14 +343,13 @@ class SupportContractAdmin(admin.ModelAdmin):
     def contract_users(self, obj):
         return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
 
-    list_display = ('label', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'day_rate', 'fixed_fee', 'fixed_fee_period')
+    list_display = ('name', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'day_rate', 'fixed_fee', 'fixed_fee_period')
     list_filter = (ContractStatusFilter, ('company', RelatedDropdownFilter),
                    ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
 
     inlines = [
         ContractUserInline,
     ]
-    form = SupportContractAdminForm
 
 
 @admin.register(models.ProjectContract)
@@ -377,33 +357,31 @@ class ProjectContractAdmin(admin.ModelAdmin):
     def contract_users(self, obj):
         return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
 
-    list_display = ('label', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'fixed_fee')
+    list_display = ('name', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'fixed_fee')
     list_filter = (ContractStatusFilter, ('company', RelatedDropdownFilter),
                    ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
 
     inlines = [
         ContractUserInline,
     ]
-    form = ProjectContractAdminForm
 
 
 @admin.register(models.ContractRole)
 class ContractRoleAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'label', 'description')
-    ordering = ('label',)
+    list_display = ('__str__', 'name', 'description')
+    ordering = ('name',)
 
 
 @admin.register(models.ContractUser)
 class ContractUserAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'contract', 'contract_role')
     ordering = ('user__first_name', 'user__last_name')
-    form = ContractUserAdminForm
 
 
 @admin.register(models.ProjectEstimate)
 class ProjectEstimateAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'project', 'role', 'hours_estimated', )
-    search_fields = ('role__label', 'project__label', 'project__customer')
+    search_fields = ('role__name', 'project__name', 'project__customer')
     ordering = ('project', 'hours_estimated')
 
 
@@ -430,7 +408,6 @@ class TimesheetAdmin(admin.ModelAdmin):
         'make_pending',
     ]
     ordering = ('-year', 'month', 'user__first_name', 'user__last_name')
-    form = TimesheetAdminForm
 
 
 @admin.register(models.Whereabout)

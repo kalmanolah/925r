@@ -12,8 +12,6 @@ from ninetofiver import views
 from oauth2_provider import views as oauth2_views
 from registration.backends.hmac import views as registration_views
 
-admin.site.index_template = 'admin/index.pug'
-admin.autodiscover()
 
 urlpatterns = [
     url(r'^api/$', views.schema_view, name='api_docs'),
@@ -135,6 +133,9 @@ urlpatterns += [
         TemplateView.as_view(template_name='ninetofiver/registration/register_closed.pug'),
         name='registration_disallowed',
     ),
+
+    # Silk (profiling)
+    url(r'^admin/silk/', include('silk.urls', namespace='silk')),
 
     # Admin
     url(r'^admin/', admin.site.urls),

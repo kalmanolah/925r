@@ -47,7 +47,7 @@ class EmploymentContractTypeFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.EmploymentContractType
 
-    label = factory.Sequence(lambda n: 'EmploymentContractTypeLabel%d' % n)
+    name = factory.Sequence(lambda n: 'EmploymentContractType%d' % n)
 
 
 class EmploymentContractFactory(factory.DjangoModelFactory):
@@ -62,7 +62,7 @@ class WorkScheduleFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.WorkSchedule
 
-    label = factory.Sequence(lambda n: 'WorkSchedule%d' % n)
+    name = factory.Sequence(lambda n: 'WorkSchedule%d' % n)
     monday = factory.LazyFunction(lambda: random.randint(0, 23))
     tuesday = factory.LazyFunction(lambda: random.randint(0, 23))
     wednesday = factory.LazyFunction(lambda: random.randint(0, 23))
@@ -95,7 +95,7 @@ class AttachmentFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.Attachment
 
-    label = factory.LazyFunction(fake.word)
+    name = factory.LazyFunction(fake.word)
     description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
     file = factory.LazyFunction(lambda: ContentFile(fake.text(max_nb_chars=200)))
 
@@ -113,7 +113,7 @@ class LeaveTypeFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.LeaveType
 
-    label = factory.Sequence(lambda n: 'LeaveType%d' % n)
+    name = factory.Sequence(lambda n: 'LeaveType%d' % n)
     description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
 
 
@@ -136,7 +136,7 @@ class PerformanceTypeFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.PerformanceType
 
-    label = factory.Sequence(lambda n: 'PerformanceType%d' % n)
+    name = factory.Sequence(lambda n: 'PerformanceType%d' % n)
     description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
     multiplier = factory.LazyFunction(lambda: random.randint(0, 3))
 
@@ -145,14 +145,14 @@ class ContractGroupFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.ContractGroup
 
-    label = factory.Sequence(lambda n: 'ContractGroup%d' % n)
+    name = factory.Sequence(lambda n: 'ContractGroup%d' % n)
 
 
 class ContractFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.Contract
 
-    label = factory.LazyFunction(fake.word)
+    name = factory.LazyFunction(fake.word)
     description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
     active = factory.LazyFunction(fake.boolean)
     starts_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
@@ -191,7 +191,7 @@ class ContractRoleFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.ContractRole
 
-    label = factory.Sequence(lambda n: 'ContractRole%d' % n)
+    name = factory.Sequence(lambda n: 'ContractRole%d' % n)
     description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
 
 
@@ -209,7 +209,7 @@ class TimesheetFactory(factory.DjangoModelFactory):
 
 
 class OpenTimesheetFactory(TimesheetFactory):
-    status= models.Timesheet.STATUS.ACTIVE
+    status = models.STATUS_ACTIVE
 
 
 class WhereaboutFactory(factory.DjangoModelFactory):

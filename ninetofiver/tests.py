@@ -16,12 +16,12 @@ from redminelib import exceptions, Redmine
 from ninetofiver import models
 
 import logging
-logger = logging.getLogger(__name__)
-# logging.basicConfig(filemode='w', filename='BONARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR.log', level=logging.WARNING)
 
 import tempfile
 import datetime
 
+
+log = logging.getLogger(__name__)
 now = datetime.date.today()
 
 
@@ -109,10 +109,10 @@ class EmploymentContractTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin,
     factory_class = factories.EmploymentContractTypeFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'label': 'Temp',
+        'name': 'Temp',
     }
     update_data = {
-        'label': 'Perm',
+        'name': 'Perm',
     }
 
 
@@ -129,7 +129,7 @@ class EmploymentContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, tes
     }
 
     def setUp(self):
-        self.company = factories.CompanyFactory.create()
+        self.company = factories.InternalCompanyFactory.create()
         self.work_schedule = factories.WorkScheduleFactory.create()
         self.employment_contract_type = factories.EmploymentContractTypeFactory.create()
         super().setUp()
@@ -154,7 +154,7 @@ class WorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
     factory_class = factories.WorkScheduleFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'label': 'Test schedule #1',
+        'name': 'Test schedule #1',
         'monday': Decimal('1.20'),
         'tuesday': Decimal('1.50'),
         'wednesday': Decimal('1.75'),
@@ -164,7 +164,7 @@ class WorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
         'sunday': Decimal('0'),
     }
     update_data = {
-        'label': 'Test schedule #2',
+        'name': 'Test schedule #2',
         'monday': Decimal('2.10'),
         'tuesday': Decimal('5.10'),
         'wednesday': Decimal('7.50'),
@@ -190,7 +190,7 @@ class UserInfoAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseREST
 
         self.company = factories.CompanyFactory.create()
         self.employmentcontract = factories.EmploymentContractFactory.create(
-            company=factories.CompanyFactory.create(),
+            company=factories.InternalCompanyFactory.create(),
             employment_contract_type=factories.EmploymentContractTypeFactory.create(),
             user=self.user,
             work_schedule=factories.WorkScheduleFactory.create(),
@@ -249,10 +249,10 @@ class LeaveTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
     factory_class = factories.LeaveTypeFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'label': 'ADV',
+        'name': 'ADV',
     }
     update_data = {
-        'label': 'Recup',
+        'name': 'Recup',
     }
 
 
@@ -262,11 +262,11 @@ class LeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRE
     user_factory = factories.AdminFactory
     create_data = {
         'description': 'Not going to work',
-        'status': 'DRAFT',
+        'status': 'draft',
     }
     update_data = {
         'description': 'Going to sleep',
-        'status': 'PENDING',
+        'status': 'pending',
     }
 
     def setUp(self):
@@ -310,7 +310,7 @@ class LeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
         )
         self.workschedule = factories.WorkScheduleFactory.create()
         self.employmentcontract = factories.EmploymentContractFactory.create(
-            company=factories.CompanyFactory.create(),
+            company=factories.InternalCompanyFactory.create(),
             employment_contract_type=factories.EmploymentContractTypeFactory.create(),
             user=user,
             work_schedule=self.workschedule,
@@ -341,11 +341,11 @@ class PerformanceTypeAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
     factory_class = factories.PerformanceTypeFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'label': 'Regular',
+        'name': 'Regular',
         'multiplier': 1.00,
     }
     update_data = {
-        'label': 'Sundays',
+        'name': 'Sundays',
         'multiplier': 2.00,
     }
 
@@ -355,10 +355,10 @@ class ContractGroupAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcase
     factory_class = factories.ContractGroupFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'label': 'Cool contract',
+        'name': 'Cool contract',
     }
     update_data = {
-        'label': 'Lame contract',
+        'name': 'Lame contract',
     }
 
 
@@ -381,7 +381,7 @@ class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
     factory_class = factories.ProjectContractFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'label': 'Projects & Stuff',
+        'name': 'Projects & Stuff',
         'active': True,
 
         'fixed_fee': 600.25,
@@ -389,7 +389,7 @@ class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
         'ends_at': now + timedelta(days=365),
     }
     update_data = {
-        'label': 'More Projects & Stuff',
+        'name': 'More Projects & Stuff',
         'active': True,
 
         'fixed_fee': 300.25,
@@ -425,6 +425,7 @@ class ProjectContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
         self.client.force_authenticate(user)
         response = self.client.get(self.url)
         self.assertIn('fixed_fee', response.data['results'][0])
+
 
 class ProjectEstimateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'projectestimate'
@@ -462,13 +463,13 @@ class ConsultancyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
     factory_class = factories.ConsultancyContractFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'label': 'Consultancy & Stuff',
+        'name': 'Consultancy & Stuff',
         'starts_at': now,
         'day_rate': 600,
         'active': True,
     }
     update_data = {
-        'label': 'More Consultancy & Stuff',
+        'name': 'More Consultancy & Stuff',
         'starts_at': now,
         'day_rate': 600,
         'active': True,
@@ -502,20 +503,20 @@ class ConsultancyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
         self.client.force_authenticate(user)
         response = self.client.get(self.url)
         self.assertIn('day_rate', response.data['results'][0])
-    
+
 
 class SupportContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'supportcontract'
     factory_class = factories.SupportContractFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'label': 'Support & Stuff',
+        'name': 'Support & Stuff',
         'starts_at': now,
         'day_rate': 600,
         'active': True,
     }
     update_data = {
-        'label': 'More Support & Stuff',
+        'name': 'More Support & Stuff',
         'starts_at': now,
         'day_rate': 600,
         'active': True,
@@ -551,17 +552,17 @@ class SupportContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testca
         self.client.force_authenticate(user)
         response = self.client.get(self.url)
         self.assertIn('day_rate', response.data['results'][0])
-    
+
 
 class ContractRoleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'contractrole'
     factory_class = factories.ContractRoleFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'label': 'Project Manager',
+        'name': 'Project Manager',
     }
     update_data = {
-        'label': 'Developer',
+        'name': 'Developer',
     }
 
 
@@ -598,12 +599,12 @@ class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Ba
     factory_class = factories.TimesheetFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'status': 'ACTIVE',
+        'status': 'active',
         'year': now.year,
         'month': now.month,
     }
     update_data = {
-        'status': 'ACTIVE',
+        'status': 'active',
         'year': now.year,
         'month': now.month,
     }
@@ -763,11 +764,11 @@ class AttachmentAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.B
     factory_class = factories.AttachmentFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'label': 'myfile',
+        'name': 'myfile',
         'description': 'My file\'s description',
     }
     update_data = {
-        'label': 'yourfile',
+        'name': 'yourfile',
         'description': 'Your file\'s description',
     }
 
@@ -801,11 +802,11 @@ class MyLeaveAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.Base
     user_factory = factories.AdminFactory
     create_data = {
         'description': 'Not going to work',
-        'status': 'DRAFT',
+        'status': 'draft',
     }
     update_data = {
         'description': 'Going to sleep',
-        'status': 'PENDING',
+        'status': 'pending',
     }
 
     def setUp(self):
@@ -845,7 +846,7 @@ class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
 
         self.workschedule = factories.WorkScheduleFactory.create()
         self.employmentcontract = factories.EmploymentContractFactory.create(
-            company=factories.CompanyFactory.create(),
+            company=factories.InternalCompanyFactory.create(),
             employment_contract_type=factories.EmploymentContractTypeFactory.create(),
             user=self.user,
             work_schedule=self.workschedule,
@@ -916,7 +917,7 @@ class MonthlyAvailabilityServiceAPIViewTestcase(APITestCase):
         self.user = factories.AdminFactory.create()
         self.client.force_authenticate(self.user)
 
-        self.company = factories.CompanyFactory.create()
+        self.company = factories.InternalCompanyFactory.create()
         self.workschedule = factories.WorkScheduleFactory.create(
             monday=8.0,
             tuesday=0,
@@ -944,7 +945,7 @@ class MonthlyAvailabilityServiceAPIViewTestcase(APITestCase):
         self.leave = factories.LeaveFactory.create(
             user=self.user,
             leave_type=factories.LeaveTypeFactory.create(
-                label='sickysticky'
+                name='sickysticky'
             ),
             status='APPROVED'
         )
@@ -1074,7 +1075,7 @@ class MonthlyAvailabilityServiceAPIViewTestcase(APITestCase):
         )
         self.leave_2 = factories.LeaveFactory.create(
             user=self.user,
-            leave_type=factories.LeaveTypeFactory.create(label='hellup, ek peize datr een euve up mi kop es gevolln'),
+            leave_type=factories.LeaveTypeFactory.create(name='hellup, ek peize datr een euve up mi kop es gevolln'),
             status='APPROVED'
         )
         self.leavedate_2 = factories.LeaveDateFactory(
@@ -1083,7 +1084,7 @@ class MonthlyAvailabilityServiceAPIViewTestcase(APITestCase):
             starts_at=timezone.make_aware(datetime.datetime(now.year, now.month, 7, 0, 0, 0), timezone.get_current_timezone()),
             ends_at=timezone.make_aware(datetime.datetime(now.year, now.month, 7, 12, 30, 0), timezone.get_current_timezone())
         )
-        
+
 
         period = now.replace(day=1).strftime('%Y-%m-%dT%H:%M:%S')
         get_response = self.client.get(self.url, { 'period':period })
@@ -1100,7 +1101,7 @@ class MonthlyAvailabilityServiceAPIViewTestcase(APITestCase):
 
 
 
-class MonthInfoServiceAPIViewTestcase(APITestCase): 
+class MonthInfoServiceAPIViewTestcase(APITestCase):
 
     def setUp(self):
         self.user = factories.AdminFactory.create()
@@ -1156,7 +1157,7 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
         self.userinfo.delete()
         get_response = self.client.get(self.url)
         self.assertEqual(get_response.status_code, status.HTTP_400_BAD_REQUEST)
-        
+
     def test_get_required_hours_with_leave(self):
         leave = factories.LeaveFactory.create(
             user=self.user,
@@ -1171,7 +1172,7 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
         leave.status = 'APPROVED'
         leavedate.save()
         leave.save()
-        
+
         get_response = self.client.get(self.url, {'month':now.month})
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
 
@@ -1186,11 +1187,11 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
     def test_get_hours_performed_of_user(self):
         get_response = self.client.get(self.url, {'user_id': self.second_user.id})
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
-  
+
     def test_get_hours_performed_month(self):
         get_response = self.client.get(self.url, {'month': now.month})
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
-    
+
     def test_get_hours_performed_month_year(self):
         get_response = self.client.get(self.url, {'month': now.month, 'year': now.year})
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
@@ -1199,7 +1200,7 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
         get_response = self.client.get(self.url, {'user_id': '999999999'})
         self.assertEqual(get_response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        
+
 class MyLeaveRequestsServiceAPITestcase(APITestCase):
     def setUp(self):
         self.user = factories.AdminFactory.create()
@@ -1217,7 +1218,7 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         self.update_url = reverse('my_leave_request_update_service')
         super().setUp()
 
-    #Success 
+    #Success
     #   Full day
     def test_normal_create_success(self):
         """Test normal scenario where leave dates can be created."""
@@ -1385,12 +1386,12 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         """Test scenario where a pre-existing leave is putted for a single day with time."""
         ltype = factories.LeaveTypeFactory.create()
         leave = factories.LeaveFactory.create(
-            user = self.user,
-            leave_type = ltype
+            user=self.user,
+            leave_type=ltype,
         )
 
         create_data = {
-            'description' : leave.description,
+            'description': leave.description,
             'status': leave.status,
             'leave_type': ltype.id,
             'full_day': False,
@@ -1420,7 +1421,7 @@ class MyLeaveRequestsServiceAPITestcase(APITestCase):
         )
 
         create_data = {
-            'description' : leave.description,
+            'description': leave.description,
             'status': leave.status,
             'leave_type': ltype.id,
             'full_day': True,
@@ -1601,12 +1602,12 @@ class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
     update_url = reverse('mytimesheet-list')
     user_factory = factories.AdminFactory
     create_data = {
-        'status': "ACTIVE",
+        'status': 'active',
         'year': now.year,
         'month': now.month,
     }
     update_data = {
-        'status': "ACTIVE",
+        'status': 'active',
         'year': now.year,
         'month': now.month,
     }
@@ -1617,13 +1618,13 @@ class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
     def test_pending_to_active_update(self):
         user = factories.UserFactory.create()
         timesheet = factories.TimesheetFactory(
-            status="PENDING",
+            status='pending',
             year=now.year,
             month=now.month,
             user=user
         )
         update_data = {
-            'status': "ACTIVE",
+            'status': 'active',
             'year': now.year,
             'month': now.month
         }
@@ -1635,13 +1636,13 @@ class MyContractAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.B
     base_name = 'mycontract'
     factory_class = factories.ContractFactory
     create_data = {
-        'label': 'Cool contract',
+        'name': 'Cool contract',
         'description': 'This is a very cool contract. B-)',
         'active': True,
         'starts_at': now
     }
     update_data = {
-        'label': 'Stupid contract',
+        'name': 'Stupid contract',
         'description': 'This is a very stupid contract. :(',
         'active': True,
         'starts_at': now,
@@ -1779,11 +1780,11 @@ class MyAttachmentAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases
     factory_class = factories.AttachmentFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'label': 'myfile',
+        'name': 'myfile',
         'description': 'My file\'s description',
     }
     update_data = {
-        'label': 'yourfile',
+        'name': 'yourfile',
         'description': 'Your file\'s description',
     }
 
@@ -1815,7 +1816,7 @@ class MyWorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcas
     factory_class = factories.WorkScheduleFactory
     user_factory = factories.AdminFactory
     create_data = {
-        'label': 'Test schedule #1',
+        'name': 'Test schedule #1',
         'monday': Decimal('1.20'),
         'tuesday': Decimal('1.50'),
         'wednesday': Decimal('1.75'),
@@ -1825,7 +1826,7 @@ class MyWorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcas
         'sunday': Decimal('0'),
     }
     update_data = {
-        'label': 'Test schedule #2',
+        'name': 'Test schedule #2',
         'monday': Decimal('2.10'),
         'tuesday': Decimal('5.10'),
         'wednesday': Decimal('7.50'),
@@ -1846,7 +1847,7 @@ class MyWorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcas
     def get_object(self, factory):
         work_schedule = self.work_schedule
         factories.EmploymentContractFactory.create(
-            user=self.user, 
+            user=self.user,
             company=factories.CompanyFactory.create(),
             work_schedule=self.work_schedule,
             employment_contract_type=factories.EmploymentContractTypeFactory.create()

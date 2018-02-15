@@ -1,4 +1,18 @@
+"""Utils."""
 from importlib import import_module
+import os
+
+
+def get_django_configuration():
+    env = os.getenv('ENVIRONMENT', 'dev')
+
+    env_map = {
+        'staging': 'Stag',
+        'demo': 'Demo',
+        'production': 'Prod',
+    }
+
+    return env_map.get(env, 'Dev')
 
 
 def str_import(string):

@@ -23,6 +23,8 @@ CFG_FILE_PATH = os.path.expanduser(os.environ.get('CFG_FILE_PATH', '/etc/925r/co
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+ENVIRONMENT = os.getenv('ENVIRONMENT', 'dev')
+
 
 class Base(Configuration):
 
@@ -41,7 +43,7 @@ class Base(Configuration):
         try:
             with open(CFG_FILE_PATH, 'r') as f:
                 data = yaml.load(f)
-        except:
+        except BaseException:
             pass
 
         if data:
@@ -58,9 +60,9 @@ class Base(Configuration):
     SECRET_KEY = '$6_rj^w8_*ihrkohpckeq4028ai1*no1cw1vp*2%oe8+#gp1sj'
 
     # SECURITY WARNING: don't run with debug turned on in production!
-    DEBUG = True
+    DEBUG = False
 
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS = ['localhost']
 
     # Apps included here will be included
     # in the test suite
@@ -69,7 +71,7 @@ class Base(Configuration):
     ]
 
     # Application definition
-    INSTALLED_APPS = [
+    INSTALLED_APPS = NINETOFIVER_APPS + [
         'django.contrib.admin',
         'django.contrib.auth',
         'django.contrib.contenttypes',
@@ -78,7 +80,7 @@ class Base(Configuration):
         'django.contrib.staticfiles',
         'rest_framework',
         'rest_framework_swagger',
-        # 'django_filters',
+        'django_filters',
         'rest_framework_filters',
         'corsheaders',
         'polymorphic',
@@ -88,10 +90,11 @@ class Base(Configuration):
         'django_countries',
         'rangefilter',
         'django_admin_listfilter_dropdown',
-#        'django_extensions'        
-    ] + NINETOFIVER_APPS
+        'silk',
+    ]
 
     MIDDLEWARE = [
+        'silk.middleware.SilkyMiddleware',
         'django.middleware.security.SecurityMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
         'corsheaders.middleware.CorsMiddleware',
@@ -119,7 +122,6 @@ class Base(Configuration):
                 ],
                 'loaders': [
                     ('pypugjs.ext.django.Loader', (
-                        'apptemplates.Loader',
                         'django.template.loaders.filesystem.Loader',
                         'django.template.loaders.app_directories.Loader',
                     )),
@@ -133,20 +135,19 @@ class Base(Configuration):
 
     # Database
     # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
-
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'YAYATA',
-            'USER': 'root',
-            'PASSWORD': 'rootroot',
-            'HOST': 'localhost',
-            'PORT': '3306',
-            'TEST': {
-                'NAME': 'test_YAYATA',
-                'CHARSET': 'utf8',
+            'HOST': 'mysql.{env}.925r.local'.format(env=ENVIRONMENT),
+            'PORT': os.getenv('MYSQL_PORT', '3306'),
+            'NAME': os.getenv('MYSQL_DB', 'ninetofiver'),
+            'USER': os.getenv('MYSQL_USER', 'ninetofiver'),
+            'PASSWORD': os.getenv('MYSQL_PASSWORD', ''),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             },
-        }
+            'CONN_MAX_AGE': 600,
+        },
     }
 
     # Password validation
@@ -187,13 +188,6 @@ class Base(Configuration):
 
     # User-uploaded files
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
-
-    # Caching
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-        }
-    }
 
     # Auth
     LOGIN_URL = 'login'
@@ -244,6 +238,16 @@ class Base(Configuration):
         'VALIDATOR_URL': None,
     }
 
+    # Profiling
+    SILKY_AUTHENTICATION = True  # User must login
+    SILKY_AUTHORISATION = True  # User must have permissions
+    SILKY_MAX_REQUEST_BODY_SIZE = 0
+    SILKY_MAX_RESPONSE_BODY_SIZE = 0
+    SILKY_META = True
+    SILKY_MAX_RECORDED_REQUESTS = 10000
+    SILKY_MAX_RECORDED_REQUESTS_CHECK_PERCENT = 1
+    SILKY_INTERCEPT_PERCENT = 5
+
     # Crispy forms
     CRISPY_TEMPLATE_PACK = 'bootstrap3'
 
@@ -252,7 +256,7 @@ class Base(Configuration):
 
     # Registration
     ACCOUNT_ACTIVATION_DAYS = 7
-    REGISTRATION_OPEN = True
+    REGISTRATION_OPEN = False
 
     # CORS
     CORS_ORIGIN_ALLOW_ALL = True
@@ -283,8 +287,8 @@ class Base(Configuration):
     }
     AUTH_LDAP_ALWAYS_UPDATE_USER = True
 
-    # REDMINE 
-    REDMINE_URL = None 
+    # REDMINE
+    REDMINE_URL = None
     REDMINE_API_KEY = None
 
     # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -294,8 +298,19 @@ class Base(Configuration):
 
 
 class Dev(Base):
-  
+
     """Dev configuration."""
+
+    DEBUG = True
+
+    ALLOWED_HOSTS = ['*']
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
 
     # Logging
     LOGGING = {
@@ -335,84 +350,45 @@ class Dev(Base):
         }
     }
 
+    INTERNAL_IPS = Base.INTERNAL_IPS + [
+        '127.0.0.1',
+    ]
+
+    # Profiling
+    SILKY_INTERCEPT_PERCENT = 100
+
+    REGISTRATION_OPEN = True
+
+
 class Prod(Base):
-  
+
     """Prod configuration."""
 
-    DEBUG = False
-    ALLOWED_HOSTS = ['localhost']
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db-prod.sqlite3'),
-        }
-    }
-
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-            'LOCATION': os.path.expanduser('~/.ninetofiver_cache'),
-            'TIMEOUT': 60 * 60 * 24 * 7 * 365,
-            'OPTIONS': {
-                'MAX_ENTRIES': 10000
-            }
-        }
-    }
-
-    REGISTRATION_OPEN = False
     # Logging
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
         'formatters': {
-            'verbose': {
-                'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-            },
             'simple': {
                 'format': '%(levelname)s %(message)s'
             },
         },
-        'filters': {
-            'require_debug_true': {
-                '()': 'django.utils.log.RequireDebugTrue',
-            },
-        },
         'handlers': {
-            'syslog': {
-                'class': 'logging.handlers.SysLogHandler',
-                'formatter': 'verbose',
-                'facility': 'user',
-            },
             'console': {
-                'level': 'DEBUG',
-                'filters': ['require_debug_true'],
                 'class': 'logging.StreamHandler',
                 'formatter': 'simple'
             },
         },
-         'loggers': {
-            'ninetofiver': {
-                'handlers': ['console', 'syslog'],
+        'loggers': {
+            '': {
+                'handlers': ['console'],
                 'level': 'INFO',
-            }
+                'propagate': False,
+            },
         }
     }
 
 
-class TravisCI(Base):
+class Stag(Prod):
 
-    """Travis-CI configuration."""
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'travis_ci_db',
-            'USER': 'root',
-            'PASSWORD': '',
-            'HOST': '127.0.0.1',
-        }
-    }
-
-    REDMINE_URL = os.getenv('REDMINE_URL')
-    REDMINE_API_KEY = os.getenv('REDMINE_API_KEY')
+    """Stag configuration."""
