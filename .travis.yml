@@ -3,8 +3,7 @@ python:
   - "3.6"
 install:
   - pip install tox
-  - pip install coveralls
 script:
-  - coverage run --source=ninetofiver `which tox`
+  - tox
 after_success:
   - coveralls
