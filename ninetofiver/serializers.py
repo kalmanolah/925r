@@ -118,6 +118,59 @@ class BasePolymorphicSerializer(serializers.Serializer):
         return serializer(context=self.context).update(instance, validated_data)
 
 
+class MinimalSerializer(serializers.ModelSerializer):
+    """Minimal serializer."""
+
+    display_label = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = (
+            'display_label',
+            'type',
+            'id',
+        )
+        read_only_fields = (
+            'display_label',
+            'type',
+            'id',
+        )
+
+    def get_display_label(self, obj):
+        return str(obj)
+
+    def get_type(self, obj):
+        return obj.__class__.__name__
+
+    def to_internal_value(self, data):
+        return (serializers.PrimaryKeyRelatedField(queryset=self.__class__.Meta.model.objects.all())
+                .to_internal_value(data))
+
+
+class MinimalUserSerializer(MinimalSerializer):
+
+    """Minimal user serializer."""
+
+    class Meta(MinimalSerializer.Meta):
+        model = auth_models.User
+
+
+class MinimalLeaveTypeSerializer(MinimalSerializer):
+
+    """Minimal leave type serializer."""
+
+    class Meta(MinimalSerializer.Meta):
+        model = models.LeaveType
+
+
+class MinimalCompanySerializer(MinimalSerializer):
+
+    """Minimal company serializer."""
+
+    class Meta(MinimalSerializer.Meta):
+        model = models.Company
+
+
 class CompanySerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Company
@@ -238,6 +291,8 @@ class LeaveDateSerializer(BaseSerializer):
 
 class LeaveSerializer(BaseSerializer):
     leavedate_set = LeaveDateSerializer(many=True, read_only=True)
+    leave_type = MinimalLeaveTypeSerializer()
+    user = MinimalUserSerializer()
 
     class Meta(BaseSerializer.Meta):
         model = models.Leave
@@ -399,13 +454,15 @@ class MyUserSerializer(UserSerializer):
 
 class MyLeaveSerializer(LeaveSerializer):
     status = serializers.ChoiceField(choices=(models.STATUS_DRAFT, models.STATUS_PENDING))
-
-    class Meta(LeaveSerializer.Meta):
-        read_only_fields = LeaveSerializer.Meta.read_only_fields + ('user',)
+    user = MinimalUserSerializer(read_only=True)
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().update(instance, validated_data)
 
 
 class MyLeaveDateSerializer(LeaveDateSerializer):
@@ -468,14 +525,6 @@ class MyAttachmentSerializer(AttachmentSerializer):
 class MyWorkScheduleSerializer(WorkScheduleSerializer):
     class Meta(WorkScheduleSerializer.Meta):
         read_only_fields = WorkScheduleSerializer.Meta.read_only_fields + ('user',)
-
-
-class MonthInfoSerializer(serializers.Serializer):
-    # user_id = serializers.CharField(max_length=255)
-    hours_performed = serializers.DecimalField(max_digits=255, decimal_places=2)
-    hours_required = serializers.DecimalField(max_digits=255, decimal_places=2)
-    # leaves = serializers.CharField(max_length=255)
-    # holidays = serializers.CharField(max_length=255)
 
 
 class LeaveRequestSerializer(serializers.Serializer):

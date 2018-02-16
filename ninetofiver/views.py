@@ -3,9 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
 from decimal import Decimal
-from datetime import datetime, timedelta, time
 from dateutil.relativedelta import relativedelta
-from calendar import monthcalendar, weekday, monthrange, day_name
+from calendar import monthcalendar, monthrange, day_name
 from collections import Counter
 from django.utils import timezone
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -32,9 +31,11 @@ from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
 from ninetofiver.redmine.views import get_redmine_user_time_entries
 from ninetofiver.redmine.serializers import RedmineTimeEntrySerializer
+from ninetofiver.utils import days_in_month
 from django.db.models import Q
 from django.db import DatabaseError
 from django.core.mail import send_mail
+from datetime import datetime, date, timedelta
 
 import ninetofiver.settings as settings
 
@@ -450,7 +451,7 @@ class MonthlyAvailabilityServiceAPIView(APIView):
     def determineHoliday(self, user, period, employmentcontract, result_dict):
         """Determines the holidays per country and checks the user's country."""
         for ec in employmentcontract:
-            endOfMonth = (period.replace(month=period.month) + relativedelta(months=1) ) - timedelta(days=1)
+            endOfMonth = (period.replace(month=period.month) + relativedelta(months=1)) - timedelta(days=1)
             holidays_month = models.Holiday.objects.filter(date__range=(period, endOfMonth)).filter()
 
             if len(holidays_month) > 0:
@@ -521,7 +522,7 @@ class MonthlyAvailabilityServiceAPIView(APIView):
             'leave': {}
         }
 
-        endOfMonth = (period.replace(month=period.month) + relativedelta(months=1) ) - timedelta(days=1)
+        endOfMonth = (period.replace(month=period.month) + relativedelta(months=1)) - timedelta(days=1)
 
         for u in users:
 
@@ -544,133 +545,100 @@ class MonthlyAvailabilityServiceAPIView(APIView):
 
 class MonthInfoServiceAPIView(APIView):
     """
-    Calculates and returns information from a given month.
+    Calculates and returns information for a given month.
+
     Returns: hours_required of a given month and user
     (as a string because decimal serialization can cause precision loss).
+
     """
+
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, format=None):
-        # get user from params, defaults to the current user if user is omitted.
-        user_id = request.query_params.get('user_id') or request.user.id
-        try:
-            user = auth_models.User.objects.get(pk=user_id)
-        except ObjectDoesNotExist as oe:
-            return Response("Can't find user with id: " + str(user_id), status=status.HTTP_400_BAD_REQUEST)
+        """Get month information."""
+        user = request.user
+
+        if user.is_superuser and request.query_params.get('user_id'):
+            user = get_object_or_404(auth_models.User.objects, pk=request.query_params.get('user_id'))
+
         # get month from params, defaults to the current month if month is omitted.
         month = int(request.query_params.get('month') or datetime.now().month)
         year = int(request.query_params.get('year') or datetime.now().year)
 
-        data = {}
+        work_hours = 0
+        holiday_hours = 0
+        leave_hours = 0
+        remaining_hours = 0
+        performed_hours = 0
 
-        try:
-            data['hours_required'] = self.total_hours_required(user_id, month, year)
-        except ObjectDoesNotExist as oe:
-            return Response(str(oe), status=status.HTTP_400_BAD_REQUEST)
+        # Calculate work hours based on work schedule and employment contract
+        ec = None
+        work_schedule = None
+        for day in range(days_in_month(year, month)):
+            dt = date(year, month, day + 1)
 
-        data['hours_performed'] = self.hours_performed(user_id, month, year)
-        serializer = serializers.MonthInfoSerializer(data=data)
+            if (not ec) or (ec.started_at > dt) or (ec.ended_at and (ec.ended_at < dt)):
+                ec = models.EmploymentContract.objects.filter(
+                    Q(user=user, started_at__gte=dt) &
+                    (Q(ended_at__isnull=True) | Q(ended_at__lte=dt))
+                ).first()
 
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.data)
+                work_schedule = ec.work_schedule if ec else None
 
-    def total_hours_required(self, user, month, year):
-        total = 0
+            if work_schedule:
+                work_hours += self._get_weekday_hours(work_schedule, dt.weekday())
 
-        # Calculate total hours required.
-        employmentcontract = models.EmploymentContract.objects.filter(user=int(user))
-        if len(employmentcontract) == 0:
-            raise ObjectDoesNotExist('No EmploymentContract object found for user with id: %s' % (str(user),))
+        # Calculate holiday hours
+        user_info = models.UserInfo.objects.filter(user=user).first()
+        if user_info and work_schedule:
+            holidays = models.Holiday.objects.filter(country=user_info.country, date__month=month, date__year=year)
 
-        wschedule = models.WorkSchedule.objects.get(pk=employmentcontract[0].work_schedule.id)
+            for holiday in holidays:
+                holiday_hours += self._get_weekday_hours(work_schedule, holiday.date.weekday())
 
-        # List that contains the amount of weekdays of the given month.
-        start_date = datetime(year, month, 1)
-        end_date = datetime(year, month, monthrange(year, month)[1])
-        days_count = {}
+        # Get all approved leaves of the user with a leavedate in the given month.
+        leaves = models.Leave.objects.filter(user=user, status=models.STATUS_APPROVED,
+                                             leavedate__starts_at__month=month, leavedate__starts_at__year=year)
 
-        for i in range((end_date - start_date).days + 1):
-            day = (start_date + timedelta(days=i)).weekday()
-            days_count[day] = days_count[day] + 1 if day in days_count else 1
+        # Calculate leave hours
+        for leave in leaves:
+            for leave_date in leave.leavedate_set.all():
+                if (leave_date.starts_at.month == month) and (leave_date.starts_at.year == year):
+                    leave_hours += Decimal(round((leave_date.ends_at - leave_date.starts_at).total_seconds() / 3600, 2))
 
-        # Caluculate total hours required to work according to work schedule.
-        for weekday in range(7):
-            total += (self.get_weekday_whours(wschedule, weekday) * days_count[weekday])
-
-        # Subtract holdays from total.
-        user_info = models.UserInfo.objects.filter(user_id=user)
-        if len(user_info) == 0:
-            raise ObjectDoesNotExist("No UserInfo object found for user with id: %s" % (str(user),))
-
-        holidays = models.Holiday.objects.filter(country=user_info[0].country).filter(date__month=month, date__year=year)
-        for holiday in holidays:
-            weekday_holiday = holiday.date.weekday()
-            total -= self.get_weekday_whours(wschedule, weekday_holiday)
-
-        RANGE_START = timezone.make_aware(datetime(year, month, 1, 0, 0, 0, 0), timezone.get_current_timezone())
-        RANGE_END = timezone.make_aware(datetime(year, month, monthrange(year, month)[1], 0, 0, 0), timezone.get_current_timezone())
-
-        # Get all approved leaves of the user.
-        leaves = models.Leave.objects.filter(user_id=user, status=models.STATUS_APPROVED)
-
-        # Filter out those who don't start or end in the current month.
-        result = list(filter(
-            lambda x: (
-                x.leavedate_set.first().starts_at >= RANGE_START
-                and x.leavedate_set.first().starts_at <= RANGE_END
-            ) or (
-                x.leavedate_set.last().starts_at >= RANGE_START
-                and x.leavedate_set.last().starts_at <= RANGE_END
-            ), leaves
-        ))
-
-        # Subtract leaves from total.
-        for leave in result:
-            leavedates = leave.leavedate_set.all()
-            first_leavedate = leavedates.first()
-            last_leavedate = leavedates.last()
-
-            # check if leave is only one day
-            if first_leavedate == last_leavedate:
-
-                # Calculate hours in leave and set max to workschedule
-                hours = first_leavedate.ends_at - first_leavedate.starts_at
-                whours_ldate = self.get_weekday_whours(wschedule, first_leavedate.starts_at.weekday())
-
-                if hours.total_seconds() > whours_ldate * 3600:
-                    hours = timedelta(seconds=int(whours_ldate*3600))
-
-                # get the weekday of the leave and subtract the leavehours from te corresponding day in worschedule
-                weekday = first_leavedate.starts_at.weekday()
-                total -= Decimal((hours.total_seconds() / 3600))
-            else:
-                for leave in leavedates:
-                    weekday = leave.starts_at.weekday()
-                    total -= (self.get_weekday_whours(wschedule, weekday))
-
-        return Decimal(round(total, 1))
-
-    def hours_performed(self, user, month, year):
-        total = 0
-        try:
-            performances = models.ActivityPerformance.objects.filter(timesheet__user_id=user, timesheet__month=month, timesheet__year=year)
-        except ObjectDoesNotExist as oe:
-            return Response('Performances not found: ' + str(oe), status=status.HTTP_404_NOT_FOUND)
+        # Calculate performed hours
+        performances = models.ActivityPerformance.objects.filter(timesheet__user=user, timesheet__month=month,
+                                                                 timesheet__year=year)
         for performance in performances:
-            total += Decimal(performance.duration)
-        return Decimal(total)
+            performed_hours += Decimal(performance.duration)
 
-    # Gets a work_schedule and a weekday and returns the corresponding hours
-    def get_weekday_whours(self, ws, weekday):
+        remaining_hours = work_hours - holiday_hours - leave_hours - performed_hours
+        remaining_hours = 0 if remaining_hours < 0 else remaining_hours
+
+        data = {
+            'work_hours': work_hours,
+            'holiday_hours': holiday_hours,
+            'leave_hours': leave_hours,
+            'remaining_hours': remaining_hours,
+            'performed_hours': performed_hours,
+            'year': year,
+            'month': month,
+        }
+
+        return Response(data)
+
+    def _get_weekday_hours(self, work_schedule, weekday):
+        """Get the amount of required working hours for the given weekday for the given workschedule."""
         work_schedule_list = [
-            ws.monday,
-            ws.tuesday,
-            ws.wednesday,
-            ws.thursday,
-            ws.friday,
-            ws.saturday,
-            ws.sunday
+            work_schedule.monday,
+            work_schedule.tuesday,
+            work_schedule.wednesday,
+            work_schedule.thursday,
+            work_schedule.friday,
+            work_schedule.saturday,
+            work_schedule.sunday,
         ]
+
         return work_schedule_list[weekday]
 
 

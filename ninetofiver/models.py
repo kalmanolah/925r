@@ -2,7 +2,6 @@
 import humanize
 import uuid
 import logging
-from calendar import monthrange
 from datetime import datetime, date
 from decimal import Decimal
 from django.contrib.auth import models as auth_models
@@ -13,7 +12,7 @@ from django.urls import reverse
 from django.utils.translation import ugettext as _
 from django_countries.fields import CountryField
 from model_utils import Choices
-from ninetofiver.utils import merge_dicts
+from ninetofiver.utils import days_in_month
 from polymorphic.models import PolymorphicManager
 from polymorphic.models import PolymorphicModel
 
@@ -499,9 +498,11 @@ class LeaveDate(BaseModel):
             raise ValidationError({'leave':
                                   _('You cannot attach leave dates to leaves and timesheets for different users')})
 
-        # Verify linked leave is in draft mode
-        if self.leave.status not in [STATUS_DRAFT, STATUS_PENDING]:
-            raise ValidationError({'leave': _('You can only add leave dates to draft leaves.')})
+        # # Verify linked leave is in draft mode
+        # @TODO Re-enable this, but since leave dates are saved after leaves when using inlines in the admin interface,
+        #       we can't ever approve/reject leaves if we do not comment this out
+        # if self.leave.status not in [STATUS_DRAFT, STATUS_PENDING]:
+        #     raise ValidationError({'leave': _('You can only add leave dates to draft leaves.')})
 
 
 class PerformanceType(BaseModel):
@@ -736,7 +737,7 @@ class Whereabout(BaseModel):
         if self.timesheet.status != STATUS_ACTIVE:
             raise ValidationError({'timesheet': _('Whereabouts can only be attached to active timesheets.')})
 
-        month_days = monthrange(self.timesheet.year, self.timesheet.month)[1]
+        month_days = days_in_month(self.timesheet.year, self.timesheet.month)
 
         if self.day > month_days:
             raise ValidationError({'day': _('There are not that many days in the month this timesheet is attached to.'
@@ -769,7 +770,7 @@ class Performance(BaseModel):
             raise ValidationError({'timesheet': _('Performances can only be attached to active timesheets.')})
 
         # Verify whether the day is valid for the month/year of the timesheet
-        month_days = monthrange(self.timesheet.year, self.timesheet.month)[1]
+        month_days = days_in_month(self.timesheet.year, self.timesheet.month)
 
         if self.day > month_days:
             raise ValidationError({'day': _('There are not that many days in the month this timesheet is attached to.'

@@ -1,9 +1,11 @@
 """Utils."""
 from importlib import import_module
+from calendar import monthrange
 import os
 
 
 def get_django_configuration():
+    """Get the django configuration name based on the current environment."""
     env = os.getenv('ENVIRONMENT', 'dev')
 
     env_map = {
@@ -30,3 +32,7 @@ def merge_dicts(*dicts):
     [result.update(x) for x in dicts]
 
     return result
+
+def days_in_month(year, month):
+    """Get the amount of days in a month."""
+    return monthrange(year, month)[1]

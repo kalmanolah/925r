@@ -1151,12 +1151,14 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
     def test_get_required_hours_without_employmentcontract(self):
         self.employmentcontract.delete()
         get_response = self.client.get(self.url)
-        self.assertEqual(get_response.status_code, status.HTTP_400_BAD_REQUEST)
+        # self.assertEqual(get_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
 
     def test_get_required_hours_without_userinfo(self):
         self.userinfo.delete()
         get_response = self.client.get(self.url)
-        self.assertEqual(get_response.status_code, status.HTTP_400_BAD_REQUEST)
+        # self.assertEqual(get_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
 
     def test_get_required_hours_with_leave(self):
         leave = factories.LeaveFactory.create(
@@ -1198,7 +1200,7 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
 
     def test_get_required_hours_with_invalid_user(self):
         get_response = self.client.get(self.url, {'user_id': '999999999'})
-        self.assertEqual(get_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(get_response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class MyLeaveRequestsServiceAPITestcase(APITestCase):
