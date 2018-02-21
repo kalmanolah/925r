@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b4d6a7c6740fe03bffd9385567259be920278dab95d70103e0145104d2763fbb"
+            "sha256": "fabadf82beb07c636ad7abd04e626cba89bbe02bb7f6052c99e7ba12c59bcd1c"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -9,9 +9,9 @@
             "os_name": "posix",
             "platform_machine": "x86_64",
             "platform_python_implementation": "CPython",
-            "platform_release": "4.14.0-2-amd64",
+            "platform_release": "4.14.0-3-amd64",
             "platform_system": "Linux",
-            "platform_version": "#1 SMP Debian 4.14.7-1 (2017-12-22)",
+            "platform_version": "#1 SMP Debian 4.14.13-1 (2018-01-14)",
             "python_full_version": "3.6.4",
             "python_version": "3.6",
             "sys_platform": "linux"
@@ -199,6 +199,13 @@
                 "sha256:22b69762eee91138a3a58f960b35f18467d685c0db87ae42dca8bd4abef11a21"
             ],
             "version": "==2.0.0"
+        },
+        "django-wkhtmltopdf": {
+            "hashes": [
+                "sha256:b8b0b96d5605235352289f603de4571c1b767fc869779c537035100060145119",
+                "sha256:f746f7b62089c0e788c5d5f8b6ccbc8795e5c8761f5f07ecabc666bc9c89054a"
+            ],
+            "version": "==3.1.0"
         },
         "djangorestframework": {
             "hashes": [

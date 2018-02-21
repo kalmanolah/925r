@@ -1,0 +1,81 @@
+extends ninetofiver/pdf/base.pug
+
+block body
+  div(class='my-5')
+  div(class='container')
+    div(class='row justify-content-between')
+      div(class='col-5 align-self-center')
+        div(class='row justify-content-center')
+          div(class='col-6')
+            - if contract.company.logo_url
+              img(class='img-fluid' src='{{ contract.company.logo_url }}')
+      div(class='col-7')
+        div(class='card')
+          div(class='card-header text-center') Timesheet &mdash; Monthly time report
+          div(class='table-body')
+            table(class='table table-sm my-0')
+              tr
+                th Consultant
+                td {{ timesheet.user }}
+                th Year
+                td {{ timesheet.year }}
+              tr
+                th Customer
+                td {{ contract.customer }}
+                th Month
+                td {{ timesheet.month }}
+              tr
+                th Project
+                td {{ contract }}
+                th
+                td
+
+    hr(class='my-4')
+
+    table(class='table table-bordered table-striped table-sm')
+      thead
+        tr
+          th Day
+          th Description
+          th(class='text-right') Hours
+          th Type
+      tbody
+        each performance, i in performances
+          tr
+            td {{ performance.day }}
+            td
+              - if performance.description
+                span {{ performance.description }}
+            td(class='text-right') {{ performance.duration }}
+            td {{ performance.performance_type }}
+        tr
+          td(colspan='4')
+        tr
+          td
+          th Total
+          th(class='text-right') {{ total_performed_hours }}
+          td
+        tr
+          td
+          th Total in 8 hour days
+          th(class='text-right') {{ total_performed_days }}
+          td
+          
+    hr(class='my-4')
+    
+    div(class='row')
+      div(class='col-4')
+        div(class='card')
+          div(class='card-body pb-5')
+            span(class='card-title') Signature consultant
+            div(class='my-5')
+      div(class='col-4')
+        div(class='card')
+          div(class='card-body pb-5')
+            span(class='card-title') Signature customer
+            div(class='my-5')
+      div(class='col-4')
+        div(class='card')
+          div(class='card-body pb-5')
+            span(class='card-title') Remarks
+            div(class='my-5')

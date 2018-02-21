@@ -6,6 +6,7 @@ from django.db.models import Q
 from collections import Counter
 from django.db.models import Func
 from django_filters.rest_framework import FilterSet
+import rest_framework_filters as filters
 from ninetofiver import models
 from ninetofiver.utils import merge_dicts
 from rest_framework import generics
@@ -534,7 +535,7 @@ class ProjectEstimateFilter(FilterSet):
         }
 
 
-class TimesheetFilter(FilterSet):
+class TimesheetFilter(filters.FilterSet):
     order_fields = ('year', 'month', 'status', 'user')
     order_by = NullLastOrderingFilter(fields=order_fields)
 

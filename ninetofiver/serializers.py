@@ -171,6 +171,30 @@ class MinimalCompanySerializer(MinimalSerializer):
         model = models.Company
 
 
+class MinimalContractSerializer(MinimalSerializer):
+
+    """Minimal contract serializer."""
+
+    class Meta(MinimalSerializer.Meta):
+        model = models.Contract
+
+
+class MinimalContractRoleSerializer(MinimalSerializer):
+
+    """Minimal contract role serializer."""
+
+    class Meta(MinimalSerializer.Meta):
+        model = models.ContractRole
+
+
+class MinimalPerformanceTypeSerializer(MinimalSerializer):
+
+    """Minimal performance type serializer."""
+
+    class Meta(MinimalSerializer.Meta):
+        model = models.PerformanceType
+
+
 class CompanySerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Company
@@ -307,6 +331,9 @@ class PerformanceTypeSerializer(BaseSerializer):
 
 
 class ContractSerializer(BaseSerializer):
+    performance_types = MinimalPerformanceTypeSerializer(many=True, required=False)
+    customer = MinimalCompanySerializer()
+    company = MinimalCompanySerializer()
     hours_spent = serializers.SerializerMethodField()
 
     def get_hours_spent(self, obj):
@@ -380,9 +407,17 @@ class ContractRoleSerializer(BaseSerializer):
 
 
 class ContractUserSerializer(BaseSerializer):
+    contract = MinimalContractSerializer()
+    contract_role = MinimalContractRoleSerializer()
+    user = MinimalUserSerializer()
+
     class Meta(BaseSerializer.Meta):
         model = models.ContractUser
-        fields = BaseSerializer.Meta.fields + ('user', 'contract', 'contract_role')
+        fields = BaseSerializer.Meta.fields + (
+            'user',
+            'contract',
+            'contract_role',
+        )
 
 
 class ContractGroupSerializer(BaseSerializer):
@@ -398,6 +433,8 @@ class ProjectEstimateSerializer(BaseSerializer):
 
 
 class TimesheetSerializer(BaseSerializer):
+    user = MinimalUserSerializer()
+
     class Meta(BaseSerializer.Meta):
         model = models.Timesheet
         fields = BaseSerializer.Meta.fields + ('user', 'year', 'month', 'status')
@@ -408,7 +445,10 @@ class WhereaboutSerializer(BaseSerializer):
         model = models.Whereabout
         fields = BaseSerializer.Meta.fields + ('timesheet', 'day', 'location')
 
+
 class PerformanceSerializer(BaseSerializer):
+    contract = MinimalContractSerializer()
+
     class Meta(BaseSerializer.Meta):
         model = models.Performance
         fields = BaseSerializer.Meta.fields + ('timesheet', 'day', 'redmine_id', 'contract')
@@ -477,6 +517,7 @@ class MyLeaveDateSerializer(LeaveDateSerializer):
 
 
 class MyTimesheetSerializer(TimesheetSerializer):
+    user = MinimalUserSerializer(read_only=True)
     class Meta(TimesheetSerializer.Meta):
         read_only_fields = TimesheetSerializer.Meta.read_only_fields + ('user', )
 
@@ -491,9 +532,15 @@ class MyTimesheetSerializer(TimesheetSerializer):
                 raise serializers.ValidationError('DA MAG NIE HE MENNEKE')
         return super().update(instance, validated_data)
 
+
 class MyContractSerializer(ContractSerializer):
     class Meta(ContractSerializer.Meta):
         read_only_fields = ContractSerializer.Meta.read_only_fields + ('user', )
+
+
+class MyContractUserSerializer(ContractUserSerializer):
+    class Meta(ContractUserSerializer.Meta):
+        read_only_fields = ContractUserSerializer.Meta.read_only_fields + ('user', )
 
 
 class MyPerformanceSerializer(PerformanceSerializer):

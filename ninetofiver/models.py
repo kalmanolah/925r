@@ -110,6 +110,7 @@ class Company(BaseModel):
     address = models.TextField(max_length=255)
     country = CountryField()
     internal = models.BooleanField(default=False)
+    logo_url = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta(BaseModel.Meta):
         verbose_name_plural = 'companies'

@@ -36,7 +36,7 @@ from django.db.models import Q
 from django.db import DatabaseError
 from django.core.mail import send_mail
 from datetime import datetime, date, timedelta
-
+from wkhtmltopdf.views import PDFTemplateView
 import ninetofiver.settings as settings
 
 import logging
@@ -902,6 +902,31 @@ class MyLeaveRequestUpdateServiceAPIView(generics.UpdateAPIView, MyLeaveRequestS
         return self.update(request)
 
 
+class MyTimesheetContractPdfExportServiceAPIView(PDFTemplateView, generics.GenericAPIView):
+
+    """View for exporting a timesheet contract to PDF."""
+
+    filename = 'timesheet_contract.pdf'
+    template_name = 'ninetofiver/timesheets/timesheet_contract_pdf_export.pug'
+
+    def render_to_response(self, context, **response_kwargs):
+        user = context['view'].request.user
+        timesheet = get_object_or_404(models.Timesheet, pk=context.get('timesheet_pk', None), user=user)
+        contract = get_object_or_404(models.Contract, pk=context.get('contract_pk', None), contractuser__user=user)
+
+        context['user'] = user
+        context['timesheet'] = timesheet
+        context['contract'] = contract
+        context['performances'] = (models.ActivityPerformance.objects
+                                   .filter(timesheet=timesheet, contract=contract)
+                                   .order_by('day')
+                                   .all())
+        context['total_performed_hours'] = sum([x.duration for x in context['performances']])
+        context['total_performed_days'] = round(context['total_performed_hours'] / 8, 2)
+
+        return super().render_to_response(context, **response_kwargs)
+
+
 class MyLeaveViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows leaves for the currently authenticated user to be viewed or edited.
@@ -952,6 +977,19 @@ class MyContractViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return models.Contract.objects.filter(contractuser__user=user).distinct()
+
+
+class MyContractUserViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows contract users for the currently authenticated user to be viewed or edited.
+    """
+    serializer_class = serializers.MyContractUserSerializer
+    filter_class = filters.ContractUserFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return models.ContractUser.objects.filter(user=user).distinct()
 
 
 class MyPerformanceViewSet(GenericHierarchicalReadOnlyViewSet):

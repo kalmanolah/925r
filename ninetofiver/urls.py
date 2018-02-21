@@ -49,6 +49,7 @@ router.register(r'my_leaves', views.MyLeaveViewSet, base_name='myleave')
 router.register(r'my_leave_dates', views.MyLeaveDateViewSet, base_name='myleavedate')
 router.register(r'my_timesheets', views.MyTimesheetViewSet, base_name='mytimesheet')
 router.register(r'my_contracts', views.MyContractViewSet, base_name='mycontract')
+router.register(r'my_contract_users', views.MyContractUserViewSet, base_name='mycontractuser')
 router.register(r'my_performances/activity', views.MyActivityPerformanceViewSet, base_name='myactivityperformance')
 router.register(r'my_performances/standby', views.MyStandbyPerformanceViewSet, base_name='mystandbyperformance')
 router.register(r'my_performances', views.MyPerformanceViewSet, base_name='myperformance')
@@ -66,7 +67,8 @@ urlpatterns += [
         url(r'^services/time_entry_import/$', views.TimeEntryImportServiceAPIView.as_view(), name='time_entry_import_service'),
         url(r'^services/monthly_availability/$', views.MonthlyAvailabilityServiceAPIView.as_view(), name='monthly_availability_service'),
         url(r'^services/month_info/$', views.MonthInfoServiceAPIView.as_view(), name='month_info_service'),
-        url(r'^services/download_attachment/(?P<slug>[A-Za-z0-9_-]+)/$', ObjectDownloadView.as_view(model=models.Attachment, file_field='file'), name='download_attachment_service')
+        url(r'^services/download_attachment/(?P<slug>[A-Za-z0-9_-]+)/$', ObjectDownloadView.as_view(model=models.Attachment, file_field='file'), name='download_attachment_service'),
+        url(r'^services/my_timesheet_contract_pdf_export/(?P<timesheet_pk>[0-9]+)/(?P<contract_pk>[0-9_-]+)/$', views.MyTimesheetContractPdfExportServiceAPIView.as_view(), name='my_timesheet_contract_pdf_export_service'),
     ])),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 

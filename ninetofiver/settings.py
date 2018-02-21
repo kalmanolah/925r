@@ -91,6 +91,7 @@ class Base(Configuration):
         'rangefilter',
         'django_admin_listfilter_dropdown',
         'silk',
+        'wkhtmltopdf',
     ]
 
     MIDDLEWARE = [
