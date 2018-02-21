@@ -189,13 +189,13 @@ class LeaveAdmin(admin.ModelAdmin):
     """Leave admin."""
 
     def make_approved(self, request, queryset):
-        queryset.update(status=models.Leave.STATUS.APPROVED)
+        queryset.update(status=models.STATUS_APPROVED)
         for leave in queryset:
             self.send_notification_email(leave, 'approved')
     make_approved.short_description = _('Approve selected leaves')
 
     def make_rejected(self, request, queryset):
-        queryset.update(status=models.Leave.STATUS.REJECTED)
+        queryset.update(status=models.STATUS_REJECTED)
         for leave in queryset:
             self.send_notification_email(leave, 'rejected')
     make_rejected.short_description = _('Reject selected leaves')
