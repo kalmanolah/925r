@@ -105,14 +105,15 @@ class UserFilter(FilterSet):
         model = auth_models.User
         fields = {
             # Basic user fields
-            'username': ['exact', ],
-            'email': ['exact', ],
-            'first_name': ['exact', 'contains', 'icontains', ],
-            'last_name': ['exact', 'contains', 'icontains', ],
+            'username': ['exact', 'icontains'],
+            'email': ['exact', 'icontains'],
+            'first_name': ['exact', 'icontains', ],
+            'last_name': ['exact', 'icontains', ],
             'is_active': ['exact', ],
 
             # AuthGroups fields
-            'groups': ['exact', 'contains', 'icontains', ],
+            'groups': ['exact', ],
+            'groups__name': ['exact', 'icontains'],
 
             # Userrelative fields
             'userrelative__name': ['exact', 'contains', 'icontains', ],
@@ -120,11 +121,12 @@ class UserFilter(FilterSet):
             # Userinfo fields
             'userinfo__gender': ['iexact', ],
             'userinfo__country': ['iexact', ],
-            'userinfo__birth_date': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
+            'userinfo__birth_date': ['exact', 'year', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
 
             # Employmentcontract fields
-            'employmentcontract__started_at': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
-            'employmentcontract__ended_at': ['exact', 'year__gt', 'year__gte', 'year__lt', 'year__lte'],
+            'employmentcontract__employment_contract_type': ['exact'],
+            'employmentcontract__started_at': ['exact', 'year', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
+            'employmentcontract__ended_at': ['exact', 'year', 'year__gt', 'year__gte', 'year__lt', 'year__lte'],
             'employmentcontract__company__name': ['exact', 'contains', 'icontains', ],
 
             # Check if user is on leave
