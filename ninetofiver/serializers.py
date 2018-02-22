@@ -473,6 +473,8 @@ class PerformanceSerializer(BaseSerializer):
 
 
 class ActivityPerformanceSerializer(PerformanceSerializer):
+    performance_type = MinimalPerformanceTypeSerializer()
+
     class Meta(PerformanceSerializer.Meta):
         model = models.ActivityPerformance
         fields = PerformanceSerializer.Meta.fields + ('duration', 'description', 'performance_type', 'contract_role')
