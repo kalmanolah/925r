@@ -33,6 +33,7 @@ def merge_dicts(*dicts):
 
     return result
 
+
 def days_in_month(year, month):
     """Get the amount of days in a month."""
     return monthrange(year, month)[1]
