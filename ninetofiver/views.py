@@ -494,9 +494,6 @@ class MonthInfoServiceAPIView(APIView):
         """Get month information."""
         user = request.user
 
-        if user.is_superuser and request.query_params.get('user_id'):
-            user = get_object_or_404(auth_models.User.objects, pk=request.query_params.get('user_id'))
-
         # get month from params, defaults to the current month if month is omitted.
         month = int(request.query_params.get('month') or datetime.now().month)
         year = int(request.query_params.get('year') or datetime.now().year)
@@ -515,14 +512,14 @@ class MonthInfoServiceAPIView(APIView):
 
             if (not ec) or (ec.started_at > dt) or (ec.ended_at and (ec.ended_at < dt)):
                 ec = models.EmploymentContract.objects.filter(
-                    Q(user=user, started_at__gte=dt) &
-                    (Q(ended_at__isnull=True) | Q(ended_at__lte=dt))
+                    Q(user=user, started_at__lte=dt) &
+                    (Q(ended_at__isnull=True) | Q(ended_at__gte=dt))
                 ).first()
 
                 work_schedule = ec.work_schedule if ec else None
 
             if work_schedule:
-                work_hours += self._get_weekday_hours(work_schedule, dt.weekday())
+                work_hours += getattr(work_schedule, dt.strftime('%A').lower(), Decimal(0.00))
 
         # Calculate holiday hours
         user_info = models.UserInfo.objects.filter(user=user).first()
@@ -530,7 +527,7 @@ class MonthInfoServiceAPIView(APIView):
             holidays = models.Holiday.objects.filter(country=user_info.country, date__month=month, date__year=year)
 
             for holiday in holidays:
-                holiday_hours += self._get_weekday_hours(work_schedule, holiday.date.weekday())
+                holiday_hours += getattr(work_schedule, holiday.date.strftime('%A').lower(), Decimal(0.00))
 
         # Get all approved leaves of the user with a leavedate in the given month.
         leaves = models.Leave.objects.filter(user=user, status=models.STATUS_APPROVED,
@@ -562,20 +559,6 @@ class MonthInfoServiceAPIView(APIView):
         }
 
         return Response(data)
-
-    def _get_weekday_hours(self, work_schedule, weekday):
-        """Get the amount of required working hours for the given weekday for the given workschedule."""
-        work_schedule_list = [
-            work_schedule.monday,
-            work_schedule.tuesday,
-            work_schedule.wednesday,
-            work_schedule.thursday,
-            work_schedule.friday,
-            work_schedule.saturday,
-            work_schedule.sunday,
-        ]
-
-        return work_schedule_list[weekday]
 
 
 class MyUserServiceAPIView(APIView):
