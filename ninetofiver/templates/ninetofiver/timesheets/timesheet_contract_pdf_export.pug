@@ -1,5 +1,7 @@
 extends ninetofiver/pdf/base.pug
 
+- load markdown
+
 block body
   div(class='my-5')
   div(class='container')
@@ -45,7 +47,7 @@ block body
             td {{ performance.day }}
             td
               - if performance.description
-                span {{ performance.description }}
+                span {{ performance.description | markdown }}
             td(class='text-right') {{ performance.duration }}
             td {{ performance.performance_type }}
         tr
