@@ -13,7 +13,7 @@ import ldap
 import os
 import yaml
 
-from configurations import Configuration
+from configurations import Configuration, values
 from django_auth_ldap.config import LDAPSearch
 from django_auth_ldap.config import LDAPSearchUnion
 
@@ -289,8 +289,8 @@ class Base(Configuration):
     AUTH_LDAP_ALWAYS_UPDATE_USER = True
 
     # REDMINE
-    REDMINE_URL = None
-    REDMINE_API_KEY = None
+    REDMINE_URL = values.Value(None)
+    REDMINE_API_KEY = values.Value(None)
 
     # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

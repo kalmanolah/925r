@@ -314,14 +314,14 @@ class UserInfo(BaseModel):
     )
 
     user = models.OneToOneField(auth_models.User, on_delete=models.CASCADE)
-    birth_date = models.DateField()
-    gender = models.CharField(max_length=2, choices=GENDER_CHOICES)
-    country = CountryField()
-    redmine_id = models.CharField(max_length=255, blank=True, null=True)  # TODO Change redmine integration method
+    birth_date = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=2, choices=GENDER_CHOICES, null=True, blank=True)
+    country = CountryField(null=True, blank=True)
+    redmine_id = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         """Return a string representation."""
-        return '%s [%s]' % (self.user, self.birth_date)
+        return '%s' % self.user
 
     def get_join_date(self):
         """Returns the date of the first employmentcontract for this user."""
@@ -339,6 +339,9 @@ class UserInfo(BaseModel):
 
         if self.birth_date.year < (datetime.now().year - 110):
             raise ValidationError({'birth_date': _('The selected birth date is likely incorrect.')})
+
+    class Meta(BaseModel.Meta):
+        verbose_name_plural = 'user info'
 
 
 class Timesheet(BaseModel):

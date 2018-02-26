@@ -64,7 +64,7 @@ urlpatterns += [
         url(r'^services/my_user/$', views.MyUserServiceAPIView.as_view(), name='my_user_service'),
         url(r'^services/my_leave_request/$', views.MyLeaveRequestServiceAPIView.as_view(), name='my_leave_request_service'),
         url(r'^services/my_leave_request_update/$', views.MyLeaveRequestUpdateServiceAPIView.as_view(), name='my_leave_request_update_service'),
-        url(r'^services/time_entry_import/$', views.TimeEntryImportServiceAPIView.as_view(), name='time_entry_import_service'),
+        url(r'^services/performance_import/$', views.PerformanceImportServiceAPIView.as_view(), name='performance_import_service'),
         url(r'^services/monthly_availability/$', views.MonthlyAvailabilityServiceAPIView.as_view(), name='monthly_availability_service'),
         url(r'^services/month_info/$', views.MonthInfoServiceAPIView.as_view(), name='month_info_service'),
         url(r'^services/download_attachment/(?P<slug>[A-Za-z0-9_-]+)/$', ObjectDownloadView.as_view(model=models.Attachment, file_field='file'), name='download_attachment_service'),

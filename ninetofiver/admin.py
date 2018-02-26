@@ -245,13 +245,13 @@ class LeaveDateAdmin(admin.ModelAdmin):
 
 @admin.register(models.UserInfo)
 class UserInfoAdmin(admin.ModelAdmin):
-    def join_date(obj):
+    def join_date(self, obj):
         return obj.get_join_date()
 
-    def user_groups(obj):
+    def user_groups(self, obj):
         return format_html('<br>'.join(str(x) for x in list(obj.user.groups.all())))
 
-    list_display = ('__str__', 'user', 'gender', 'birth_date', user_groups, 'country', 'join_date')
+    list_display = ('__str__', 'user', 'gender', 'birth_date', 'user_groups', 'country', 'join_date')
     ordering = ('user',)
 
 

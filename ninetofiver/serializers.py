@@ -2,8 +2,9 @@
 from django.contrib.auth import models as auth_models
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
-from rest_framework import serializers
+from django_countries.serializers import CountryFieldMixin
 from django.db.models import Q
+from rest_framework import serializers
 import logging
 import datetime
 from ninetofiver import models
@@ -228,7 +229,7 @@ class UserRelativeSerializer(BaseSerializer):
         fields = BaseSerializer.Meta.fields + ('name', 'relation', 'birth_date', 'gender', 'user')
 
 
-class UserInfoSerializer(BaseSerializer):
+class UserInfoSerializer(CountryFieldMixin, BaseSerializer):
     join_date = serializers.SerializerMethodField()
 
     class Meta(BaseSerializer.Meta):
@@ -491,7 +492,7 @@ class MyUserSerializer(UserSerializer):
 
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + ('is_staff', 'is_superuser', 'user_permissions', 'userinfo',)
-        depth = 2
+        depth = 1
 
 
 class MyLeaveSerializer(LeaveSerializer):

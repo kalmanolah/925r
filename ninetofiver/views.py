@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from ninetofiver import filters
 from ninetofiver import models
 from ninetofiver import serializers
+from ninetofiver import redmine
 from ninetofiver.viewsets import GenericHierarchicalReadOnlyViewSet
 from rest_framework import parsers
 from rest_framework import permissions
@@ -29,8 +30,6 @@ from rest_framework.schemas import SchemaGenerator
 from rest_framework_swagger import renderers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
-from ninetofiver.redmine.views import get_redmine_user_time_entries
-from ninetofiver.redmine.serializers import RedmineTimeEntrySerializer
 from ninetofiver.utils import days_in_month
 from django.db.models import Q
 from django.db import DatabaseError
@@ -355,38 +354,23 @@ class AttachmentViewSet(viewsets.ModelViewSet):
     parser_classes = (parsers.MultiPartParser, parsers.FileUploadParser, parsers.JSONParser)
 
 
-class TimeEntryImportServiceAPIView(APIView):
+class PerformanceImportServiceAPIView(APIView):
     """
-    Gets time entries from external sources and returns them to be imported as performances.
+    Gets performances from external sources and returns them to be imported.
     """
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, format=None):
-        try:
-            redmine_id = models.UserInfo.objects.get(user_id=request.user.id).redmine_id
-            if redmine_id:
-                try:
-                    redmine_time_entries = get_redmine_user_time_entries(
-                        user_id=redmine_id,
-                        params=request.query_params
-                    )
-                except Exception as e:
-                    return Response('Something went wrong: ' + str(e), status = status.HTTP_400_BAD_REQUEST)
+        from_date = request.query_params.get('from', str(date.today()))
+        to_date = request.query_params.get('to', str(date.today()))
 
-                serializer = RedmineTimeEntrySerializer(
-                    instance=redmine_time_entries,
-                    many=True
-                )
-                if serializer.data:
-                    # serializer.is_valid(raise_exception=True)
-                    return Response(serializer.data, status = status.HTTP_200_OK)
+        data = []
 
-                return Response(serializer.data, status = status.HTTP_200_OK)
-            else:
-                return Response('Redmine_id for the current user has not been found.', status = status.HTTP_404_NOT_FOUND)
+        # Redmine
+        redmine_data = redmine.get_user_redmine_performances(request.user, from_date=from_date, to_date=to_date)
+        data += redmine_data
 
-        except Exception as e:
-            return Response('Something went wrong: ' + str(e), status = status.HTTP_400_BAD_REQUEST)
+        return Response(data)
 
 
 class MonthlyAvailabilityServiceAPIView(APIView):
@@ -570,6 +554,7 @@ class MyUserServiceAPIView(APIView):
     def get(self, request, format=None):
         entity = request.user
         data = serializers.MyUserSerializer(entity, context={'request': request}).data
+
         return Response(data)
 
 

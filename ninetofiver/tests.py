@@ -8,10 +8,6 @@ from ninetofiver import factories
 from decimal import Decimal
 from datetime import timedelta
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from ninetofiver.settings import REDMINE_URL, REDMINE_API_KEY
-from ninetofiver.redmine.choices import get_redmine_project_choices, get_redmine_user_choices
-from ninetofiver.redmine.views import get_redmine_user_time_entries
-from redminelib import exceptions, Redmine
 
 from ninetofiver import models
 
@@ -76,8 +72,6 @@ class GenericViewTests(AuthenticatedAPITestCase):
             work_schedule=factories.WorkScheduleFactory.create(),
         )
         self.employmentcontract.save()
-        self.user_info = factories.UserInfoFactory.create(user=self.user)
-        self.user_info.save()
         response = self.client.get(reverse('my_user_service'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['display_label'], str(self.user))
@@ -186,6 +180,7 @@ class UserInfoAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseREST
 
     def setUp(self):
         self.user = factories.AdminFactory.create()
+        self.user.userinfo.delete()
         self.client.force_authenticate(self.user)
 
         self.company = factories.CompanyFactory.create()
@@ -876,38 +871,15 @@ class MyLeaveDateAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
         return self.create_data
 
 
-class TimeEntryImportServiceAPIViewTestCase(APITestCase):
+class PerformanceImportServiceAPIViewTestCase(APITestCase):
     def setUp(self):
         self.user = factories.AdminFactory.create()
         self.client.force_authenticate(self.user)
-
-        self.url = reverse('time_entry_import_service')
-
-    def test_user_info_not_found(self):
-        """Test scenario where contractuser's info is not found."""
-        user_info_error = self.client.get(self.url)
-        self.assertEqual(user_info_error.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_user_redmine_id_not_found(self):
-        """Test scenario where redmine_id for contractuser's info is not found."""
-        self.user_info = factories.UserInfoFactory(
-            user=self.user
-        ).save()
-
-        with self.assertRaises(Exception):
-            redmine_error = self.client.get(self.url)
-            self.assertEqual(redmine_error.status_code, status.HTTP_400_BAD_REQUEST)
+        self.url = reverse('performance_import_service')
 
     def test_success(self):
         """Test scenario where everything goes by the books."""
-        redm_users = get_redmine_user_choices()
-        redm_user = next(iter(redm_users))
-        redm_user_id = redm_user[0]
-        user_info = factories.UserInfoFactory(
-            user=self.user,
-            redmine_id=redm_user[0]
-        )
-        success_response = self.client.get(self.url, {'filter_imported': 'true'})
+        success_response = self.client.get(self.url)
         self.assertEqual(success_response.status_code, status.HTTP_200_OK)
 
 
@@ -1109,18 +1081,14 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
             user=self.user,
             work_schedule=factories.WorkScheduleFactory.create(),
         )
-        self.userinfo = factories.UserInfoFactory.create(
-            user=self.user
-        )
+        self.userinfo = self.user.userinfo
         self.timesheet = factories.TimesheetFactory.create(
             user=self.user,
             month=now.month
         )
 
         self.second_user = factories.UserFactory.create()
-        self.second_userinfo = factories.UserInfoFactory.create(
-            user=self.second_user
-        )
+        self.second_userinfo = self.second_user.userinfo
         self.second_employmentcontract = factories.EmploymentContractFactory.create(
             company=factories.CompanyFactory.create(),
             employment_contract_type=factories.EmploymentContractTypeFactory.create(),
@@ -1880,34 +1848,3 @@ class MyWorkScheduleAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcas
         response = self.client.get(reverse('myworkschedule-list'), {'current':True})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 1)
-
-class RedmineAPITestCase(APITestCase):
-    def test_empty_redmine_url(self):
-        redmine = Redmine('', key=REDMINE_API_KEY)
-        self.assertRaises(exceptions.ResourceError)
-
-    def test_redmine_project_choices(self):
-        project_choices = get_redmine_project_choices()
-        self.assertIsNotNone(project_choices)
-
-    def test_redmine_user_choices(self):
-        user_choices = get_redmine_user_choices()
-        self.assertIsNotNone(user_choices)
-
-    def test_redmine_user_time_entry_import(self):
-        users = get_redmine_user_choices()
-        user = next(iter(users))
-        params = {
-            'filter_imported': 'false'
-        }
-        time_entries = get_redmine_user_time_entries(user[0], params)
-        self.assertIsNotNone(time_entries)
-
-    def test_redmine_user_time_entry_import_filter_imported(self):
-        users = get_redmine_user_choices()
-        user = next(iter(users))
-        params = {
-            'filter_imported': 'true'
-        }
-        time_entries = get_redmine_user_time_entries(user[0], params)
-        self.assertIsNotNone(time_entries)
