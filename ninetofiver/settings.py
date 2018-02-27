@@ -27,7 +27,6 @@ ENVIRONMENT = os.getenv('ENVIRONMENT', 'dev')
 
 
 class Base(Configuration):
-
     """Base configuration."""
 
     @classmethod
@@ -266,6 +265,7 @@ class Base(Configuration):
     SETTINGS_EXPORT = [
         'DEBUG',
         'REGISTRATION_OPEN',
+        'BASE_URL',
     ]
 
     # Authentication using LDAP
@@ -292,14 +292,16 @@ class Base(Configuration):
     REDMINE_URL = values.Value(None)
     REDMINE_API_KEY = values.Value(None)
 
-    # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST_USER = 'no-reply@inuits.eu'
-    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    EMAIL_HOST = values.Value('localhost')
+    EMAIL_PORT = values.Value(25)
+    EMAIL_BACKEND = values.Value('django.core.mail.backends.smtp.EmailBackend')
+    DEFAULT_FROM_EMAIL = values.Value('noreply@example.org')
+
+    # Absolute URL generation without request info
+    BASE_URL = values.Value('http://localhost:8000')
 
 
 class Dev(Base):
-
     """Dev configuration."""
 
     DEBUG = True
@@ -362,7 +364,6 @@ class Dev(Base):
 
 
 class Prod(Base):
-
     """Prod configuration."""
 
     # Logging
@@ -391,5 +392,4 @@ class Prod(Base):
 
 
 class Stag(Prod):
-
     """Stag configuration."""

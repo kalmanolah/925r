@@ -12,9 +12,10 @@ from django.urls import reverse
 from django.utils.translation import ugettext as _
 from django_countries.fields import CountryField
 from model_utils import Choices
-from ninetofiver.utils import days_in_month
 from polymorphic.models import PolymorphicManager
 from polymorphic.models import PolymorphicModel
+from dirtyfields import DirtyFieldsMixin
+from ninetofiver.utils import days_in_month
 
 
 log = logging.getLogger(__name__)
@@ -53,12 +54,10 @@ PERIOD_YEARLY = 'yearly'
 
 
 class BaseManager(PolymorphicManager):
-
     """Base manager."""
 
 
-class BaseModel(PolymorphicModel):
-
+class BaseModel(DirtyFieldsMixin, PolymorphicModel):
     """Abstract base model."""
 
     objects = BaseManager()
@@ -82,13 +81,14 @@ class BaseModel(PolymorphicModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Abstract meta class."""
+
         abstract = True
         ordering = ['id']
         base_manager_name = 'base_objects'
 
 
 class Company(BaseModel):
-
     """
     Company model.
 

@@ -36,11 +36,12 @@ django-admin-list-filter-dropdown = "==1.0.0"
 django-downloadview = "==1.9"
 coreschema = "==0.0.4"
 python-redmine = "==2.0.2"
-timestring = "==1.6.2"
 django-rest-framework = "*"
 django-silk = "*"
 django-wkhtmltopdf = "*"
 markdown = "*"
+django-dirtyfields = "*"
+pytz = "==2018.3"
 
 
 [dev-packages]

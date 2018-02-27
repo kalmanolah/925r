@@ -175,47 +175,44 @@ class HolidayAdmin(admin.ModelAdmin):
 
 @admin.register(models.LeaveType)
 class LeaveTypeAdmin(admin.ModelAdmin):
+    """Leave type admin."""
+
     list_display = ('__str__', 'name', 'description')
     ordering = ('name',)
 
 
 class LeaveDateInline(admin.TabularInline):
+    """Leave date inline."""
+
     model = models.LeaveDate
 
 
 @admin.register(models.Leave)
 class LeaveAdmin(admin.ModelAdmin):
-
     """Leave admin."""
 
     def make_approved(self, request, queryset):
-        queryset.update(status=models.STATUS_APPROVED)
+        """Approve selected leaves."""
         for leave in queryset:
-            self.send_notification_email(leave, 'approved')
+            leave.status = models.STATUS_APPROVED
+            leave.save()
     make_approved.short_description = _('Approve selected leaves')
 
     def make_rejected(self, request, queryset):
-        queryset.update(status=models.STATUS_REJECTED)
+        """Reject selected leaves."""
         for leave in queryset:
-            self.send_notification_email(leave, 'rejected')
+            leave.status = models.STATUS_REJECTED
+            leave.save()
     make_rejected.short_description = _('Reject selected leaves')
 
     def leave_dates(self, obj):
+        """List leave dates."""
         return format_html('<br>'.join(str(x) for x in list(obj.leavedate_set.all())))
 
     def attachment(self, obj):
+        """Attachment URLs."""
         return format_html('<br>'.join('<a href="%s">%s</a>'
                            % (x.get_file_url(), str(x)) for x in list(obj.attachments.all())))
-
-    def send_notification_email(self, leave, status):
-        send_mail(
-            str(leave.leave_type) + ' - ' + str(leave.description),
-            'Dear %s\n\nyour %s from \n%s to %s\nhas been %s.\n\nKind regards\nAn inocent bot' %
-            (str(leave.user.first_name), str(leave.leave_type), str(leave.leavedate_set.first().starts_at.date()), str(leave.leavedate_set.last().ends_at.date()), str(status)),
-            'no-reply@inuits.eu',
-            [leave.user.email],
-            fail_silently=False
-        )
 
     list_display = ('__str__', 'user', 'leave_type', 'leave_dates', 'status', 'description', 'attachment')
     list_filter = (

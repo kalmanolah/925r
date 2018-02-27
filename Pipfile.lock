@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "17f4ce9ecf995c29bf41c6fd58a4db9dc7468b877d7de8fdae56b11f09fdeb58"
+            "sha256": "5cac669e439db884c784f7da8d12b6f2d1c2f582334c5d6754c1155f64a397e0"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -11,7 +11,7 @@
             "platform_python_implementation": "CPython",
             "platform_release": "4.14.0-3-amd64",
             "platform_system": "Linux",
-            "platform_version": "#1 SMP Debian 4.14.13-1 (2018-01-14)",
+            "platform_version": "#1 SMP Debian 4.14.17-1 (2018-02-14)",
             "python_full_version": "3.6.4",
             "python_version": "3.6",
             "sys_platform": "linux"
@@ -122,6 +122,12 @@
                 "sha256:c894f3a44e111ae6c6226c67741d96d120adb942de41dc8b2a991b87de7ff9c0"
             ],
             "version": "==1.6.1"
+        },
+        "django-dirtyfields": {
+            "hashes": [
+                "sha256:9f477eb9b22ecdb5439134900232195553834291c1070a6b8fdfec86ecfa98b2"
+            ],
+            "version": "==1.3"
         },
         "django-downloadview": {
             "hashes": [
@@ -344,17 +350,17 @@
         },
         "pytz": {
             "hashes": [
-                "sha256:8e826ceea889d20734e21081a216aeb8744ce4255c64dbfcc7d1b3dd5bedc79b",
-                "sha256:3c5dec5a88a490752a116085da5eecbd6ca65935ad9a4b488d70d0ec9c76606f",
-                "sha256:9be114d31a95b4040f8921d6a5dbec0e22e182c17b20603eb727304f44a1811f",
-                "sha256:70fb64523176c13c29dae820b953e28bce8380adcbbdcfd829fa70ceea362790",
-                "sha256:29a55ccfbe5afdf53e648edc53f83c272792924d58985ed9200b5e22238774de",
-                "sha256:a6807acbfd255031057e39c6547f8ef095d92e2e6ab57b1c45805a81f12c1cb5",
-                "sha256:65eb49cc05b7917fddc61e1fe6d8a4512c295cb53891dd5ec816bcccdce3f1a5",
-                "sha256:0797293d12ca2f7e5dd5bc0807f521f39d5b60a2c347c48f8362f9fd0174af3f",
-                "sha256:6c42f767873c44d69f6f0514c5f1f97394ab5d817e1e6116ad6d087ab5a17253"
+                "sha256:ed6509d9af298b7995d69a440e2822288f2eca1681b8cce37673dbb10091e5fe",
+                "sha256:f93ddcdd6342f94cea379c73cddb5724e0d6d0a1c91c9bdef364dc0368ba4fda",
+                "sha256:61242a9abc626379574a166dc0e96a66cd7c3b27fc10868003fa210be4bff1c9",
+                "sha256:ba18e6a243b3625513d85239b3e49055a2f0318466e0b8a92b8fb8ca7ccdf55f",
+                "sha256:07edfc3d4d2705a20a6e99d97f0c4b61c800b8232dc1c04d87e8554f130148dd",
+                "sha256:3a47ff71597f821cd84a162e71593004286e5be07a340fd462f0d33a760782b5",
+                "sha256:5bd55c744e6feaa4d599a6cbd8228b4f8f9ba96de2c38d56f08e534b3c9edf0d",
+                "sha256:887ab5e5b32e4d0c86efddd3d055c1f363cbaa583beb8da5e22d2fa2f64d51ef",
+                "sha256:410bcd1d6409026fbaa65d9ed33bf6dd8b1e94a499e32168acfc7b332e4095c0"
             ],
-            "version": "==2013b0"
+            "version": "==2018.3"
         },
         "pyyaml": {
             "hashes": [
@@ -421,12 +427,6 @@
                 "sha256:ce028444cfab83be538752a2ffdb56bc417b7784ff35bb9a3062413717807dec"
             ],
             "version": "==0.2.4"
-        },
-        "timestring": {
-            "hashes": [
-                "sha256:7b6539851ff48e5618be9f187b99d525176ecc866b5ae7e4ba0c3e220dc2a5ea"
-            ],
-            "version": "==1.6.2"
         },
         "uritemplate": {
             "hashes": [

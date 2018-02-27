@@ -1,0 +1,3 @@
+{% block body %}{% endblock %}
+
+{% include 'ninetofiver/emails/mail_footer.txt' %}
