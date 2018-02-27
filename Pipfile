@@ -42,6 +42,7 @@ django-wkhtmltopdf = "*"
 markdown = "*"
 django-dirtyfields = "*"
 pytz = "==2018.3"
+django-ical = "*"
 
 
 [dev-packages]

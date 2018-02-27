@@ -12,6 +12,7 @@ from ninetofiver import filters
 from ninetofiver import models
 from ninetofiver import serializers
 from ninetofiver import redmine
+from ninetofiver import feeds
 from ninetofiver.viewsets import GenericHierarchicalReadOnlyViewSet
 from rest_framework import parsers
 from rest_framework import permissions
@@ -963,3 +964,13 @@ class MyWorkScheduleViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return models.WorkSchedule.objects.filter(employmentcontract__user=user)
+
+
+class LeaveFeedServiceAPIView(APIView):
+    """
+    Get leaves as an ICS feed.
+    """
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, format=None):
+        return feeds.LeaveFeed().__call__(request)

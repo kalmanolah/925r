@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 
 # Monkey patch user model to serialize properly
 def user_str(self):
+    """Get a string representation for the given user."""
     if self.get_full_name():
         return '%s' % (self.get_full_name())
     return self.username

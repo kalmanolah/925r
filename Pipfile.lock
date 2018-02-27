@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5cac669e439db884c784f7da8d12b6f2d1c2f582334c5d6754c1155f64a397e0"
+            "sha256": "faa85d1405be693594955a4bfbc207d5be4a1debb909b053c1504185a1c5c3c3"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -149,6 +149,12 @@
             ],
             "version": "==1.4.0"
         },
+        "django-ical": {
+            "hashes": [
+                "sha256:887458315f14633dd373961f63deb69a4e85d9008f7c1d75f91cdb02c8211155"
+            ],
+            "version": "==1.4"
+        },
         "django-model-utils": {
             "hashes": [
                 "sha256:1587729b129b3b0802c80243312cd9dfd90aa3cee290f7335ea4c2e429488f61"
@@ -252,6 +258,13 @@
                 "sha256:a43f57115831ac7c70de098e6ac46ac13be00d69abbf60bdcac251344785bb19"
             ],
             "version": "==0.5.1"
+        },
+        "icalendar": {
+            "hashes": [
+                "sha256:396ad75bc6c7cc23c97c69370a81c001aca06cf99da32e6bb40856ea0bdf7368",
+                "sha256:682a42023d3d43a3a83933b4e329d109aabb07c9e11cb94a4d83ca687c3a3e8d"
+            ],
+            "version": "==4.0.1"
         },
         "idna": {
             "hashes": [

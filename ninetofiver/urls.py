@@ -7,10 +7,9 @@ from django.views.generic.base import TemplateView
 from rest_framework import routers
 # from rest_framework.urlpatterns import format_suffix_patterns
 from django_downloadview import ObjectDownloadView
-from ninetofiver import models
-from ninetofiver import views
 from oauth2_provider import views as oauth2_views
 from registration.backends.hmac import views as registration_views
+from ninetofiver import views, models, feeds
 
 
 urlpatterns = [
@@ -69,6 +68,7 @@ urlpatterns += [
         url(r'^services/month_info/$', views.MonthInfoServiceAPIView.as_view(), name='month_info_service'),
         url(r'^services/download_attachment/(?P<slug>[A-Za-z0-9_-]+)/$', ObjectDownloadView.as_view(model=models.Attachment, file_field='file'), name='download_attachment_service'),
         url(r'^services/my_timesheet_contract_pdf_export/(?P<timesheet_pk>[0-9]+)/(?P<contract_pk>[0-9_-]+)/$', views.MyTimesheetContractPdfExportServiceAPIView.as_view(), name='my_timesheet_contract_pdf_export_service'),
+        url(r'^services/feeds/leaves\.ics$', views.LeaveFeedServiceAPIView.as_view()),
     ])),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
