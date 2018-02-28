@@ -11,6 +11,7 @@ setup(
     version='0.0.2',
     packages=find_packages(),
     include_package_data=True,
+    zip_safe=False,
     license='MIT License',
     description='A free and open source time and leave tracking application.',
     long_description=README,
