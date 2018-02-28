@@ -3,13 +3,13 @@ extends ninetofiver/base/base.pug
 
 block body
   div(class='container')
-    div(class='row')
-      div(class='col-lg-4 offset-lg-4 col-md-6 offset-md-3 col-sm-8 offset-sm-2')
-        div(class='m-y-1')
+    div(class='row justify-content-center')
+      div(class='col-lg-4 col-md-6 col-sm-8')
+        div(class='my-4')
         div(class='card')
           a(href='{% url "home" %}')
-            img(class='card-img-top img-fluid p-x-1 p-t-2' src='{% static "ninetofiver/img/logo_text.svg" %}')
-          div(class='card-block')
+            img(class='card-img-top img-fluid px-4 py-4' src='{% static "ninetofiver/img/logo_text.svg" %}')
+          div(class='card-body')
             h4(class='card-title')
               block title
             block content

@@ -23,9 +23,10 @@ block content
         href='{% url "oauth2_provider:authorized-token-list" %}'
       ) Authorized tokens
 
-  div(class='m-y-1')
+  div(class='my-3')
 
-  div(class='card card-block')
-    h3(class='card-title')
-      block title
-    block content_main
+  div(class='card')
+    div(class='card-body')
+      h3(class='card-title')
+        block title
+      block content_main

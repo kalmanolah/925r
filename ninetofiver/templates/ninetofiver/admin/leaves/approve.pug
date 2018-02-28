@@ -1,0 +1,7 @@
+extends ninetofiver/base/page.pug
+- load static
+
+block content
+  div(class='alert alert-info text-center')
+    | {{ leaves | length }} leave{{ leaves | length | pluralize:'s' }} {{ leaves | length | pluralize:'has,have' }} been approved.
+    | You may close this window.

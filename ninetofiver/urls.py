@@ -139,6 +139,10 @@ urlpatterns += [
     # Silk (profiling)
     url(r'^admin/silk/', include('silk.urls', namespace='silk')),
 
+    # Custom admin routes
+    url(r'^admin/ninetofiver/leave/approve/$', views.admin_leave_approve_view, name='admin_leave_approve'),
+    url(r'^admin/ninetofiver/leave/reject/$', views.admin_leave_reject_view, name='admin_leave_reject'),
+
     # Admin
     url(r'^admin/', admin.site.urls),
 ]

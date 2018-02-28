@@ -37,6 +37,6 @@ block content_main
           i(class='fa fa-times')
           | Cancel
   else
-    div(class='alert alert-danger')
+    div(class='alert alert-danger mb-0')
       h4(class='alert-heading') Error: {{ error.error }}
-      p(class='m-b-0') {{ error.description }}
+      p(class='mb-0') {{ error.description }}

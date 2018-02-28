@@ -17,12 +17,14 @@ block content
       value='{{ next }}'
     )
     {{ form | crispy }}
-    button(
-      type='submit'
-      class='btn btn-outline-primary'
-    ) Log in
+    
+    div(class='d-flex justify-content-between')
+      button(
+        type='submit'
+        class='btn btn-outline-primary'
+      ) Log in
 
-    a(
-      class='btn btn-outline-secondary pull-xs-right'
-      href='{% url "password_reset" %}'
-    ) Forgot your password?
+      a(
+        class='btn btn-outline-secondary'
+        href='{% url "password_reset" %}'
+      ) Forgot your password?

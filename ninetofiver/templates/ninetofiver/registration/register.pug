@@ -12,12 +12,14 @@ block content
   )
     {% csrf_token %}
     {{ form | crispy }}
-    button(
-      type='submit'
-      class='btn btn-outline-primary'
-    ) Submit
-    a(
-      href='{% url "home" %}'
-      onclick='window.history.back(); return false'
-      class='btn btn-outline-secondary pull-xs-right'
-    ) Back
+    
+    div(class='d-flex justify-content-between')
+      button(
+        type='submit'
+        class='btn btn-outline-primary'
+      ) Submit
+      a(
+        href='{% url "home" %}'
+        onclick='window.history.back(); return false'
+        class='btn btn-outline-secondary'
+      ) Back

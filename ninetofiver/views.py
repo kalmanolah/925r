@@ -1,11 +1,9 @@
 from django.contrib.auth import models as auth_models
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import get_object_or_404
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from decimal import Decimal
-from dateutil.relativedelta import relativedelta
-from calendar import monthcalendar, monthrange, day_name
-from collections import Counter
 from django.utils import timezone
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from ninetofiver import filters
@@ -27,20 +25,17 @@ from rest_framework.decorators import renderer_classes
 from rest_framework.renderers import CoreJSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.schemas import SchemaGenerator
-from rest_framework_swagger import renderers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
 from ninetofiver.utils import days_in_month
 from django.db.models import Q
-from django.db import DatabaseError
-from django.core.mail import send_mail
 from datetime import datetime, date, timedelta
 from wkhtmltopdf.views import PDFTemplateView
-import ninetofiver.settings as settings
-
 import logging
+
+
 logger = logging.getLogger(__name__)
+
 
 def home_view(request):
     """Homepage."""
@@ -53,6 +48,40 @@ def account_view(request):
     """User-specific account page."""
     context = {}
     return render(request, 'ninetofiver/account/index.pug', context)
+
+
+@staff_member_required
+def admin_leave_approve_view(request):
+    """Approve the selected leaves."""
+    leaves = list(map(int, request.GET.get('leaves', '').split(',')))
+    leaves = models.Leave.objects.filter(id__in=leaves, status=models.STATUS_PENDING)
+
+    for leave in leaves:
+        leave.status = models.STATUS_APPROVED
+        leave.save()
+
+    context = {
+        'leaves': leaves,
+    }
+
+    return render(request, 'ninetofiver/admin/leaves/approve.pug', context)
+
+
+@staff_member_required
+def admin_leave_reject_view(request):
+    """Reject the selected leaves."""
+    leaves = list(map(int, request.GET.get('leaves', '').split(',')))
+    leaves = models.Leave.objects.filter(id__in=leaves, status=models.STATUS_PENDING)
+
+    for leave in leaves:
+        leave.status = models.STATUS_REJECTED
+        leave.save()
+
+    context = {
+        'leaves': leaves,
+    }
+
+    return render(request, 'ninetofiver/admin/leaves/reject.pug', context)
 
 
 @api_view(exclude_from_schema=True)
