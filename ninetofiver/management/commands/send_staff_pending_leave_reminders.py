@@ -31,9 +31,11 @@ class Command(BaseCommand):
                 send_mail(
                     user.email,
                     _('Pending leaves awaiting your approval'),
-                    'ninetofiver/emails/pending_leave_reminder.txt',
+                    'ninetofiver/emails/pending_leave_reminder.pug',
                     context={
                         'user': user,
-                        'pending_leave_count': pending_leave_count,
+                        'leaves': pending_leaves,
+                        'leave_ids': ','.join([str(x.id) for x in pending_leaves]),
+                        'leave_count': pending_leave_count,
                     }
                 )

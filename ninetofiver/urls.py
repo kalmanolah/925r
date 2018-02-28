@@ -140,8 +140,8 @@ urlpatterns += [
     url(r'^admin/silk/', include('silk.urls', namespace='silk')),
 
     # Custom admin routes
-    url(r'^admin/ninetofiver/leave/approve/$', views.admin_leave_approve_view, name='admin_leave_approve'),
-    url(r'^admin/ninetofiver/leave/reject/$', views.admin_leave_reject_view, name='admin_leave_reject'),
+    url(r'^admin/ninetofiver/leave/approve/(?P<leave_pk>[0-9,]+)/$', views.admin_leave_approve_view, name='admin_leave_approve'),  # noqa
+    url(r'^admin/ninetofiver/leave/reject/(?P<leave_pk>[0-9,]+)/$', views.admin_leave_reject_view, name='admin_leave_reject'),  # noqa
 
     # Admin
     url(r'^admin/', admin.site.urls),

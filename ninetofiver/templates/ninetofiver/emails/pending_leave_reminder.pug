@@ -1,0 +1,122 @@
+extends ninetofiver/emails/mail_generic.pug
+
+block content
+    p Dear {{ user }},
+    p There {{ leave_count|pluralize:"is,are" }} {{ leave_count }} pending leave{{ leave_count|pluralize:"s" }} awaiting your approval.
+    
+    p
+        a(href='{{ settings.BASE_URL }}{% url "admin_leave_approve" leave_pk=leave_ids %}' style="
+            background: #79aec8;
+            border-radius: 4px;
+            color: #fff;
+            padding: 4px 5px;
+            text-decoration: none;
+        ") Approve all
+        | &nbsp;&nbsp;&nbsp;&nbsp;
+        a(href='{{ settings.BASE_URL }}/admin/ninetofiver/leave/?status__exact=pending' style="
+            background: #79aec8;
+            border-radius: 4px;
+            color: #fff;
+            padding: 4px 5px;
+            text-decoration: none;
+        ") View all
+        
+
+    table(style="
+        border-collapse: collapse;
+    ")
+        thead
+            tr
+                th(style="
+                    color: #666;
+                    background: #f6f6f6;
+                    text-transform: uppercase;
+                    border-top: 1px solid #eee;
+                    border-bottom: 1px solid #eee;
+                    padding: 5px 10px;
+                    text-align: left;
+                ") User
+                th(style="
+                    color: #666;
+                    background: #f6f6f6;
+                    text-transform: uppercase;
+                    border-top: 1px solid #eee;
+                    border-bottom: 1px solid #eee;
+                    padding: 5px 10px;
+                    text-align: left;
+                ") Type
+                th(style="
+                    color: #666;
+                    background: #f6f6f6;
+                    text-transform: uppercase;
+                    border-top: 1px solid #eee;
+                    border-bottom: 1px solid #eee;
+                    padding: 5px 10px;
+                    text-align: left;
+                ") Date
+                th(style="
+                    color: #666;
+                    background: #f6f6f6;
+                    text-transform: uppercase;
+                    border-top: 1px solid #eee;
+                    border-bottom: 1px solid #eee;
+                    padding: 5px 10px;
+                    text-align: left;
+                ") Description
+                th(style="
+                    color: #666;
+                    background: #f6f6f6;
+                    text-transform: uppercase;
+                    border-top: 1px solid #eee;
+                    border-bottom: 1px solid #eee;
+                    padding: 5px 10px;
+                    text-align: left;
+                ") Actions          
+
+        tbody
+            for leave in leaves
+                tr(style="
+                    background: {% cycle '#ffffff' '#f9f9f9' %};
+                ")
+                    td(style="
+                        border-bottom: 1px solid #eee;
+                        padding: 8px;
+                        vertical-align: top;
+                    ") {{ leave.user }}
+                    td(style="
+                        border-bottom: 1px solid #eee;
+                        padding: 8px;
+                        vertical-align: top;
+                    ") {{ leave.leave_type }}
+                    td(style="
+                        border-bottom: 1px solid #eee;
+                        padding: 8px;
+                        vertical-align: top;
+                    ")
+                        for leave_date in leave.leavedate_set.all
+                            | {{ leave_date }}<br>
+                    td(style="
+                        border-bottom: 1px solid #eee;
+                        padding: 8px;
+                        vertical-align: top;
+                    ") {{ leave.description | default:'None' }}
+                    td(style="
+                        border-bottom: 1px solid #eee;
+                        padding: 8px;
+                        vertical-align: top;
+                    ")
+                        a(href='{{ settings.BASE_URL }}{% url "admin_leave_approve" leave_pk=leave.id %}' style="
+                            background: #79aec8;
+                            border-radius: 4px;
+                            color: #fff;
+                            padding: 4px 5px;
+                            text-decoration: none;
+                        ") Approve
+                        | &nbsp;
+                        a(href='{{ settings.BASE_URL }}{% url "admin_leave_reject" leave_pk=leave.id %}' style="
+                            background: #79aec8;
+                            border-radius: 4px;
+                            color: #fff;
+                            padding: 4px 5px;
+                            text-decoration: none;
+                        ") Reject

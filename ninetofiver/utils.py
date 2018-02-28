@@ -54,8 +54,9 @@ def send_mail(recipients, subject, template, context={}):
 
     base_send_mail(
         subject,
-        message,
+        '',
         DEFAULT_FROM_EMAIL,
         recipients,
         fail_silently=False,
+        html_message=message
     )

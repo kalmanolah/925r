@@ -1,20 +1,20 @@
 from datetime import date
 from django.contrib import admin
 from django.contrib.auth import models as auth_models
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.db.models import Q
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
 from django_admin_listfilter_dropdown.filters import DropdownFilter
 from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
-from ninetofiver import models
 from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin import PolymorphicParentModelAdmin
 from rangefilter.filter import DateRangeFilter
 from rangefilter.filter import DateTimeRangeFilter
 from django import forms
-from django.core.mail import send_mail
-from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
+from django.urls import reverse
+from ninetofiver import models
 import logging
 
 
@@ -205,7 +205,7 @@ class LeaveAdmin(admin.ModelAdmin):
             leave.save()
     make_rejected.short_description = _('Reject selected leaves')
 
-    def leave_dates(self, obj):
+    def date(self, obj):
         """List leave dates."""
         return format_html('<br>'.join(str(x) for x in list(obj.leavedate_set.all())))
 
@@ -214,7 +214,28 @@ class LeaveAdmin(admin.ModelAdmin):
         return format_html('<br>'.join('<a href="%s">%s</a>'
                            % (x.get_file_url(), str(x)) for x in list(obj.attachments.all())))
 
-    list_display = ('__str__', 'user', 'leave_type', 'leave_dates', 'status', 'description', 'attachment')
+    def item_actions(self, obj):
+        """Actions."""
+        actions = []
+
+        if obj.status == models.STATUS_PENDING:
+            actions.append('<a class="button" href="%s?return=true">%s</a>' %
+                           (reverse('admin_leave_approve', kwargs={'leave_pk': obj.id}), _('Approve')))
+            actions.append('<a class="button" href="%s?return=true">%s</a>' %
+                           (reverse('admin_leave_reject', kwargs={'leave_pk': obj.id}), _('Reject')))
+
+        return format_html('&nbsp;'.join(actions))
+
+    list_display = (
+        '__str__',
+        'user',
+        'leave_type',
+        'date',
+        'status',
+        'description',
+        'attachment',
+        'item_actions',
+    )
     list_filter = (
         'status',
         ('leave_type', RelatedDropdownFilter),

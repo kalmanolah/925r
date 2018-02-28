@@ -54,7 +54,7 @@ def on_leave_pre_save(sender, instance, created=False, **kwargs):
                 send_mail(
                     instance.user.email,
                     _('Leave status updated: %(status)s') % {'status': instance.status},
-                    'ninetofiver/emails/leave_status_updated.txt',
+                    'ninetofiver/emails/leave_status_updated.pug',
                     context={
                         'user': instance.user,
                         'leave': instance,

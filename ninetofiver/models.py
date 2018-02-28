@@ -461,7 +461,12 @@ class LeaveDate(BaseModel):
 
     def __str__(self):
         """Return a string representation."""
-        return '%s - %s' % (self.starts_at.strftime('%Y-%m-%d %H:%M:%S'), self.ends_at.strftime('%Y-%m-%d %H:%M:%S'))
+        if self.starts_at.date() != self.ends_at.date():
+            dt_format = '%a %d %B %Y %H:%M'
+            return '%s - %s' % (self.starts_at.strftime(dt_format), self.ends_at.strftime(dt_format))
+
+        return '%s, %s - %s' % (self.starts_at.strftime('%a %d %B %Y'), self.starts_at.strftime('%H:%M'),
+                                self.ends_at.strftime('%H:%M'))
 
     def perform_additional_validation(self):
         """Perform additional validation on the object."""

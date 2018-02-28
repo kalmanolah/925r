@@ -2,7 +2,7 @@ from django.contrib.auth import models as auth_models
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import get_object_or_404
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from decimal import Decimal
 from django.utils import timezone
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -51,10 +51,12 @@ def account_view(request):
 
 
 @staff_member_required
-def admin_leave_approve_view(request):
+def admin_leave_approve_view(request, leave_pk):
     """Approve the selected leaves."""
-    leaves = list(map(int, request.GET.get('leaves', '').split(',')))
-    leaves = models.Leave.objects.filter(id__in=leaves, status=models.STATUS_PENDING)
+    leave_pks = list(map(int, leave_pk.split(',')))
+    return_to_referer = request.GET.get('return', 'fase').lower() == 'true'
+
+    leaves = models.Leave.objects.filter(id__in=leave_pks, status=models.STATUS_PENDING)
 
     for leave in leaves:
         leave.status = models.STATUS_APPROVED
@@ -64,14 +66,19 @@ def admin_leave_approve_view(request):
         'leaves': leaves,
     }
 
+    if return_to_referer and request.META.get('HTTP_REFERER', None):
+        return redirect(request.META.get('HTTP_REFERER'))
+
     return render(request, 'ninetofiver/admin/leaves/approve.pug', context)
 
 
 @staff_member_required
-def admin_leave_reject_view(request):
+def admin_leave_reject_view(request, leave_pk):
     """Reject the selected leaves."""
-    leaves = list(map(int, request.GET.get('leaves', '').split(',')))
-    leaves = models.Leave.objects.filter(id__in=leaves, status=models.STATUS_PENDING)
+    leave_pks = list(map(int, leave_pk.split(',')))
+    return_to_referer = request.GET.get('return', 'fase').lower() == 'true'
+
+    leaves = models.Leave.objects.filter(id__in=leave_pks, status=models.STATUS_PENDING)
 
     for leave in leaves:
         leave.status = models.STATUS_REJECTED
@@ -80,6 +87,9 @@ def admin_leave_reject_view(request):
     context = {
         'leaves': leaves,
     }
+
+    if return_to_referer and request.META.get('HTTP_REFERER', None):
+        return redirect(request.META.get('HTTP_REFERER'))
 
     return render(request, 'ninetofiver/admin/leaves/reject.pug', context)
 
