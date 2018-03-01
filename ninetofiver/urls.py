@@ -61,8 +61,7 @@ urlpatterns += [
     url(r'^$', views.home_view, name='home'),
     url(r'^api/v1/', include(router.urls + [
         url(r'^services/my_user/$', views.MyUserServiceAPIView.as_view(), name='my_user_service'),
-        url(r'^services/my_leave_request/$', views.MyLeaveRequestServiceAPIView.as_view(), name='my_leave_request_service'),
-        url(r'^services/my_leave_request_update/$', views.MyLeaveRequestUpdateServiceAPIView.as_view(), name='my_leave_request_update_service'),
+        url(r'^services/leave_request/$', views.LeaveRequestServiceAPIView.as_view(), name='leave_request_service'),
         url(r'^services/performance_import/$', views.PerformanceImportServiceAPIView.as_view(), name='performance_import_service'),
         url(r'^services/monthly_availability/$', views.MonthlyAvailabilityServiceAPIView.as_view(), name='monthly_availability_service'),
         url(r'^services/month_info/$', views.MonthInfoServiceAPIView.as_view(), name='month_info_service'),

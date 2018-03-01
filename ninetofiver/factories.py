@@ -63,13 +63,13 @@ class WorkScheduleFactory(factory.DjangoModelFactory):
         model = models.WorkSchedule
 
     name = factory.Sequence(lambda n: 'WorkSchedule%d' % n)
-    monday = factory.LazyFunction(lambda: random.randint(0, 23))
-    tuesday = factory.LazyFunction(lambda: random.randint(0, 23))
-    wednesday = factory.LazyFunction(lambda: random.randint(0, 23))
-    thursday = factory.LazyFunction(lambda: random.randint(0, 23))
-    friday = factory.LazyFunction(lambda: random.randint(0, 23))
-    saturday = factory.LazyFunction(lambda: random.randint(0, 23))
-    sunday = factory.LazyFunction(lambda: random.randint(0, 23))
+    monday = factory.LazyFunction(lambda: random.randint(0, 10))
+    tuesday = factory.LazyFunction(lambda: random.randint(0, 10))
+    wednesday = factory.LazyFunction(lambda: random.randint(0, 10))
+    thursday = factory.LazyFunction(lambda: random.randint(0, 10))
+    friday = factory.LazyFunction(lambda: random.randint(0, 10))
+    saturday = factory.LazyFunction(lambda: random.randint(0, 10))
+    sunday = factory.LazyFunction(lambda: random.randint(0, 10))
 
 
 class UserInfoFactory(factory.DjangoModelFactory):

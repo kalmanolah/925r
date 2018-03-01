@@ -3,9 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
+from django.db import transaction
 from decimal import Decimal
 from django.utils import timezone
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from ninetofiver import filters
 from ninetofiver import models
 from ninetofiver import serializers
@@ -32,7 +32,9 @@ from ninetofiver import settings
 from django.db.models import Q
 from datetime import datetime, date, timedelta
 from wkhtmltopdf.views import PDFTemplateView
+from dateutil import parser
 import logging
+import copy
 
 
 logger = logging.getLogger(__name__)
@@ -597,246 +599,95 @@ class MyUserServiceAPIView(APIView):
         return Response(data)
 
 
-class MyLeaveRequestService(generics.GenericAPIView):
+class LeaveRequestServiceAPIView(APIView):
     """
-    Baseclass to create all leavedates for a given range.
+    Request leave for the given date range.
     """
-    serializer_class = serializers.LeaveRequestCreateSerializer
+
     permission_classes = (permissions.IsAuthenticated,)
 
-    def calculate_end(self, user, start, end):
-        """
-        Calculcate the end_date's time, based off of the workschedule's hours & minutes for that day.
-        """
-
-        # Get current workschedule, based off of the active employmentcontract
-        ec = models.EmploymentContract.objects.get(
-            Q(user=user),
-            Q(ended_at__isnull=True)
-            | Q(ended_at__gte=datetime.now())
-        )
-        ws = models.WorkSchedule.objects.get(employmentcontract=ec).__dict__
-
-        # Get the hours of required work, count from starting hour to those hours
-        working_day = ws[start.strftime('%A').lower()]
-        working_hours = int(working_day)
-        working_minutes = (working_day - working_hours) * 60
-
-        return end.replace(
-            year=(start.year),
-            month=(start.month),
-            day=(start.day),
-            hour=start.hour + working_hours,
-            minute=working_minutes,
-            second=0
-        )
-
-    def create_leavedates(self, this, request, leave):
-        """
-        Used to handle logic and return the correct response.
-        """
-        user = request.user
-        data = request.data
-
-        try:
-            # Make the datetimes aware of the timezone
-            start = datetime.strptime(data['starts_at'], "%Y-%m-%dT%H:%M:%S%z")
-            end = datetime.strptime(data['ends_at'], "%Y-%m-%dT%H:%M:%S%z")
-
-            full_day = False
-            if type(data['full_day']) is not str:
-                full_day = data['full_day']
-            elif data['full_day'] == 'true':
-                full_day = True
-
-            # If the leave isn't flagged as full_day
-            if start.date() == end.date() and not full_day:
-                timesheet, created = models.Timesheet.objects.get_or_create(
-                    user=user,
-                    year=start.year,
-                    month=start.month
-                )
-
-                # Create leavedate
-                ld = models.LeaveDate(
-                    leave=leave,
-                    timesheet=timesheet,
-                    starts_at=start,
-                    ends_at=end
-                )
-
-                # Validate & save
-                ld.full_clean()
-                ld.save()
-
-                leave.status = models.STATUS_PENDING
-                leave.save()
-
-                return_dict = {
-                    'leave': leave.id,
-                    'description': leave.description,
-                    'leave_type': leave.leave_type.id,
-                    'full_day': data['full_day'],
-                    'starts_at': start,
-                    'ends_at': end
-                }
-                return Response(return_dict, status=status.HTTP_201_CREATED)
-
-            # If the leave is flagged as full_day
-            elif full_day and start.date() != end.date():
-                try:
-                    new_start = start.replace(
-                        year=start.year,
-                        month=start.month,
-                        day=start.day,
-                        hour=settings.DEFAULT_WORKING_DAY_STARTING_HOUR,
-                        minute=0,
-                        second=0
-                    )
-                    new_end = self.calculate_end(user, new_start, end)
-                    days = (end - start).days + 1
-
-                except Exception as e:
-                    leave.delete()
-                    return Response('Workschedule couldn\'t be found for that user.', status = status.HTTP_404_NOT_FOUND)
-
-                if days < 0:
-                    leave.delete()
-                    return Response('End date should come after start date.', status = status.HTTP_400_BAD_REQUEST)
-
-                # Get timesheet, or create it
-                timesheet = models.Timesheet.objects.get_or_create(
-                    user=user,
-                    year=new_start.year,
-                    month=new_start.month
-                )[0]
-
-                my_list = list()
-
-                # Create all leavedates ranging from the start to the end
-                for x in range(0, days):
-
-                    # If not correct timesheet, get /create it and overwrite
-                    if not (timesheet.year == new_start.year and timesheet.month == new_start.month):
-                        timesheet = models.Timesheet.objects.get_or_create(
-                            user=user,
-                            year=new_start.year,
-                            month=new_start.month
-                        )[0]
-
-                    temp = models.LeaveDate(
-                        leave=leave,
-                        timesheet=timesheet,
-                        starts_at=new_start,
-                        ends_at=new_end
-                    )
-
-                    # Call validation on the object
-                    try:
-                        temp.full_clean()
-                    except ValidationError as e:
-                        leave.delete()
-                        raise e
-
-                    # Save the object
-                    temp.save()
-
-                    # Convert object into a list because serializer needs a list
-                    my_list.append({
-                        'id': temp.id,
-                        'created_at': temp.created_at,
-                        'updated_at': temp.updated_at,
-                        'leave': temp.leave_id,
-                        'timesheet': temp.timesheet_id,
-                        'starts_at': temp.starts_at,
-                        'ends_at': temp.ends_at
-                    })
-
-                    # Set time to original end when second to last has run
-                    if x <= days - 2:
-                        try:
-                            new_start += timedelta(days=1)
-                            new_end = self.calculate_end(user, new_start, new_end + timedelta(days=1))
-                        except Exception as e:
-                            leave.delete()
-                            return Response('Workschedule couldn\'t be found for that user', status = status.HTTP_400_BAD_REQUEST)
-
-                leave.status = models.STATUS_PENDING
-                leave.save()
-
-                return_dict = {
-                    'leave': leave.id,
-                    'description': leave.description,
-                    'leave_type': leave.leave_type.id,
-                    'full_day': data['full_day'],
-                    'starts_at': start,
-                    'ends_at': end
-                }
-                return Response(return_dict, status = status.HTTP_201_CREATED)
-
-            else:
-                leave.delete()
-                return Response('The request can not be marked as full_day and only span a single day.', status = status.HTTP_400_BAD_REQUEST)
-
-        except Exception as e:
-            leave.delete()
-            raise e
-
-
-class MyLeaveRequestServiceAPIView(generics.CreateAPIView, MyLeaveRequestService):
-    """
-    Creates a leave and all its leavedates for a given range.
-    """
-    serializer_class = serializers.LeaveRequestCreateSerializer
-
-    def create_leave(self, request):
-        """Creates the leave object for the leavedates."""
-        lt = models.LeaveType.objects.get(pk=request.data['leave_type'])
-
-        if lt is None:
-            raise ObjectDoesNotExist('Leavetype could not be found based on the provided pk.')
-
-        return models.Leave.objects.create(
-            user = request.user,
-            description = request.data['description'],
-            leave_type = lt,
-            status = models.STATUS_DRAFT,
-        )
-
     def post(self, request, format=None):
-        """Defines the behaviour for a post request."""
-        leave = self.create_leave(request)
-        return self.create_leavedates(self, request, leave)
+        user = request.user
+        leave_type = get_object_or_404(models.LeaveType, pk=request.data['leave_type'])
+        description = request.data.get('description', None)
+        full_day = request.data['full_day']
 
+        starts_at = parser.parse(request.data['starts_at'])
+        starts_at = timezone.make_aware(starts_at) if not timezone.is_aware(starts_at) else starts_at
+        ends_at = parser.parse(request.data['ends_at'])
+        ends_at = timezone.make_aware(ends_at) if not timezone.is_aware(ends_at) else ends_at
 
-class MyLeaveRequestUpdateServiceAPIView(generics.UpdateAPIView, MyLeaveRequestService):
-    """
-    Updates a leave's leavedates for a given range.
-    """
-    serializer_class = serializers.LeaveRequestUpdateSerializer
+        # Ensure we can roll back if something goes wrong
+        with transaction.atomic():
+            # Create leave
+            leave = models.Leave.objects.create(user=user, description=description, leave_type=leave_type,
+                                                status=models.STATUS_DRAFT)
 
-    def get_leave(self, request):
-        """Creates the leave object for the leavedates."""
-        lv = models.Leave.objects.filter(pk=request.data['leave_id'])
+            # Determine leave dates to create
+            leave_dates = []
 
-        if len(lv) is 0:
-            raise ObjectDoesNotExist('Leave object could not be found based on the provided pk.')
+            # If this isn't a full day request, we have a single pair
+            if not full_day:
+                leave_dates.append([starts_at, ends_at])
 
-        return lv[0]
+            # If this is a full day request, determine leave date pairs using work schedule
+            else:
+                # Determine amount of days we are going to create leaves for, so we can
+                # iterate over the dates
+                leave_date_count = (ends_at - starts_at).days + 1
 
-    def update(self, request):
-        """Defines the behaviour for an update request."""
-        lv = self.get_leave(request)
-        models.LeaveDate.objects.filter(leave=lv).delete()
-        return self.create_leavedates(self, request, lv)
+                work_schedule = None
+                employment_contract = None
 
-    def patch(self, request, format=None):
-        """Defines the behaviour for a patch request."""
-        return self.update(request)
+                for i in range(leave_date_count):
+                    # Determine date for this day
+                    current_dt = copy.deepcopy(starts_at) + timedelta(days=i)
+                    current_date = current_dt.date()
 
-    def put(self, request, format=None):
-        """Defines the behaviour for a put request."""
-        return self.update(request)
+                    # For the given date, determine the active work schedule
+                    if ((not employment_contract) or (employment_contract.started_at > current_date) or
+                            (employment_contract.ended_at and (employment_contract.ended_at < current_date))):
+                        employment_contract = models.EmploymentContract.objects.filter(
+                            Q(user=user, started_at__lte=current_date) &
+                            (Q(ended_at__isnull=True) | Q(ended_at__gte=current_date))
+                        ).first()
+                        work_schedule = employment_contract.work_schedule if employment_contract else None
+
+                    # Determine amount of hours to work on this day based on work schedule
+                    work_hours = 0.00
+                    if work_schedule:
+                        work_hours = float(getattr(work_schedule, current_date.strftime('%A').lower(), Decimal(0.00)))
+
+                    # If we have to work a certain amount of hours on this day, add a leave date pair for
+                    # that amount of hours
+                    if work_hours > 0.0:
+                        # Ensure the leave starts when the working day does
+                        pair_starts_at = current_dt.replace(hour=settings.DEFAULT_WORKING_DAY_STARTING_HOUR, minute=0,
+                                                            second=0)
+                        # Add work hours to pair start to obtain pair end
+                        pair_ends_at = pair_starts_at.replace(hour=int(pair_starts_at.hour + work_hours),
+                                                              minute=int((work_hours % 1) * 60))
+                        # Log pair
+                        leave_dates.append([pair_starts_at, pair_ends_at])
+
+            # Create leave dates for leave date pairs
+            timesheet = None
+            for pair in leave_dates:
+                # Determine timesheet to use
+                if (not timesheet) or ((timesheet.year != pair[0].year) and (timesheet.month != pair[0].month)):
+                    timesheet, created = models.Timesheet.objects.get_or_create(user=user, year=pair[0].year,
+                                                                                month=pair[0].month)
+
+                models.LeaveDate.objects.create(leave=leave, timesheet=timesheet, starts_at=pair[0],
+                                                ends_at=pair[1])
+
+            # Mark leave as Pending
+            leave.status = models.STATUS_PENDING
+            leave.save()
+
+        data = serializers.MyLeaveSerializer(leave, context={'request': request}).data
+
+        return Response(data)
 
 
 class MyTimesheetContractPdfExportServiceAPIView(PDFTemplateView, generics.GenericAPIView):

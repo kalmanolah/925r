@@ -63,6 +63,20 @@ class BaseModel(DirtyFieldsMixin, PolymorphicModel):
 
     objects = BaseManager()
 
+    def save(self, validate=True, **kwargs):
+        """Save the object."""
+        if validate:
+            self.perform_additional_validation()
+
+        super().save(**kwargs)
+
+    def delete(self, validate=True, **kwargs):
+        """Delete the object."""
+        if validate:
+            self.perform_additional_validation()
+
+        super().delete(**kwargs)
+
     def perform_additional_validation(self):
         """Perform additional validation on the object."""
         pass
@@ -286,8 +300,8 @@ class UserRelative(BaseModel):
 
     user = models.ForeignKey(auth_models.User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
-    birth_date = models.DateField()
-    gender = models.CharField(max_length=2, choices=GENDER_CHOICES)
+    birth_date = models.DateField(blank=True, null=True)
+    gender = models.CharField(null=True, blank=True, max_length=2, choices=GENDER_CHOICES)
     relation = models.CharField(max_length=255)
 
     def __str__(self):
@@ -298,11 +312,13 @@ class UserRelative(BaseModel):
         """Perform additional validation on the object."""
         super().perform_additional_validation()
 
-        if self.birth_date > datetime.now().date():
-            raise ValidationError({'birth_date': _('A birth date should not be set in the future')})
+        if self.birth_date:
+            if self.birth_date > datetime.now().date():
+                raise ValidationError({'birth_date': _('A birth date should not be set in the future')})
 
-        if self.birth_date.year < (datetime.now().year - 110):
-            raise ValidationError({'birth_date': _('The selected birth date is likely incorrect.')})
+        if self.birth_date:
+            if self.birth_date.year < (datetime.now().year - 110):
+                raise ValidationError({'birth_date': _('The selected birth date is likely incorrect.')})
 
 
 class UserInfo(BaseModel):
@@ -335,11 +351,12 @@ class UserInfo(BaseModel):
         """Perform additional validation on the object."""
         super().perform_additional_validation()
 
-        if self.birth_date > datetime.now().date():
-            raise ValidationError({'birth_date': _('A birth date should not be set in the future')})
+        if self.birth_date:
+            if self.birth_date > datetime.now().date():
+                raise ValidationError({'birth_date': _('A birth date should not be set in the future')})
 
-        if self.birth_date.year < (datetime.now().year - 110):
-            raise ValidationError({'birth_date': _('The selected birth date is likely incorrect.')})
+            if self.birth_date.year < (datetime.now().year - 110):
+                raise ValidationError({'birth_date': _('The selected birth date is likely incorrect.')})
 
     class Meta(BaseModel.Meta):
         verbose_name_plural = 'user info'
@@ -462,11 +479,11 @@ class LeaveDate(BaseModel):
     def __str__(self):
         """Return a string representation."""
         if self.starts_at.date() != self.ends_at.date():
-            dt_format = '%a %d %B %Y %H:%M'
+            dt_format = '%a %d %B %Y %H:%M %Z'
             return '%s - %s' % (self.starts_at.strftime(dt_format), self.ends_at.strftime(dt_format))
 
-        return '%s, %s - %s' % (self.starts_at.strftime('%a %d %B %Y'), self.starts_at.strftime('%H:%M'),
-                                self.ends_at.strftime('%H:%M'))
+        return '%s, %s - %s %s' % (self.starts_at.strftime('%a %d %B %Y'), self.starts_at.strftime('%H:%M'),
+                                   self.ends_at.strftime('%H:%M'), self.starts_at.strftime('%Z'))
 
     def perform_additional_validation(self):
         """Perform additional validation on the object."""
