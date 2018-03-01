@@ -553,15 +553,13 @@ class MonthInfoServiceAPIView(APIView):
             for holiday in holidays:
                 holiday_hours += getattr(work_schedule, holiday.date.strftime('%A').lower(), Decimal(0.00))
 
-        # Get all approved leaves of the user with a leavedate in the given month.
-        leaves = models.Leave.objects.filter(user=user, status=models.STATUS_APPROVED,
-                                             leavedate__starts_at__month=month, leavedate__starts_at__year=year)
+        # Get all approved leave dates of the user in the given month
+        leave_dates = models.LeaveDate.objects.filter(leave__user=user, leave__status=models.STATUS_APPROVED,
+                                                      starts_at__month=month, starts_at__year=year)
 
         # Calculate leave hours
-        for leave in leaves:
-            for leave_date in leave.leavedate_set.all():
-                if (leave_date.starts_at.month == month) and (leave_date.starts_at.year == year):
-                    leave_hours += Decimal(round((leave_date.ends_at - leave_date.starts_at).total_seconds() / 3600, 2))
+        for leave_date in leave_dates:
+            leave_hours += Decimal(round((leave_date.ends_at - leave_date.starts_at).total_seconds() / 3600, 2))
 
         # Calculate performed hours
         performances = models.ActivityPerformance.objects.filter(timesheet__user=user, timesheet__month=month,
