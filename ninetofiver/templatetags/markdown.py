@@ -9,8 +9,8 @@ register = template.Library()
 
 @register.filter
 def markdown(value):
+    """Convert the given markdown value to HTML."""
     res = md.markdown(value)
-    print(res)
     res = mark_safe(res)
 
     return res

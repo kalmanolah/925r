@@ -1,3 +1,7 @@
 td *:last-child {
-    margin-bottom: 0
+    margin-bottom: 0;
+}
+
+.nobreak {
+    page-break-inside: avoid;
 }
