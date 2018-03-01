@@ -290,7 +290,7 @@ class LeaveTypeFilter(FilterSet):
         }
 
 
-class LeaveFilter(FilterSet):
+class LeaveFilter(filters.FilterSet):
 
     def leavedate_range_distinct(self, queryset, name, value):
         """Filters distinct leavedates between a given range."""

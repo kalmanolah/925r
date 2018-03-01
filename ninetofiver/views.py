@@ -28,6 +28,7 @@ from rest_framework.views import APIView
 from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
 from ninetofiver.utils import days_in_month
+from ninetofiver import settings
 from django.db.models import Q
 from datetime import datetime, date, timedelta
 from wkhtmltopdf.views import PDFTemplateView
@@ -616,7 +617,7 @@ class MyLeaveRequestService(generics.GenericAPIView):
         )
         ws = models.WorkSchedule.objects.get(employmentcontract=ec).__dict__
 
-        # Get the hours of required work, count from midnight to those hours
+        # Get the hours of required work, count from starting hour to those hours
         working_day = ws[start.strftime('%A').lower()]
         working_hours = int(working_day)
         working_minutes = (working_day - working_hours) * 60
@@ -625,9 +626,9 @@ class MyLeaveRequestService(generics.GenericAPIView):
             year=(start.year),
             month=(start.month),
             day=(start.day),
-            hour=working_hours,
+            hour=start.hour + working_hours,
             minute=working_minutes,
-            second=(1)
+            second=0
         )
 
     def create_leavedates(self, this, request, leave):
@@ -639,14 +640,8 @@ class MyLeaveRequestService(generics.GenericAPIView):
 
         try:
             # Make the datetimes aware of the timezone
-            start = timezone.make_aware(
-                (datetime.strptime(data['starts_at'], "%Y-%m-%dT%H:%M:%S")),
-                timezone.get_current_timezone()
-            )
-            end = timezone.make_aware(
-                (datetime.strptime(data['ends_at'], "%Y-%m-%dT%H:%M:%S")),
-                timezone.get_current_timezone()
-            )
+            start = datetime.strptime(data['starts_at'], "%Y-%m-%dT%H:%M:%S%z")
+            end = datetime.strptime(data['ends_at'], "%Y-%m-%dT%H:%M:%S%z")
 
             full_day = False
             if type(data['full_day']) is not str:
@@ -694,7 +689,7 @@ class MyLeaveRequestService(generics.GenericAPIView):
                         year=start.year,
                         month=start.month,
                         day=start.day,
-                        hour=0,
+                        hour=settings.DEFAULT_WORKING_DAY_STARTING_HOUR,
                         minute=0,
                         second=0
                     )
@@ -741,7 +736,7 @@ class MyLeaveRequestService(generics.GenericAPIView):
                         temp.full_clean()
                     except ValidationError as e:
                         leave.delete()
-                        return Response(e, status = status.HTTP_400_BAD_REQUEST)
+                        raise e
 
                     # Save the object
                     temp.save()
@@ -785,7 +780,7 @@ class MyLeaveRequestService(generics.GenericAPIView):
 
         except Exception as e:
             leave.delete()
-            return Response(str(e), status = status.HTTP_404_NOT_FOUND)
+            raise e
 
 
 class MyLeaveRequestServiceAPIView(generics.CreateAPIView, MyLeaveRequestService):

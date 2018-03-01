@@ -208,6 +208,7 @@ class Base(Configuration):
         'DEFAULT_FILTER_BACKENDS': (
             'django_filters.rest_framework.DjangoFilterBackend',
         ),
+        'EXCEPTION_HANDLER': 'ninetofiver.exceptions.exception_handler',
         'TEST_REQUEST_DEFAULT_FORMAT': 'json',
         'DEFAULT_PAGINATION_CLASS': 'ninetofiver.pagination.CustomizablePageNumberPagination',
         'PAGE_SIZE': 25,
@@ -299,6 +300,8 @@ class Base(Configuration):
 
     # Absolute URL generation without request info
     BASE_URL = values.Value('http://localhost:8000')
+    # Default starting hour for working days
+    DEFAULT_WORKING_DAY_STARTING_HOUR = 9
 
 
 class Dev(Base):
