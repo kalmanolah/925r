@@ -809,7 +809,7 @@ class ActivityPerformance(Performance):
     """Activity performance model."""
 
     performance_type = models.ForeignKey(PerformanceType, on_delete=models.PROTECT)
-    contract_role = models.ForeignKey(ContractRole, null=True, on_delete=models.PROTECT)
+    contract_role = models.ForeignKey(ContractRole, on_delete=models.PROTECT)
     description = models.TextField(max_length=255, blank=True, null=True)
     duration = models.DecimalField(
         max_digits=4,

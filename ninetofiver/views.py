@@ -586,6 +586,144 @@ class MonthInfoServiceAPIView(APIView):
         return Response(data)
 
 
+class RangeInfoServiceAPIView(APIView):
+    """Calculates and returns information for a given date range."""
+
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, format=None):
+        """Get date range information."""
+        user = request.user
+        user_info = user.userinfo
+
+        from_date = parser.parse(request.query_params.get('from', None)).date()
+        until_date = parser.parse(request.query_params.get('until', None)).date()
+        daily = request.query_params.get('daily', 'false') == 'true'
+        detailed = request.query_params.get('detailed', 'false') == 'true'
+
+        work_hours = 0
+        holiday_hours = 0
+        leave_hours = 0
+        performed_hours = 0
+        remaining_hours = 0
+        total_hours = 0
+
+        details = {}
+
+        # Determine amount of days we are going to process leaves for, so we can
+        # iterate over the dates
+        day_count = (until_date - from_date).days + 1
+
+        work_schedule = None
+        employment_contract = None
+
+        # Fetch holidays
+        holidays = []
+        if user_info and user_info.country:
+            holidays = list(models.Holiday.objects.filter(country=user_info.country, date__gte=from_date,
+                                                          date__lte=until_date))
+
+        # Fetch all approved leave dates
+        leave_dates = list(models.LeaveDate.objects.filter(leave__user=user, leave__status=models.STATUS_APPROVED,
+                                                           starts_at__date__gte=from_date,
+                                                           starts_at__date__lte=until_date))
+
+        for i in range(day_count):
+            # Detail storage
+            day_detail = {
+                'work_hours': 0,
+                'holiday_hours': 0,
+                'leave_hours': 0,
+                'remaining_hours': 0,
+                'performed_hours': 0,
+                'total_hours': 0,
+            }
+
+            day_holidays = []
+            day_leaves = []
+            day_performances = []
+
+            # Determine date for this day
+            current_date = copy.deepcopy(from_date) + timedelta(days=i)
+
+            # For the given date, determine the active work schedule
+            if ((not employment_contract) or (employment_contract.started_at > current_date) or
+                    (employment_contract.ended_at and (employment_contract.ended_at < current_date))):
+                employment_contract = models.EmploymentContract.objects.filter(
+                    Q(user=user, started_at__lte=current_date) &
+                    (Q(ended_at__isnull=True) | Q(ended_at__gte=current_date))
+                ).first()
+                work_schedule = employment_contract.work_schedule if employment_contract else None
+
+            # Determine work hours
+            if work_schedule:
+                duration = getattr(work_schedule, current_date.strftime('%A').lower(), Decimal(0.00))
+                work_hours += duration
+                day_detail['work_hours'] += duration
+
+            # Determine holidays
+            for holiday in holidays:
+                if holiday.date == current_date:
+                    duration = getattr(work_schedule, holiday.date.strftime('%A').lower(), Decimal(0.00))
+                    holiday_hours += duration
+                    day_detail['holiday_hours'] += duration
+                    day_holidays.append(holiday)
+                    break
+
+            # Determine leave hours
+            for leave_date in leave_dates:
+                if leave_date.starts_at.date() == current_date:
+                    duration = Decimal(round((leave_date.ends_at - leave_date.starts_at).total_seconds() / 3600, 2))
+                    leave_hours += duration
+                    day_detail['leave_hours'] += duration
+                    day_leaves.append(leave_date.leave)
+
+            # Determine performed hours
+            # Fetch performances
+            performances = models.ActivityPerformance.objects.filter(timesheet__user=user,
+                                                                     timesheet__month=current_date.month,
+                                                                     timesheet__year=current_date.year,
+                                                                     day=current_date.day)
+            for performance in performances:
+                duration = Decimal(performance.duration)
+                performed_hours += duration
+                day_detail['performed_hours'] += duration
+                day_performances.append(performance)
+
+            day_detail['total_hours'] = (day_detail['holiday_hours'] + day_detail['leave_hours']
+                                         + day_detail['performed_hours'])
+            day_detail['remaining_hours'] = day_detail['work_hours'] - day_detail['total_hours']
+            day_detail['remaining_hours'] = max(0, day_detail['remaining_hours'])
+
+            if detailed:
+                day_detail['holidays'] = serializers.HolidaySerializer(day_holidays, many=True).data
+                day_detail['leaves'] = serializers.LeaveSerializer(day_leaves, many=True).data
+                day_detail['performances'] = serializers.ActivityPerformanceSerializer(day_performances,
+                                                                                       many=True).data
+
+            details[str(current_date)] = day_detail
+
+        total_hours = holiday_hours + leave_hours + performed_hours
+        remaining_hours = work_hours - total_hours
+        remaining_hours = max(0, remaining_hours)
+
+        data = {
+            'work_hours': work_hours,
+            'holiday_hours': holiday_hours,
+            'leave_hours': leave_hours,
+            'remaining_hours': remaining_hours,
+            'performed_hours': performed_hours,
+            'total_hours': total_hours,
+            'from': from_date,
+            'until': until_date,
+        }
+
+        if daily:
+            data['details'] = details
+
+        return Response(data)
+
+
 class MyUserServiceAPIView(APIView):
     """
     Get the currently authenticated user.

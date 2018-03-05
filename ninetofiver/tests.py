@@ -1044,6 +1044,13 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
             month=now.month,
             year=now.year
         )
+        self.contract = factories.ContractFactory.create(
+            company=factories.CompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        self.contract_role = factories.ContractRoleFactory.create(contract=self.contract)
+        self.contract_user = factories.ContractUserFactory(contract=self.contract, contract_role=self.contract_role,
+                                                           user=self.user)
 
         self.second_user = factories.UserFactory.create()
         self.second_userinfo = self.second_user.userinfo
@@ -1053,14 +1060,11 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
             user=self.second_user,
             work_schedule=factories.WorkScheduleFactory.create(),
         )
-        self.contract = factories.ContractFactory.create(
-            company=factories.CompanyFactory.create(),
-            customer=factories.CompanyFactory.create()
-        )
         self.activityperformance = factories.ActivityPerformanceFactory.create(
             timesheet=self.timesheet,
             contract=self.contract,
-            performance_type=factories.PerformanceTypeFactory.create()
+            performance_type=factories.PerformanceTypeFactory.create(),
+            contract_role=self.contract_role
         )
 
         self.url = reverse('month_info_service')

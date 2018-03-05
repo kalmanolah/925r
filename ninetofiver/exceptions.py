@@ -50,11 +50,17 @@ def core_validation_error_to_dict(exc):
 def rest_validation_error_to_dict(exc):
     """Convert a validation error to a dict."""
     err_data = {}
-    for field, err in exc.detail.items():
-        err_data[field] = [{
-            'message': x,
-            'key': error_message_to_key(x),
-        } for x in err]
+    detail_type = type(exc.detail)
+
+    if detail_type is dict:
+        for field, err in exc.detail.items():
+            err_data[field] = [{
+                'message': x,
+                'key': error_message_to_key(x),
+            } for x in err]
+    elif detail_type is list:
+        err_data['error'] = [{'message': x, 'key': error_message_to_key(x)} for x in exc.detail]
+
     return err_data
 
 

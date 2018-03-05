@@ -475,6 +475,7 @@ class PerformanceSerializer(BaseSerializer):
 
 class ActivityPerformanceSerializer(PerformanceSerializer):
     performance_type = MinimalPerformanceTypeSerializer()
+    contract_role = MinimalContractRoleSerializer()
 
     class Meta(PerformanceSerializer.Meta):
         model = models.ActivityPerformance

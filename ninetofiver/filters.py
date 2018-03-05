@@ -13,6 +13,7 @@ from rest_framework import generics
 
 from django.contrib.auth import models as auth_models
 from django.core.exceptions import ValidationError
+import dateutil
 
 import logging
 logger = logging.getLogger(__name__)
@@ -299,8 +300,8 @@ class LeaveFilter(filters.FilterSet):
         try:
             # Split value.
             values = value.split(',')
-            start_date = datetime.strptime(values[0], "%Y-%m-%dT%H:%M:%S")
-            end_date = datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S")
+            start_date = dateutil.parser.parse(values[0])
+            end_date = dateutil.parser.parse(values[1])
         except Exception as e:
             # Raise validation error.
             raise ValidationError('Datetimes have to be in the correct \'YYYY-MM-DDTHH:mm:ss\' format.')
