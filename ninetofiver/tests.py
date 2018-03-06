@@ -681,8 +681,9 @@ class ActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
     }
 
     def setUp(self):
+        self.user = factories.AdminFactory.create()
         self.timesheet = factories.OpenTimesheetFactory.create(
-            user=factories.AdminFactory.create(),
+            user=self.user,
         )
         self.performance_type = factories.PerformanceTypeFactory.create()
         self.contract = factories.ContractFactory.create(
@@ -690,34 +691,24 @@ class ActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
             company=factories.InternalCompanyFactory.create(),
             customer=factories.CompanyFactory.create()
         )
-        self.admin = factories.AdminFactory.create()
-        self.admin.set_password('password')
-        self.admin.save()
+        self.contract_role = factories.ContractRoleFactory.create()
+        self.contract_user = factories.ContractUserFactory(user=self.user, contract=self.contract,
+                                                           contract_role=self.contract_role)
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(timesheet=self.timesheet, performance_type=self.performance_type, contract=self.contract)
+        return factory.create(timesheet=self.timesheet, performance_type=self.performance_type, contract=self.contract,
+                              contract_role=self.contract_role)
 
     def get_create_data(self):
         self.create_data.update({
             'timesheet': self.timesheet.id,
             'contract': self.contract.id,
             'performance_type': self.performance_type.id,
+            'contract_role': self.contract_role.id,
         })
 
         return self.create_data
-
-    def test_non_admin_update(self):
-        performance = factories.ActivityPerformanceFactory.create(
-            timesheet=factories.OpenTimesheetFactory(
-                user=self.user
-            ),
-            contract=self.contract,
-            performance_type=self.performance_type
-        )
-        performance.save()
-        update_response = self.client.patch(reverse('activityperformance-list'), {'description': 'updated description'}, format='json')
-        self.assertEqual(update_response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class StandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
@@ -1048,7 +1039,7 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
             company=factories.CompanyFactory.create(),
             customer=factories.CompanyFactory.create()
         )
-        self.contract_role = factories.ContractRoleFactory.create(contract=self.contract)
+        self.contract_role = factories.ContractRoleFactory.create()
         self.contract_user = factories.ContractUserFactory(contract=self.contract, contract_role=self.contract_role,
                                                            user=self.user)
 
@@ -1101,27 +1092,7 @@ class MonthInfoServiceAPIViewTestcase(APITestCase):
         leavedate.save()
         leave.save()
 
-        get_response = self.client.get(self.url, {'month':now.month})
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
-
-    def test_get_required_hours_of_user(self):
-        get_response = self.client.get(self.url, {'user_id':self.second_user.id})
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
-
-    def test_get_hours_performed(self):
-        get_response = self.client.get(self.url)
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
-
-    def test_get_hours_performed_of_user(self):
-        get_response = self.client.get(self.url, {'user_id': self.second_user.id})
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
-
-    def test_get_hours_performed_month(self):
         get_response = self.client.get(self.url, {'month': now.month})
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
-
-    def test_get_hours_performed_month_year(self):
-        get_response = self.client.get(self.url, {'month': now.month, 'year': now.year})
         self.assertEqual(get_response.status_code, status.HTTP_200_OK)
 
 
@@ -1274,22 +1245,27 @@ class MyActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, 
         self.timesheet = factories.OpenTimesheetFactory.create(
             user=self.user,
         )
+        self.contract_role = factories.ContractRoleFactory.create()
         self.performance_type = factories.PerformanceTypeFactory.create()
         self.contract = factories.ContractFactory.create(
             active=True,
             company=factories.InternalCompanyFactory.create(),
             customer=factories.CompanyFactory.create()
         )
+        self.contract_user = factories.ContractUserFactory.create(user=self.user, contract=self.contract,
+                                                                  contract_role=self.contract_role)
         super().setUp()
 
     def get_object(self, factory):
-        return factory.create(timesheet=self.timesheet, performance_type=self.performance_type, contract=self.contract)
+        return factory.create(timesheet=self.timesheet, performance_type=self.performance_type, contract=self.contract,
+                              contract_role=self.contract_role)
 
     def get_create_data(self):
         self.create_data.update({
             'timesheet': self.timesheet.id,
             'contract': self.contract.id,
             'performance_type': self.performance_type.id,
+            'contract_role': self.contract_role.id,
         })
 
         return self.create_data
