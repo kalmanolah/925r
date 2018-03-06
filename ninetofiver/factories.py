@@ -165,6 +165,7 @@ class ProjectContractFactory(ContractFactory):
 
     fixed_fee = factory.LazyFunction(lambda: random.randint(0, 9999))
 
+
 class ProjectEstimateFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.ProjectEstimate
@@ -234,7 +235,7 @@ class ActivityPerformanceFactory(PerformanceFactory):
 
     description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
     duration = factory.LazyFunction(lambda: random.randint(1, 24))
-    contract_role = ContractRoleFactory()
+    contract_role = ContractRoleFactory
 
 
 class StandbyPerformanceFactory(PerformanceFactory):
