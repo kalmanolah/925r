@@ -624,20 +624,20 @@ class RangeInfoServiceAPIView(APIView):
                                                           date__lte=until_date))
 
         # Fetch all approved leave dates
-        leave_dates = list(models.LeaveDate.objects.filter(leave__user=user, leave__status=models.STATUS_APPROVED,
-                                                           starts_at__date__gte=from_date,
-                                                           starts_at__date__lte=until_date))
+        leave_dates = list(models.LeaveDate.objects
+                           .filter(leave__user=user, leave__status=models.STATUS_APPROVED,
+                                   starts_at__date__gte=from_date,
+                                   starts_at__date__lte=until_date)
+                           .select_related('leave', 'leave__leave_type', 'leave__user')
+                           .prefetch_related('leave__attachments', 'leave__leavedate_set'))
 
         for i in range(day_count):
-            # Detail storage
-            day_detail = {
-                'work_hours': 0,
-                'holiday_hours': 0,
-                'leave_hours': 0,
-                'remaining_hours': 0,
-                'performed_hours': 0,
-                'total_hours': 0,
-            }
+            day_work_hours = 0
+            day_holiday_hours = 0
+            day_leave_hours = 0
+            day_remaining_hours = 0
+            day_performed_hours = 0
+            day_total_hours = 0
 
             day_holidays = []
             day_leaves = []
@@ -652,21 +652,21 @@ class RangeInfoServiceAPIView(APIView):
                 employment_contract = models.EmploymentContract.objects.filter(
                     Q(user=user, started_at__lte=current_date) &
                     (Q(ended_at__isnull=True) | Q(ended_at__gte=current_date))
-                ).first()
+                ).select_related('work_schedule').first()
                 work_schedule = employment_contract.work_schedule if employment_contract else None
 
             # Determine work hours
             if work_schedule:
                 duration = getattr(work_schedule, current_date.strftime('%A').lower(), Decimal(0.00))
                 work_hours += duration
-                day_detail['work_hours'] += duration
+                day_work_hours += duration
 
             # Determine holidays
             for holiday in holidays:
                 if holiday.date == current_date:
                     duration = getattr(work_schedule, holiday.date.strftime('%A').lower(), Decimal(0.00))
                     holiday_hours += duration
-                    day_detail['holiday_hours'] += duration
+                    day_holiday_hours += duration
                     day_holidays.append(holiday)
                     break
 
@@ -675,33 +675,43 @@ class RangeInfoServiceAPIView(APIView):
                 if leave_date.starts_at.date() == current_date:
                     duration = Decimal(round((leave_date.ends_at - leave_date.starts_at).total_seconds() / 3600, 2))
                     leave_hours += duration
-                    day_detail['leave_hours'] += duration
+                    day_leave_hours += duration
                     day_leaves.append(leave_date.leave)
 
             # Determine performed hours
-            # Fetch performances
-            performances = models.ActivityPerformance.objects.filter(timesheet__user=user,
-                                                                     timesheet__month=current_date.month,
-                                                                     timesheet__year=current_date.year,
-                                                                     day=current_date.day)
+            performances = (models.ActivityPerformance.objects
+                            .filter(timesheet__user=user, timesheet__month=current_date.month,
+                                    timesheet__year=current_date.year, day=current_date.day)
+                            .select_related('performance_type', 'contract_role', 'contract', 'contract__customer',
+                                            'contract__company', 'timesheet', 'timesheet__user'))
+
             for performance in performances:
                 duration = Decimal(performance.duration)
                 performed_hours += duration
-                day_detail['performed_hours'] += duration
+                day_performed_hours += duration
                 day_performances.append(performance)
 
-            day_detail['total_hours'] = (day_detail['holiday_hours'] + day_detail['leave_hours']
-                                         + day_detail['performed_hours'])
-            day_detail['remaining_hours'] = day_detail['work_hours'] - day_detail['total_hours']
-            day_detail['remaining_hours'] = max(0, day_detail['remaining_hours'])
+            day_total_hours = (day_holiday_hours + day_leave_hours + day_performed_hours)
+            day_remaining_hours = day_work_hours - day_total_hours
+            day_remaining_hours = max(0, day_remaining_hours)
 
-            if detailed:
-                day_detail['holidays'] = serializers.HolidaySerializer(day_holidays, many=True).data
-                day_detail['leaves'] = serializers.LeaveSerializer(day_leaves, many=True).data
-                day_detail['performances'] = serializers.ActivityPerformanceSerializer(day_performances,
-                                                                                       many=True).data
+            if daily:
+                day_detail = {
+                    'work_hours': day_work_hours,
+                    'holiday_hours': day_holiday_hours,
+                    'leave_hours': day_leave_hours,
+                    'remaining_hours': day_remaining_hours,
+                    'performed_hours': day_performed_hours,
+                    'total_hours': day_total_hours,
+                }
 
-            details[str(current_date)] = day_detail
+                if detailed:
+                    day_detail['holidays'] = serializers.HolidaySerializer(day_holidays, many=True).data
+                    day_detail['leaves'] = serializers.LeaveSerializer(day_leaves, many=True).data
+                    day_detail['performances'] = serializers.ActivityPerformanceSerializer(day_performances,
+                                                                                           many=True).data
+
+                details[str(current_date)] = day_detail
 
         total_hours = holiday_hours + leave_hours + performed_hours
         remaining_hours = work_hours - total_hours

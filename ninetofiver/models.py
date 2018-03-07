@@ -586,7 +586,7 @@ class Contract(BaseModel):
 
     def __str__(self):
         """Return a string representation."""
-        return '%s [%s → %s]' % (self.name, self.company, self.customer)
+        return '[%s/%s] %s' % (self.get_real_instance_class().__name__[0], self.customer, self.name)
 
     def perform_additional_validation(self):
         """Perform additional validation on the object."""
@@ -610,10 +610,6 @@ class ProjectContract(Contract):
             validators.MaxValueValidator(9999999),
         ]
     )
-
-    def __str__(self):
-        """Return a string representation."""
-        return '%s: %s' % (_('Project'), self.name)
 
 
 class ConsultancyContract(Contract):
@@ -639,10 +635,6 @@ class ConsultancyContract(Contract):
             validators.MaxValueValidator(9999),
         ]
     )
-
-    def __str__(self):
-        """Return a string representation."""
-        return '%s: %s' % (_('Consultancy'), self.name)
 
 
 class SupportContract(Contract):
@@ -679,10 +671,6 @@ class SupportContract(Contract):
         ]
     )
     fixed_fee_period = models.CharField(blank=True, null=True, max_length=10, choices=FIXED_FEE_PERIOD_CHOICES)
-
-    def __str__(self):
-        """Return a string representation."""
-        return '%s: %s' % (_('Support'), self.name)
 
     def perform_additional_validation(self):
         """Perform additional validation on the object."""
