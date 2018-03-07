@@ -683,7 +683,7 @@ class RangeInfoServiceAPIView(APIView):
                             .filter(timesheet__user=user, timesheet__month=current_date.month,
                                     timesheet__year=current_date.year, day=current_date.day)
                             .select_related('performance_type', 'contract_role', 'contract', 'contract__customer',
-                                            'contract__company', 'timesheet', 'timesheet__user'))
+                                            'timesheet', 'timesheet__user'))
 
             for performance in performances:
                 duration = Decimal(performance.duration)
