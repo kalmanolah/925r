@@ -602,6 +602,7 @@ class RangeInfoServiceAPIView(APIView):
         until_date = parser.parse(request.query_params.get('until', None)).date()
         daily = request.query_params.get('daily', 'false') == 'true'
         detailed = request.query_params.get('detailed', 'false') == 'true'
+        summary = request.query_params.get('summary', 'false') == 'true'
 
         work_hours = 0
         holiday_hours = 0
@@ -610,14 +611,15 @@ class RangeInfoServiceAPIView(APIView):
         remaining_hours = 0
         total_hours = 0
 
-        details = {}
-
+        daily_data = {}
         # Determine amount of days we are going to process leaves for, so we can
         # iterate over the dates
         day_count = (until_date - from_date).days + 1
 
         work_schedule = None
         employment_contract = None
+
+        performances = []
 
         # Fetch holidays
         holidays = []
@@ -681,17 +683,17 @@ class RangeInfoServiceAPIView(APIView):
                     day_leaves.append(leave_date.leave)
 
             # Determine performed hours
-            performances = (models.ActivityPerformance.objects
-                            .filter(timesheet__user=user, timesheet__month=current_date.month,
-                                    timesheet__year=current_date.year, day=current_date.day)
-                            .select_related('performance_type', 'contract_role', 'contract', 'contract__customer',
-                                            'timesheet', 'timesheet__user'))
+            day_performances = list(models.ActivityPerformance.objects
+                                    .filter(timesheet__user=user, timesheet__month=current_date.month,
+                                            timesheet__year=current_date.year, day=current_date.day)
+                                    .select_related('performance_type', 'contract_role', 'contract',
+                                                    'contract__customer', 'timesheet', 'timesheet__user'))
 
-            for performance in performances:
+            for performance in day_performances:
                 duration = Decimal(performance.duration)
                 performed_hours += duration
                 day_performed_hours += duration
-                day_performances.append(performance)
+                performances.append(performance)
 
             day_total_hours = (day_holiday_hours + day_leave_hours + day_performed_hours)
             day_remaining_hours = day_work_hours - day_total_hours
@@ -713,7 +715,8 @@ class RangeInfoServiceAPIView(APIView):
                     day_detail['performances'] = serializers.ActivityPerformanceSerializer(day_performances,
                                                                                            many=True).data
 
-                details[str(current_date)] = day_detail
+                # Insert day detail into daily data
+                daily_data[str(current_date)] = day_detail
 
         total_hours = holiday_hours + leave_hours + performed_hours
         remaining_hours = work_hours - total_hours
@@ -731,7 +734,23 @@ class RangeInfoServiceAPIView(APIView):
         }
 
         if daily:
-            data['details'] = details
+            data['details'] = daily_data
+
+        if summary:
+            summary_performances = {}
+
+            for performance in performances:
+                if performance.contract.id not in summary_performances:
+                    summary_performances[performance.contract.id] = {
+                        'contract': serializers.MinimalContractSerializer(performance.contract).data,
+                        'duration': 0,
+                    }
+
+                summary_performances[performance.contract.id]['duration'] += performance.duration
+
+            data['summary'] = {
+                'performances': summary_performances.values()
+            }
 
         return Response(data)
 

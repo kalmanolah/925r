@@ -292,26 +292,9 @@ class LeaveTypeSerializer(BaseSerializer):
 
 
 class LeaveDateSerializer(BaseSerializer):
-    full_day = serializers.SerializerMethodField()
-
     class Meta(BaseSerializer.Meta):
         model = models.LeaveDate
-        fields = BaseSerializer.Meta.fields + ('leave', 'timesheet', 'full_day', 'starts_at', 'ends_at')
-
-    def get_full_day(self, obj):
-        """Calculates whether leaveduration > workschedule"""
-        ec = models.EmploymentContract.objects.filter(
-            Q(user = obj.leave.user),
-            Q(ended_at__isnull = True)  | Q(ended_at__gte = datetime.datetime.now())
-        )
-        ws = models.WorkSchedule.objects.get(employmentcontract = ec).__dict__
-
-        start_time = float(str(obj.starts_at.hour) + '.' + str(obj.starts_at.minute))
-        end_time = float(str(obj.ends_at.hour) + '.' + str(obj.ends_at.minute))
-
-        weekday = obj.starts_at.strftime('%A').lower()
-
-        return (end_time - start_time) >= ws[weekday]
+        fields = BaseSerializer.Meta.fields + ('leave', 'timesheet', 'starts_at', 'ends_at')
 
 
 class LeaveSerializer(BaseSerializer):
