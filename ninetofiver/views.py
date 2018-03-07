@@ -430,7 +430,7 @@ class MonthlyAvailabilityServiceAPIView(APIView):
         month = int(request.query_params.get('month', None))
 
         period = timezone.make_aware(datetime(year, month, 1), timezone.get_current_timezone())
-        sickness_type_ids = models.LeaveType.objects.filter(name__icontains='sick').values_list('id', flat=True)
+        sickness_type_ids = list(models.LeaveType.objects.filter(name__icontains='sick').values_list('id', flat=True))
 
         data = {
             'year': period.year,
@@ -456,16 +456,15 @@ class MonthlyAvailabilityServiceAPIView(APIView):
 
             if timesheet:
                 # Determine leave & sickness
-                leaves = (models.Leave.objects
-                          .filter(user=user, status=models.STATUS_APPROVED, leavedate__timesheet=timesheet)
-                          .distinct())
+                leave_dates = (models.LeaveDate.objects
+                               .filter(leave__user=user, leave__status=models.STATUS_APPROVED, timesheet=timesheet)
+                               .select_related('leave', 'leave__leave_type'))
 
-                for leave in leaves:
-                    for leave_date in leave.leavedate_set.all():
-                        if leave.leave_type.id in sickness_type_ids:
-                            data['sickness'][user.id].append(leave_date.starts_at.day)
-                        else:
-                            data['leave'][user.id].append(leave_date.starts_at.day)
+                for leave_date in leave_dates:
+                    if leave_date.leave.leave_type.id in sickness_type_ids:
+                        data['sickness'][user.id].append(leave_date.starts_at.day)
+                    else:
+                        data['leave'][user.id].append(leave_date.starts_at.day)
 
                 # Determine home work
                 whereabouts = models.Whereabout.objects.filter(timesheet=timesheet, location__icontains='home')
@@ -481,8 +480,11 @@ class MonthlyAvailabilityServiceAPIView(APIView):
                 if ((not employment_contract) or
                         (employment_contract.ended_at and (employment_contract.ended_at < day))):
                     try:
-                        employment_contract = models.EmploymentContract.objects.filter(
-                            Q(ended_at__isnull=True) | Q(ended_at__gte=day), user=user, started_at__lte=day).first()
+                        employment_contract = (models.EmploymentContract.objects
+                                               .filter(Q(ended_at__isnull=True) | Q(ended_at__gte=day), user=user,
+                                                       started_at__lte=day)
+                                               .select_related('company', 'work_schedule')
+                                               .first())
                     except models.EmploymentContract.DoesNotExist:
                         employment_contract = None
 
