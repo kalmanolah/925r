@@ -340,7 +340,6 @@ class AdminProjectContractSerializer(ContractSerializer):
     def get_hours_estimated(self, obj):
         return obj.projectestimate_set.values_list('hours_estimated', 'role_id',)
 
-
     class Meta(ContractSerializer.Meta):
         model = models.ProjectContract
         fields = ContractSerializer.Meta.fields + ('redmine_id', 'starts_at', 'ends_at', 'fixed_fee', 'hours_estimated',)

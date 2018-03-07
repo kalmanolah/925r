@@ -416,7 +416,7 @@ class PerformanceImportServiceAPIView(APIView):
         return Response(data)
 
 
-class MonthlyAvailabilityServiceAPIView(APIView):
+class RangeAvailabilityServiceAPIView(APIView):
     """
     Get all active users where each property of the user is the day of a 'special' event.
     Special events are: working from home, sickness leave, normal leave, nonWorkingDay based on workschedule.
@@ -425,16 +425,16 @@ class MonthlyAvailabilityServiceAPIView(APIView):
 
     def get(self, request, format=None):
         """Defines the entrypoint of the retrieval."""
-        users = auth_models.User.objects.filter(is_active=True)
-        year = int(request.query_params.get('year', None))
-        month = int(request.query_params.get('month', None))
+        from_date = parser.parse(request.query_params.get('from', None)).date()
+        until_date = parser.parse(request.query_params.get('until', None)).date()
 
-        period = timezone.make_aware(datetime(year, month, 1), timezone.get_current_timezone())
+        users = auth_models.User.objects.filter(is_active=True)
         sickness_type_ids = list(models.LeaveType.objects.filter(name__icontains='sick').values_list('id', flat=True))
 
+        # Initialize data
         data = {
-            'year': period.year,
-            'month': period.month,
+            'from': from_date,
+            'until': until_date,
             'no_work': {},
             'holiday': {},
             'home_work': {},
@@ -442,150 +442,108 @@ class MonthlyAvailabilityServiceAPIView(APIView):
             'leave': {}
         }
 
+        # Fetch all employment contracts for this period
+        employment_contracts = (models.EmploymentContract.objects
+                                .filter(
+                                    (Q(ended_at__isnull=True) & Q(started_at__lte=from_date)) |
+                                    (Q(started_at__lte=until_date) & Q(ended_at__gte=from_date)),
+                                    user__in=users)
+                                .order_by('started_at')
+                                .select_related('user', 'company', 'work_schedule'))
+        # Index employment contracts by user ID
+        employment_contract_data = {}
+        for employment_contract in employment_contracts:
+            (employment_contract_data
+                .setdefault(employment_contract.user.id, [])
+                .append(employment_contract))
+
+        # Fetch all leave dates for this period
+        leave_dates = (models.LeaveDate.objects
+                       .filter(leave__user__in=users, leave__status=models.STATUS_APPROVED,
+                               starts_at__date__gte=from_date, starts_at__date__lte=until_date)
+                       .select_related('leave', 'leave__leave_type', 'leave__user'))
+        # Index leave dates by day, then by user ID
+        leave_date_data = {}
+        for leave_date in leave_dates:
+            (leave_date_data
+                .setdefault(str(leave_date.starts_at.date()), {})
+                .setdefault(leave_date.leave.user.id, [])
+                .append(leave_date))
+
+        # Fetch all holidays for this period
+        holidays = (models.Holiday.objects
+                    .filter(date__gte=from_date, date__lte=until_date))
+        # Index holidays by day, then by country
+        holiday_data = {}
+        for holiday in holidays:
+            (holiday_data
+                .setdefault(str(holiday.date), {})
+                .setdefault(holiday.country, [])
+                .append(holiday))
+
+        # Count days
+        day_count = (until_date - from_date).days + 1
+
+        # Iterate over users
         for user in users:
-            data['no_work'][user.id] = []
-            data['holiday'][user.id] = []
-            data['home_work'][user.id] = []
-            data['sickness'][user.id] = []
-            data['leave'][user.id] = []
+            # Initialize user data
+            user_no_work = []
+            user_holiday = []
+            user_home_work = []
+            user_sickness = []
+            user_leave = []
 
-            try:
-                timesheet = models.Timesheet.objects.get(user=user, year=period.year, month=period.month)
-            except models.Timesheet.DoesNotExist:
-                timesheet = None
+            # Iterate over days
+            for i in range(day_count):
+                # Determine date for this day
+                current_date = copy.deepcopy(from_date) + timedelta(days=i)
 
-            if timesheet:
-                # Determine leave & sickness
-                leave_dates = (models.LeaveDate.objects
-                               .filter(leave__user=user, leave__status=models.STATUS_APPROVED, timesheet=timesheet)
-                               .select_related('leave', 'leave__leave_type'))
+                # Get employment contract for this day
+                # This allows us to determine the work schedule and country of the user
+                employment_contract = None
+                try:
+                    for ec in employment_contract_data[user.id]:
+                        if (ec.started_at <= current_date) and ((not ec.ended_at) or (ec.ended_at >= current_date)):
+                            employment_contract = ec
+                            break
+                except KeyError:
+                    pass
 
-                for leave_date in leave_dates:
-                    if leave_date.leave.leave_type.id in sickness_type_ids:
-                        data['sickness'][user.id].append(leave_date.starts_at.day)
-                    else:
-                        data['leave'][user.id].append(leave_date.starts_at.day)
+                work_schedule = employment_contract.work_schedule if employment_contract else None
+                country = employment_contract.company.country if employment_contract else None
 
-                # Determine home work
-                whereabouts = models.Whereabout.objects.filter(timesheet=timesheet, location__icontains='home')
+                # No work occurs when there is no work_schedule, or no hours should be worked that day
+                if (not work_schedule) or (getattr(work_schedule, current_date.strftime('%A').lower(), 0.00) <= 0):
+                    user_no_work.append(current_date)
 
-                for whereabout in whereabouts:
-                    data['home_work'][user.id].append(whereabout.day)
+                # Holidays
+                try:
+                    if country and holiday_data[str(current_date)][country]:
+                        user_holiday.append(current_date)
+                except KeyError:
+                    pass
 
-            # Iterate over days, attempting to determine employment contract for each day
-            employment_contract = None
-            for i in range(days_in_month(period.year, period.month)):
-                day = date(period.year, period.month, i + 1)
+                # Leave & Sickness
+                try:
+                    for leave_date in leave_date_data[str(current_date)][user.id]:
+                        if leave_date.leave.leave_type.id in sickness_type_ids:
+                            user_sickness.append(current_date)
+                        else:
+                            user_leave.append(current_date)
+                except KeyError:
+                    pass
 
-                if ((not employment_contract) or
-                        (employment_contract.ended_at and (employment_contract.ended_at < day))):
-                    try:
-                        employment_contract = (models.EmploymentContract.objects
-                                               .filter(Q(ended_at__isnull=True) | Q(ended_at__gte=day), user=user,
-                                                       started_at__lte=day)
-                                               .select_related('company', 'work_schedule')
-                                               .first())
-                    except models.EmploymentContract.DoesNotExist:
-                        employment_contract = None
+                # Home work
+                # @TODO Implement home working
 
-                if employment_contract:
-                    # Determine holiday
-                    holiday_cnt = (models.Holiday.objects
-                                   .filter(country=employment_contract.company.country, date=day)
-                                   .count())
-                    if holiday_cnt:
-                        data['holiday'][user.id].append(day.day)
-
-                    # Determine work schedule
-                    work_schedule = employment_contract.work_schedule
-                    day_hours = getattr(work_schedule, day.strftime('%A').lower(), 0.00)
-                    if day_hours <= 0:
-                        data['no_work'][user.id].append(day.day)
-                else:
-                    # Determine work schedule
-                    data['no_work'][user.id].append(day.day)
+            # Store user data
+            data['no_work'][user.id] = user_no_work
+            data['holiday'][user.id] = user_holiday
+            data['home_work'][user.id] = user_home_work
+            data['sickness'][user.id] = user_sickness
+            data['leave'][user.id] = user_leave
 
         return Response(data, status=status.HTTP_200_OK)
-
-
-class MonthInfoServiceAPIView(APIView):
-    """
-    Calculates and returns information for a given month.
-
-    Returns: hours_required of a given month and user
-    (as a string because decimal serialization can cause precision loss).
-
-    """
-
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def get(self, request, format=None):
-        """Get month information."""
-        user = request.user
-
-        # get month from params, defaults to the current month if month is omitted.
-        month = int(request.query_params.get('month') or datetime.now().month)
-        year = int(request.query_params.get('year') or datetime.now().year)
-
-        work_hours = 0
-        holiday_hours = 0
-        leave_hours = 0
-        remaining_hours = 0
-        performed_hours = 0
-
-        # Calculate work hours based on work schedule and employment contract
-        ec = None
-        work_schedule = None
-        for day in range(days_in_month(year, month)):
-            dt = date(year, month, day + 1)
-
-            if (not ec) or (ec.started_at > dt) or (ec.ended_at and (ec.ended_at < dt)):
-                ec = models.EmploymentContract.objects.filter(
-                    Q(user=user, started_at__lte=dt) &
-                    (Q(ended_at__isnull=True) | Q(ended_at__gte=dt))
-                ).first()
-
-                work_schedule = ec.work_schedule if ec else None
-
-            if work_schedule:
-                work_hours += getattr(work_schedule, dt.strftime('%A').lower(), Decimal(0.00))
-
-        # Calculate holiday hours
-        user_info = models.UserInfo.objects.filter(user=user).first()
-        if user_info and work_schedule:
-            holidays = models.Holiday.objects.filter(country=user_info.country, date__month=month, date__year=year)
-
-            for holiday in holidays:
-                holiday_hours += getattr(work_schedule, holiday.date.strftime('%A').lower(), Decimal(0.00))
-
-        # Get all approved leave dates of the user in the given month
-        leave_dates = models.LeaveDate.objects.filter(leave__user=user, leave__status=models.STATUS_APPROVED,
-                                                      starts_at__month=month, starts_at__year=year)
-
-        # Calculate leave hours
-        for leave_date in leave_dates:
-            leave_hours += Decimal(round((leave_date.ends_at - leave_date.starts_at).total_seconds() / 3600, 2))
-
-        # Calculate performed hours
-        performances = models.ActivityPerformance.objects.filter(timesheet__user=user, timesheet__month=month,
-                                                                 timesheet__year=year)
-        for performance in performances:
-            performed_hours += Decimal(performance.duration)
-
-        remaining_hours = work_hours - holiday_hours - leave_hours - performed_hours
-        remaining_hours = 0 if remaining_hours < 0 else remaining_hours
-
-        data = {
-            'work_hours': work_hours,
-            'holiday_hours': holiday_hours,
-            'leave_hours': leave_hours,
-            'remaining_hours': remaining_hours,
-            'performed_hours': performed_hours,
-            'year': year,
-            'month': month,
-        }
-
-        return Response(data)
 
 
 class RangeInfoServiceAPIView(APIView):
