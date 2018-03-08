@@ -289,6 +289,16 @@ class Base(Configuration):
     }
     AUTH_LDAP_ALWAYS_UPDATE_USER = True
 
+    # PDFs
+    WKHTMLTOPDF_CMD_OPTIONS = {
+        'encoding': 'utf8',
+        'quiet': True,
+        'margin-bottom': '3mm',
+        'margin-left': '3mm',
+        'margin-right': '3mm',
+        'margin-top': '3mm',
+    }
+
     # REDMINE
     REDMINE_URL = values.Value(None)
     REDMINE_API_KEY = values.Value(None)

@@ -295,41 +295,27 @@ class LeaveFilter(filters.FilterSet):
 
     def leavedate_range_distinct(self, queryset, name, value):
         """Filters distinct leavedates between a given range."""
-
-        # Validate input.
         try:
-            # Split value.
             values = value.split(',')
             start_date = dateutil.parser.parse(values[0])
             end_date = dateutil.parser.parse(values[1])
-        except Exception as e:
-            # Raise validation error.
+        except Exception:
             raise ValidationError('Datetimes have to be in the correct \'YYYY-MM-DDTHH:mm:ss\' format.')
 
-        # Filter distinct using range.
         return queryset.filter(leavedate__starts_at__range=(start_date, end_date)).distinct()
-
 
     def leavedate_upcoming_distinct(self, queryset, name, value):
         """Filters distinct leavedates happening after provided date."""
-
-        #Validate input
         try:
-            #Convert input into values
-            base_date = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
-        except:
-            #Raise validationerror
+            base_date = dateutil.parser.parse(value)
+        except Exception:
             raise ValidationError('Datetime has to be in the correct \'YYYY-MM-DDTHH:mm:ss\' format.')
 
-        # Filter distinct using range.
         return queryset.filter(leavedate__starts_at__gte=base_date).distinct()
-
 
     def leavedate_timesheet(self, queryset, name, value):
         """Filters distinct leavedates linked to the provided timesheet."""
-
         return queryset.filter(leavedate__timesheet=value).distinct()
-
 
     order_fields = ('status', 'description')
     order_by = NullLastOrderingFilter(fields=order_fields)
