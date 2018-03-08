@@ -878,7 +878,7 @@ class MyTimesheetViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return user.timesheet_set.exclude(status = models.STATUS_CLOSED)
+        return user.timesheet_set
 
 
 class MyContractViewSet(viewsets.ModelViewSet):
