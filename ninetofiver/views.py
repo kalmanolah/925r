@@ -363,27 +363,27 @@ class PerformanceViewSet(GenericHierarchicalReadOnlyViewSet):
         models.ActivityPerformance: serializers.ActivityPerformanceSerializer,
     }
     filter_class = filters.PerformanceFilter
-    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
 
-class ActivityPerformanceViewSet(viewsets.ModelViewSet):
+class ActivityPerformanceViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows activity performances to be viewed or edited.
     """
     queryset = models.ActivityPerformance.objects.all()
     serializer_class = serializers.ActivityPerformanceSerializer
     filter_class = filters.ActivityPerformanceFilter
-    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
 
-class StandbyPerformanceViewSet(viewsets.ModelViewSet):
+class StandbyPerformanceViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows standby performances to be viewed or edited.
     """
     queryset = models.StandbyPerformance.objects.all()
     serializer_class = serializers.StandbyPerformanceSerializer
     filter_class = filters.StandbyPerformanceFilter
-    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
 
 class AttachmentViewSet(viewsets.ModelViewSet):

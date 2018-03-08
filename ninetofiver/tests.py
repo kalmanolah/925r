@@ -665,7 +665,7 @@ class PerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseR
         return factory.create(timesheet=self.timesheet, contract=self.contract)
 
 
-class ActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+class ActivityPerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'activityperformance'
     factory_class = factories.ActivityPerformanceFactory
     user_factory = factories.AdminFactory
@@ -711,7 +711,7 @@ class ActivityPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, te
         return self.create_data
 
 
-class StandbyPerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+class StandbyPerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'standbyperformance'
     factory_class = factories.StandbyPerformanceFactory
     user_factory = factories.AdminFactory
