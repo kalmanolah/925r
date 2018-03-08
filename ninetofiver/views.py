@@ -237,7 +237,7 @@ class ContractViewSet(GenericHierarchicalReadOnlyViewSet):
         models.SupportContract: serializers.SupportContractSerializer,
     }
     filter_class = filters.ContractFilter
-    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
 
 class ProjectContractViewSet(viewsets.ModelViewSet):
@@ -246,7 +246,7 @@ class ProjectContractViewSet(viewsets.ModelViewSet):
     """
     queryset = models.ProjectContract.objects.all()
     filter_class = filters.ProjectContractFilter
-    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     def get_serializer_class(self):
         if self.request.user.is_superuser or self.request.user.is_staff:
@@ -260,7 +260,7 @@ class ConsultancyContractViewSet(viewsets.ModelViewSet):
     """
     queryset = models.ConsultancyContract.objects.all()
     filter_class = filters.ConsultancyContractFilter
-    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     def get_serializer_class(self):
         if self.request.user.is_superuser or self.request.user.is_staff:
@@ -274,7 +274,7 @@ class SupportContractViewSet(viewsets.ModelViewSet):
     """
     queryset = models.SupportContract.objects.all()
     filter_class = filters.SupportContractFilter
-    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     def get_serializer_class(self):
         if self.request.user.is_superuser or self.request.user.is_staff:
