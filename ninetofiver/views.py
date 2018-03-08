@@ -823,6 +823,7 @@ class MyTimesheetContractPdfExportServiceAPIView(PDFTemplateView, generics.Gener
 
     filename = 'timesheet_contract.pdf'
     template_name = 'ninetofiver/timesheets/timesheet_contract_pdf_export.pug'
+    permission_classes = (permissions.IsAuthenticated,)
 
     def render_to_response(self, context, **response_kwargs):
         user = context['view'].request.user
