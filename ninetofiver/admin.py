@@ -424,7 +424,12 @@ class TimesheetAdmin(admin.ModelAdmin):
     make_pending.short_description = _('Set selected timesheets to pending')
 
     list_display = ('__str__', 'user', 'month', 'year', 'status')
-    list_filter = ('status',)
+    list_filter = (
+        'status',
+        ('user', RelatedDropdownFilter),
+        'year',
+        'month',
+    )
     actions = [
         'make_closed',
         'make_active',
