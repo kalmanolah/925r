@@ -110,10 +110,11 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    queryset = auth_models.User.objects.distinct().order_by('-date_joined')
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = serializers.UserSerializer
     filter_class = filters.UserFilter
-    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+    queryset = (auth_models.User.objects.distinct().order_by('-date_joined')
+                .select_related('userinfo').prefetch_related('groups'))
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):

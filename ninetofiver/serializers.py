@@ -254,14 +254,15 @@ class GroupSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     display_label = serializers.SerializerMethodField()
-
     userinfo = UserInfoSerializer()
     groups = GroupSerializer(many=True)
 
     class Meta:
         model = auth_models.User
-        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'userinfo')
-        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active', 'userinfo' )
+        fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label', 'is_active',
+                  'userinfo')
+        read_only_fields = ('id', 'username', 'email', 'groups', 'first_name', 'last_name', 'display_label',
+                            'is_active', 'userinfo')
 
     def get_display_label(self, obj):
         return str(obj)

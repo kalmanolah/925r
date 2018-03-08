@@ -71,68 +71,20 @@ class NullLastOrderingFilter(django_filters.OrderingFilter):
 
 
 class UserFilter(FilterSet):
-
-    # Custom method to see if user is active on specific day
-    def filter_active_day(self, queryset, name, value):
-        fl = 'gt' if value else 'lte'
-
-        lookup = '__'.join(['employmentcontract', 'work_schedule', name, fl])
-        return queryset.filter(**{lookup: 0})
-
-
-    employmentcontract_type = django_filters.CharFilter(name='employmentcontract__employment_contract_type__name')
-    workschedule_name = django_filters.CharFilter(name='employmentcontract__work_schedule__name')
-    workschedule_name__contains = django_filters.CharFilter(name='employmentcontract__work_schedule__name', lookup_expr='contains')
-    workschedule_name__icontains = django_filters.CharFilter(name='employmentcontract__work_schedule__name', lookup_expr='icontains')
-
-    active_monday = django_filters.BooleanFilter(name='monday', method='filter_active_day')
-    active_tuesday = django_filters.BooleanFilter(name='tuesday', method='filter_active_day')
-    active_wednesday = django_filters.BooleanFilter(name='wednesday', method='filter_active_day')
-    active_thursday = django_filters.BooleanFilter(name='thursday', method='filter_active_day')
-    active_friday = django_filters.BooleanFilter(name='friday', method='filter_active_day')
-    active_saturday = django_filters.BooleanFilter(name='saturday', method='filter_active_day')
-    active_sunday = django_filters.BooleanFilter(name='sunday', method='filter_active_day')
-
-    order_fields = ('username', 'email', 'first_name', 'last_name', 'groups', 'userrelative__name',
-        'userinfo__gender', 'userinfo__country', 'userinfo__birth_date', 'employmentcontract__started_at',
-        'employmentcontract__ended_at', 'employmentcontract__company__name', 'employmentcontract__work_schedule__name',
-        'employmentcontract__employment_contract_type__name', 'leave__leavedate__starts_at', 'leave__leavedate__ends_at',
-        'active_monday', 'active_tuesday', 'active_wednesday', 'active_thursday', 'active_friday',
-        'active_saturday', 'active_sunday', 'userinfo__join_date')
+    order_fields = ('username', 'email', 'first_name', 'last_name', 'groups',)
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:
-
         model = auth_models.User
         fields = {
-            # Basic user fields
             'username': ['exact', 'icontains'],
             'email': ['exact', 'icontains'],
             'first_name': ['exact', 'icontains', ],
             'last_name': ['exact', 'icontains', ],
             'is_active': ['exact', ],
 
-            # AuthGroups fields
             'groups': ['exact', ],
             'groups__name': ['exact', 'icontains'],
-
-            # Userrelative fields
-            'userrelative__name': ['exact', 'contains', 'icontains', ],
-
-            # Userinfo fields
-            'userinfo__gender': ['iexact', ],
-            'userinfo__country': ['iexact', ],
-            'userinfo__birth_date': ['exact', 'year', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
-
-            # Employmentcontract fields
-            'employmentcontract__employment_contract_type': ['exact'],
-            'employmentcontract__started_at': ['exact', 'year', 'year__gt', 'year__gte', 'year__lt', 'year__lte', ],
-            'employmentcontract__ended_at': ['exact', 'year', 'year__gt', 'year__gte', 'year__lt', 'year__lte'],
-            'employmentcontract__company__name': ['exact', 'contains', 'icontains', ],
-
-            # Check if user is on leave
-            'leave__leavedate__starts_at': ['lte'],
-            'leave__leavedate__ends_at': ['gte'],
         }
 
 
