@@ -195,14 +195,14 @@ class LeaveAdmin(admin.ModelAdmin):
         """Approve selected leaves."""
         for leave in queryset:
             leave.status = models.STATUS_APPROVED
-            leave.save()
+            leave.save(validate=False)
     make_approved.short_description = _('Approve selected leaves')
 
     def make_rejected(self, request, queryset):
         """Reject selected leaves."""
         for leave in queryset:
             leave.status = models.STATUS_REJECTED
-            leave.save()
+            leave.save(validate=False)
     make_rejected.short_description = _('Reject selected leaves')
 
     def date(self, obj):
@@ -405,17 +405,22 @@ class ProjectEstimateAdmin(admin.ModelAdmin):
 
 @admin.register(models.Timesheet)
 class TimesheetAdmin(admin.ModelAdmin):
-
     def make_closed(self, request, queryset):
-        queryset.update(status=models.Timesheet.STATUS.CLOSED)
+        for timesheet in queryset:
+            timesheet.status = models.STATUS_CLOSED
+            timesheet.save(validate=False)
     make_closed.short_description = _('Close selected timesheets')
 
     def make_active(self, request, queryset):
-        queryset.update(status=models.Timesheet.STATUS.ACTIVE)
+        for timesheet in queryset:
+            timesheet.status = models.STATUS_ACTIVE
+            timesheet.save(validate=False)
     make_active.short_description = _('Activate selected timesheets')
 
     def make_pending(self, request, queryset):
-        queryset.update(status=models.Timesheet.STATUS.PENDING)
+        for timesheet in queryset:
+            timesheet.status = models.STATUS_PENDING
+            timesheet.save(validate=False)
     make_pending.short_description = _('Set selected timesheets to pending')
 
     list_display = ('__str__', 'user', 'month', 'year', 'status')
