@@ -49,7 +49,7 @@ def get_user_redmine_performances(user, from_date=None, to_date=None):
             logger.debug('No contract with Redmine project ID %s found' % entry.project.id)
             continue
 
-        description = '###### _Imported from Redmine:_ %s/issues/%s.' % (url, entry.issue.id)
+        description = '_See:_ %s/issues/%s.' % (url, entry.issue.id)
         if entry.comments:
             description = '%s\n%s' % (entry.comments, description)
 
