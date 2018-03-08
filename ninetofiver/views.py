@@ -737,7 +737,7 @@ class LeaveRequestServiceAPIView(APIView):
         user = request.user
         leave_type = get_object_or_404(models.LeaveType, pk=request.data['leave_type'])
         description = request.data.get('description', None)
-        full_day = request.data['full_day']
+        full_day = request.data.get('full_day', False)
 
         starts_at = parser.parse(request.data['starts_at'])
         starts_at = timezone.make_aware(starts_at) if not timezone.is_aware(starts_at) else starts_at
@@ -785,9 +785,15 @@ class LeaveRequestServiceAPIView(APIView):
                     if work_schedule:
                         work_hours = float(getattr(work_schedule, current_date.strftime('%A').lower(), Decimal(0.00)))
 
-                    # If we have to work a certain amount of hours on this day, add a leave date pair for
-                    # that amount of hours
-                    if work_hours > 0.0:
+                    # Determine existence of holidays on this day based on work schedule
+                    holiday = None
+                    if employment_contract:
+                        holiday = models.Holiday.objects.filter(date=current_date,
+                                                                country=employment_contract.company.country).first()
+
+                    # If we have to work a certain amount of hours on this day, and there is no holiday on that day,
+                    # add a leave date pair for that amount of hours
+                    if (work_hours > 0.0) and (not holiday):
                         # Ensure the leave starts when the working day does
                         pair_starts_at = current_dt.replace(hour=settings.DEFAULT_WORKING_DAY_STARTING_HOUR, minute=0,
                                                             second=0)
@@ -801,7 +807,7 @@ class LeaveRequestServiceAPIView(APIView):
             timesheet = None
             for pair in leave_dates:
                 # Determine timesheet to use
-                if (not timesheet) or ((timesheet.year != pair[0].year) and (timesheet.month != pair[0].month)):
+                if (not timesheet) or ((timesheet.year != pair[0].year) or (timesheet.month != pair[0].month)):
                     timesheet, created = models.Timesheet.objects.get_or_create(user=user, year=pair[0].year,
                                                                                 month=pair[0].month)
 
