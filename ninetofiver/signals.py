@@ -27,7 +27,7 @@ def on_populate_user(sender, **kwargs):
     if zimbra_status is not None:
         user.is_active = zimbra_status == 'enabled'
 
-    # Since we're populating from LDAP, disable regular regular password
+    # Since we're populating from LDAP, disable regular password
     user.set_unusable_password()
 
 

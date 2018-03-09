@@ -288,6 +288,9 @@ class Base(Configuration):
         'last_name': 'sn',
     }
     AUTH_LDAP_ALWAYS_UPDATE_USER = True
+    AUTH_LDAP_GLOBAL_OPTIONS = {
+        ldap.OPT_X_TLS_REQUIRE_CERT: ldap.OPT_X_TLS_ALLOW,
+    }
 
     # PDFs
     WKHTMLTOPDF_CMD_OPTIONS = {
