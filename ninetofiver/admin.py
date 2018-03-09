@@ -460,60 +460,47 @@ class StandbyPerformanceChildAdmin(PerformanceChildAdmin):
 
 @admin.register(models.Performance)
 class PerformanceParentAdmin(PolymorphicParentModelAdmin):
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('activityperformance',
+                                                            'activityperformance__performance_type',
+                                                            'activityperformance__contract_role',
+                                                            'contract',
+                                                            'timesheet',
+                                                            'timesheet__user')
+
     def duration(self, obj):
-        try:
-            activity = getattr(obj, 'activityperformance', None)
-        except:
-            activity = None
-
-        if activity:
-            return activity.duration
-
-        return None
-
-    def contract(self, obj):
-        try:
-            activity = getattr(obj, 'activityperformance', None)
-        except:
-            activity = None
-
-        if activity:
-            return activity.contract
-
-        return _('Standby')
+        return obj.activityperformance.duration
 
     def performance_type(self, obj):
-        try:
-            activity = getattr(obj, 'activityperformance', None)
-        except:
-            activity = None
-
-        if activity:
-            return activity.performance_type
-
-        return _('Standby')
+        return obj.activityperformance.performance_type
 
     def description(self, obj):
-        try:
-            activity = getattr(obj, 'activityperformance', None)
-        except:
-            activity = None
-
-        if activity:
-            return activity.description
-
-        return None
+        return obj.activityperformance.description
 
     def contract_role(self, obj):
-        try:
-            activity = getattr(obj, 'activityperformance', None)
-        except:
-            activity = None
-
-        if activity:
-            return activity.contract_role
+        return obj.activityperformance.contract_role
 
     base_model = models.Performance
-    child_models = (models.ActivityPerformance, models.StandbyPerformance)
-    list_filter = (PolymorphicChildModelFilter,)
-    list_display = ('__str__', 'timesheet', 'day', 'contract', 'performance_type', 'duration', 'description', 'contract_role')
+    child_models = (
+        models.ActivityPerformance,
+        models.StandbyPerformance,
+    )
+    list_filter = (
+        PolymorphicChildModelFilter,
+        ('contract', RelatedDropdownFilter),
+        ('timesheet__user', RelatedDropdownFilter),
+        ('timesheet__year', DropdownFilter),
+        ('timesheet__month', DropdownFilter),
+        ('activityperformance__contract_role', RelatedDropdownFilter),
+        ('activityperformance__performance_type', RelatedDropdownFilter),
+    )
+    list_display = (
+        '__str__',
+        'timesheet',
+        'day',
+        'contract',
+        'performance_type',
+        'duration',
+        'description',
+        'contract_role',
+    )
