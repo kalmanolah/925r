@@ -3,7 +3,7 @@ extends ninetofiver/pdf/base.pug
 - load markdown
 
 block body
-  div(class='container mt-4')
+  div(class='container')
     div(class='row justify-content-between')
       div(class='col-5 align-self-center')
         div(class='row justify-content-center')
@@ -43,14 +43,13 @@ block body
       tbody
         each performance, i in performances
           tr
-            td {{ performance.day }}
+            td(class='text-nowrap') {{ performance.day }}
             td
               - if performance.description
                 span {{ performance.description | markdown }}
-            td(class='text-right') {{ performance.duration }}
-            td {{ performance.performance_type }}
-        tr
-          td(colspan='4')
+            td(class='text-nowrap text-right') {{ performance.duration }}
+            td(class='text-nowrap') {{ performance.performance_type }}
+
         tr
           td
           th Total

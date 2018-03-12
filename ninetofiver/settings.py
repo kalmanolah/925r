@@ -296,10 +296,10 @@ class Base(Configuration):
     WKHTMLTOPDF_CMD_OPTIONS = {
         'encoding': 'utf8',
         'quiet': True,
-        'margin-bottom': '3mm',
-        'margin-left': '3mm',
-        'margin-right': '3mm',
-        'margin-top': '3mm',
+        'margin-bottom': '10mm',
+        'margin-left': '5mm',
+        'margin-right': '5mm',
+        'margin-top': '10mm',
     }
 
     # REDMINE
