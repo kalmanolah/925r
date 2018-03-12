@@ -82,8 +82,7 @@ class UserFilter(FilterSet):
             'first_name': ['exact', 'icontains', ],
             'last_name': ['exact', 'icontains', ],
             'is_active': ['exact', ],
-            'userinfo__birth_date': ['exact', ],
-
+            'userinfo__birth_date': ['exact', 'month__exact', 'day__exact'],
             'groups': ['exact', ],
             'groups__name': ['exact', 'icontains'],
         }
