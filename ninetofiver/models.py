@@ -89,8 +89,10 @@ class BaseModel(DirtyFieldsMixin, PolymorphicModel):
     def get_absolute_url(self):
         """Get an absolute URL for the object."""
         from django.urls import reverse
-        # return reverse('%s-detail' % self.__class__._meta.verbose_name.replace(' ', ''), args=[str(self.id)])
-        return reverse('%s-detail' % self.__class__.__name__.lower(), args=[str(self.id)])
+        return reverse(self.get_absolute_url_view_name(), args=[str(self.id)])
+
+    def get_absolute_url_view_name(self):
+        return '%s-detail' % self.__class__.__name__.lower()
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

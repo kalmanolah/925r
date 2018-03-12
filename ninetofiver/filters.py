@@ -146,25 +146,15 @@ class EmploymentContractFilter(FilterSet):
 class WorkScheduleFilter(FilterSet):
     order_fields = ('name',)
     order_by = NullLastOrderingFilter(fields=order_fields)
+    current = django_filters.BooleanFilter(method='current_filter')
 
-    # def get_current_work_schedule(self, queryset, name, value):
-    #     """Checks if the workschedule is the one that is currently active."""
-    #
-    #     if value is True:
-    #         return queryset.filter(
-    #             Q(employmentcontract__ended_at__isnull=True)
-    #             or
-    #             Q(employmentcontract__ended_at__gt=datetime.now())
-    #         ).distinct()
-    #     elif value is False:
-    #         return queryset.filter(
-    #             Q(employmentcontract__ended_at__isnull=False)
-    #             & Q(employmentcontract__ended_at__lte=datetime.now())
-    #         ).distinct()
-    #     else:
-    #         return queryset
+    def current_filter(self, queryset, name, value):
+        if value is True:
+            return queryset.filter(Q(employmentcontract__started_at__lte=datetime.now()),
+                                   Q(employmentcontract__ended_at__isnull=True) |
+                                   Q(employmentcontract__ended_at__gte=datetime.now()))
 
-    # current = django_filters.BooleanFilter(method='get_current_work_schedule')
+        return queryset
 
     class Meta:
         model = models.WorkSchedule
