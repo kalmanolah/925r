@@ -1,5 +1,4 @@
 from django.urls import reverse
-from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_assured import testcases
@@ -7,12 +6,7 @@ from django.utils.timezone import utc
 from ninetofiver import factories
 from decimal import Decimal
 from datetime import timedelta
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
-
-from ninetofiver import models
-
 import logging
-
 import tempfile
 import datetime
 
@@ -75,6 +69,102 @@ class GenericViewTests(AuthenticatedAPITestCase):
         response = self.client.get(reverse('my_user_service'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['display_label'], str(self.user))
+
+
+class ContractUserGroupTests(AuthenticatedAPITestCase):
+    """Contract user group tests."""
+
+    def test_automatic_contract_user_handling(self):
+        """Test automatic contract user handling."""
+        # Initial data setup
+        contract = factories.ContractFactory.create()
+        user = factories.UserFactory.create()
+        group_one = factories.GroupFactory.create()
+        group_two = factories.GroupFactory.create()
+        contract_role_one = factories.ContractRoleFactory()
+        contract_role_two = factories.ContractRoleFactory()
+
+        user.groups.add(group_one)
+
+        # Contract should initially have no contract users
+        self.assertEqual(contract.contractuser_set.count(), 0)
+
+        # If a contract user group is created for the user's group,
+        # the user should have a contract user created for the contract with the given
+        # contract role
+        contract_user_group = factories.ContractUserGroupFactory.create(contract=contract, group=group_one,
+                                                                        contract_role=contract_role_one)
+        self.assertEqual(contract.contractuser_set.count(), 1)
+        self.assertEqual(contract.contractuser_set.all()[0].user, user)
+        self.assertEqual(contract.contractuser_set.all()[0].contract_role, contract_role_one)
+
+        # If the contract user group's contract role is changed, the contract user's role should change as well
+        contract_user_group.contract_role = contract_role_two
+        contract_user_group.save()
+
+        self.assertEqual(contract.contractuser_set.count(), 1)
+        self.assertEqual(contract.contractuser_set.all()[0].user, user)
+        self.assertEqual(contract.contractuser_set.all()[0].contract_role, contract_role_two)
+
+        # If the group is removed from the user, the contract user should be gone
+        user.groups.remove(group_one)
+        self.assertEqual(contract.contractuser_set.count(), 0)
+
+        # If the group is added to the user, the contract user should exist
+        user.groups.add(group_one)
+        self.assertEqual(contract.contractuser_set.count(), 1)
+
+        # If the user is removed from the group, the contract user should be gone
+        group_one.user_set.remove(user)
+        self.assertEqual(contract.contractuser_set.count(), 0)
+
+        # If the user is added to the group, the contract user should exist
+        group_one.user_set.add(user)
+        self.assertEqual(contract.contractuser_set.count(), 1)
+
+        # If the contract user group's group is changed to one which doesn't contain the user, the contract user should
+        # be gone
+        contract_user_group.group = group_two
+        contract_user_group.save()
+        self.assertEqual(contract.contractuser_set.count(), 0)
+
+        # If the contract user group's group is changed to one which contains the user, the contract user should exist
+        contract_user_group.group = group_one
+        contract_user_group.save()
+        self.assertEqual(contract.contractuser_set.count(), 1)
+
+        # If the contract user group is removed, the contract user should be gone
+        contract_user_group.delete()
+        self.assertEqual(contract.contractuser_set.count(), 0)
+
+        # If we add the second group to the user, no contract user groups should exist
+        user.groups.add(group_two)
+        self.assertEqual(contract.contractuser_set.count(), 0)
+
+        # If we create two contract user groups for the same contract role, only one contract user should exist
+        contract_user_group_one = factories.ContractUserGroupFactory.create(contract=contract, group=group_one,
+                                                                            contract_role=contract_role_one)
+        contract_user_group_two = factories.ContractUserGroupFactory.create(contract=contract, group=group_two,
+                                                                            contract_role=contract_role_one)
+        self.assertEqual(contract.contractuser_set.count(), 1)
+
+        # If we change the contract role of the second contract user group, two contract users should exist
+        contract_user_group_two.contract_role = contract_role_two
+        contract_user_group_two.save()
+        self.assertEqual(contract.contractuser_set.count(), 2)
+
+        # If we change the contract role of the first contract user group, one contract user should exist again
+        contract_user_group_one.contract_role = contract_role_two
+        contract_user_group_one.save()
+        self.assertEqual(contract.contractuser_set.count(), 1)
+
+        # If we delete any one of the contract user groups, one contract user should remain
+        contract_user_group_two.delete()
+        self.assertEqual(contract.contractuser_set.count(), 1)
+
+        # Deleting the final contract user group should remove the final contract user
+        contract_user_group_one.delete()
+        self.assertEqual(contract.contractuser_set.count(), 0)
 
 
 class CompanyAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):

@@ -694,13 +694,29 @@ class ContractRole(BaseModel):
         return '%s' % self.name
 
 
-class ContractUser(BaseModel):
+class ContractUserGroup(BaseModel):
+    """Contract user group model."""
 
+    group = models.ForeignKey(auth_models.Group, on_delete=models.CASCADE)
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
+    contract_role = models.ForeignKey(ContractRole, on_delete=models.PROTECT)
+
+    class Meta(BaseModel.Meta):
+        unique_together = (('group', 'contract', 'contract_role'),)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s [%s]' % (self.group, self.contract_role)
+
+
+class ContractUser(BaseModel):
     """Contract user model."""
 
     user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
     contract_role = models.ForeignKey(ContractRole, on_delete=models.PROTECT)
+    contract_user_group = models.ForeignKey(ContractUserGroup, on_delete=models.CASCADE, editable=False, blank=True,
+                                            null=True)
 
     class Meta(BaseModel.Meta):
         unique_together = (('user', 'contract', 'contract_role'),)

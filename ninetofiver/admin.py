@@ -284,6 +284,10 @@ class ContractUserInline(admin.TabularInline):
     ordering = ("user__first_name", "user__last_name",)
 
 
+class ContractUserGroupInline(admin.TabularInline):
+    model = models.ContractUserGroup
+
+
 @admin.register(models.ContractGroup)
 class ContractGroupAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', )
@@ -292,6 +296,7 @@ class ContractGroupAdmin(admin.ModelAdmin):
 class ContractChildAdmin(PolymorphicChildModelAdmin):
     base_model = models.Contract
     inlines = [
+        ContractUserGroupInline,
         ContractUserInline,
     ]
 
@@ -352,6 +357,7 @@ class ConsultancyContractAdmin(admin.ModelAdmin):
                    ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
 
     inlines = [
+        ContractUserGroupInline,
         ContractUserInline,
     ]
 
@@ -366,6 +372,7 @@ class SupportContractAdmin(admin.ModelAdmin):
                    ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
 
     inlines = [
+        ContractUserGroupInline,
         ContractUserInline,
     ]
 
@@ -380,6 +387,7 @@ class ProjectContractAdmin(admin.ModelAdmin):
                    ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
 
     inlines = [
+        ContractUserGroupInline,
         ContractUserInline,
     ]
 

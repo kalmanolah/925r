@@ -26,6 +26,13 @@ class AdminFactory(UserFactory):
     is_superuser = True
 
 
+class GroupFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = auth_models.Group
+
+    name = factory.Sequence(lambda n: 'Group%d' % n)
+
+
 class CompanyFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.Company
@@ -157,6 +164,8 @@ class ContractFactory(factory.DjangoModelFactory):
     active = factory.LazyFunction(fake.boolean)
     starts_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=True))
     ends_at = factory.LazyFunction(lambda: fake.date_time_this_decade(before_now=False, after_now=True))
+    company = factory.SubFactory(InternalCompanyFactory)
+    customer = factory.SubFactory(CompanyFactory)
 
 
 class ProjectContractFactory(ContractFactory):
@@ -199,6 +208,11 @@ class ContractRoleFactory(factory.DjangoModelFactory):
 class ContractUserFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.ContractUser
+
+
+class ContractUserGroupFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.ContractUserGroup
 
 
 class TimesheetFactory(factory.DjangoModelFactory):

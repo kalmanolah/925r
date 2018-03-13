@@ -156,6 +156,14 @@ class MinimalUserSerializer(MinimalSerializer):
         model = auth_models.User
 
 
+class MinimalGroupSerializer(MinimalSerializer):
+
+    """Minimal group serializer."""
+
+    class Meta(MinimalSerializer.Meta):
+        model = auth_models.Group
+
+
 class MinimalLeaveTypeSerializer(MinimalSerializer):
 
     """Minimal leave type serializer."""
