@@ -111,7 +111,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = serializers.UserSerializer
     filter_class = filters.UserFilter
-    queryset = (auth_models.User.objects.distinct().order_by('-date_joined')
+    queryset = (auth_models.User.objects.distinct().exclude(is_active=False).order_by('-date_joined')
                 .select_related('userinfo').prefetch_related('groups'))
 
 
