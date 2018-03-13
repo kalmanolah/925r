@@ -4,8 +4,9 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
 from django.db import transaction
-from decimal import Decimal
+from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
+from decimal import Decimal
 from ninetofiver import filters
 from ninetofiver import models
 from ninetofiver import serializers
@@ -679,6 +680,10 @@ class LeaveRequestServiceAPIView(APIView):
         ends_at = parser.parse(request.data['ends_at'])
         ends_at = timezone.make_aware(ends_at) if not timezone.is_aware(ends_at) else ends_at
 
+        # If the end date comes before the start date, NOPE
+        if ends_at < starts_at:
+            raise serializers.ValidationError(_('The end date should come after the start date.'))
+
         # Ensure we can roll back if something goes wrong
         with transaction.atomic():
             # Create leave
@@ -737,6 +742,10 @@ class LeaveRequestServiceAPIView(APIView):
                                                               minute=int((work_hours % 1) * 60))
                         # Log pair
                         leave_dates.append([pair_starts_at, pair_ends_at])
+
+            # If no leave date pairs are available, no leave should be created
+            if not leave_dates:
+                raise serializers.ValidationError(_('No leave dates are available for this period.'))
 
             # Create leave dates for leave date pairs
             timesheet = None
