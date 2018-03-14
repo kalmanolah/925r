@@ -39,16 +39,16 @@ block body
           th Day
           th Description
           th(class='text-right') Hours
-          th Type
+          th(class='text-right') Type
       tbody
         each performance, i in performances
           tr
-            td(class='text-nowrap') {{ performance.day }}
+            td(class='text-nowrap') {{ performance.get_date | date:'d (D)' }}
             td
               - if performance.description
                 span {{ performance.description | markdown }}
             td(class='text-nowrap text-right') {{ performance.duration }}
-            td(class='text-nowrap') {{ performance.performance_type }}
+            td(class='text-nowrap text-right') {{ performance.performance_type }}
 
         tr
           td

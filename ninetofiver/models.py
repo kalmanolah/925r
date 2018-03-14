@@ -343,7 +343,7 @@ class UserInfo(BaseModel):
         return '%s' % self.user
 
     def get_join_date(self):
-        """Returns the date of the first employmentcontract for this user."""
+        """Return the date of the first employmentcontract for this user."""
         try:
             return EmploymentContract.objects.filter(user=self.user).earliest('started_at').started_at
         except BaseException:
@@ -808,6 +808,10 @@ class Performance(BaseModel):
         if self.day > month_days:
             raise ValidationError({'day': _('There are not that many days in the month this timesheet is attached to.'
                                             % month_days)})
+
+    def get_date(self):
+        """Get the date for this performance."""
+        return date.today().replace(year=self.timesheet.year, month=self.timesheet.month, day=self.day)
 
 
 class ActivityPerformance(Performance):
