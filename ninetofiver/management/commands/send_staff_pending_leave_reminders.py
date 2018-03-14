@@ -23,7 +23,7 @@ class Command(BaseCommand):
         log.info('%s pending leave(s) found' % pending_leave_count)
 
         if pending_leave_count:
-            staff = auth_models.User.objects.filter(is_staff=True, email__isnull=False)
+            staff = auth_models.User.objects.filter(is_staff=True).exclude(email__isnull=True).exclude(email__exact='')
 
             for user in staff:
                 log.info('Sending reminder to %s' % user.email)

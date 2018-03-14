@@ -538,7 +538,7 @@ class PerformanceType(BaseModel):
 
     """Performance type model."""
 
-    name = models.CharField(unique=True, max_length=255)
+    name = models.CharField(max_length=255)
     description = models.TextField(max_length=255, blank=True, null=True)
     multiplier = models.DecimalField(
         max_digits=4,
