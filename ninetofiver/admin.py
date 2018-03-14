@@ -348,15 +348,27 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
                            % (x.get_file_url(), str(x)) for x in list(obj.attachments.all())))
 
     def fixed_fee(obj):
-        if obj.consultancycontract.fixed_fee:
+        if obj.projectcontract.fixed_fee:
             return obj.consultancycontract.fixed_fee
-        if obj.supportcontract.fixed_fee:
+        elif obj.supportcontract.fixed_fee:
             return obj.supportcontract.fixed_fee
         return None
 
     def fixed_fee_period(obj):
         if obj.supportcontract.fixed_fee_period:
             return obj.supportcontract.fixed_fee_period
+        return None
+
+    def duration(obj):
+        if obj.consultancycontract.duration:
+            return obj.consultancycontract.duration
+        return None
+
+    def day_rate(obj):
+        if obj.consultancycontract.day_rate:
+            return obj.consultancycontract.day_rate
+        elif obj.supportcontract.day_rate:
+            return obj.supportcontract.day_rate
         return None
 
     base_model = models.Contract
@@ -366,7 +378,8 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
         models.SupportContract,
     )
     list_display = ('__str__', 'name', 'company', 'customer', contract_users, contract_user_groups, performance_type,
-                    'active', 'starts_at', 'ends_at', 'description', attachments, fixed_fee, fixed_fee_period)
+                    'active', 'starts_at', 'ends_at', 'description', attachments, fixed_fee, fixed_fee_period,
+                    duration, day_rate)
 
     list_filter = (
         PolymorphicChildModelFilter,
