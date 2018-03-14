@@ -19,6 +19,19 @@ def get_redmine_connector():
     return None
 
 
+def get_redmine_user_choices():
+    """Get redmine project choices."""
+    choices = [[None, '-----------']]
+    redmine = get_redmine_connector()
+
+    if redmine:
+        res = redmine.user.all()
+        choices += sorted([[x.id, '%s %s [%s, %s]' % (x.firstname, x.lastname, x.login, x.mail)] for x in res],
+                          key=lambda x: x[1].lower())
+
+    return choices
+
+
 def get_redmine_project_choices():
     """Get redmine project choices."""
     choices = [[None, '-----------']]

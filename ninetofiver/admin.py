@@ -263,6 +263,19 @@ class LeaveDateAdmin(admin.ModelAdmin):
     ordering = ('-starts_at',)
 
 
+class UserInfoForm(forms.ModelForm):
+    """User info form."""
+
+    def __init__(self, *args, **kwargs):
+        """Constructor."""
+        super().__init__(*args, **kwargs)
+
+        self.fields['redmine_id'].label = 'Redmine user'
+        redmine_user_choices = cache.get_or_set('user_info_admin_redmine_id_choices',
+                                                redmine.get_redmine_user_choices)
+        self.fields['redmine_id'].widget = forms.Select(choices=redmine_user_choices)
+
+
 @admin.register(models.UserInfo)
 class UserInfoAdmin(admin.ModelAdmin):
     def join_date(self, obj):
@@ -273,6 +286,7 @@ class UserInfoAdmin(admin.ModelAdmin):
 
     list_display = ('__str__', 'user', 'gender', 'birth_date', 'user_groups', 'country', 'join_date')
     ordering = ('user',)
+    form = UserInfoForm
 
 
 @admin.register(models.PerformanceType)
