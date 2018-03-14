@@ -322,101 +322,118 @@ class ContractForm(forms.ModelForm):
         self.fields['redmine_id'].widget = forms.Select(choices=redmine_project_choices)
 
 
-class ContractChildAdmin(PolymorphicChildModelAdmin):
-    base_model = models.Contract
-    inlines = [
-        ContractUserGroupInline,
-        ContractUserInline,
-    ]
-    base_form = ContractForm
-
-
-# @admin.register(models.ProjectContract)
-class ProjectContractChildAdmin(ContractChildAdmin):
-    base_model = models.ProjectContract
-
-
-# @admin.register(models.ConsultancyContract)
-class ConsultancyContractChildAdmin(ContractChildAdmin):
-    base_model = models.ConsultancyContract
-
-
-# @admin.register(models.SupportContract)
-class SupportContractChildAdmin(ContractChildAdmin):
-    base_model = models.SupportContract
-
-
 @admin.register(models.Contract)
 class ContractParentAdmin(PolymorphicParentModelAdmin):
-    def contract_users(self, obj):
+    """Contract parent admin."""
+
+    def get_queryset(self, request):
+        return (super().get_queryset(request)
+                .select_related('company', 'customer')
+                .prefetch_related('contractusergroup_set', 'contractusergroup_set__group',
+                                  'contractusergroup_set__contract_role', 'contractuser_set', 'contractuser_set__user',
+                                  'contractuser_set__contract_role',)
+                .distinct())
+
+    def contract_users(obj):
         return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
 
-    def performance_types(obj):
+    def contract_user_groups(obj):
+        return format_html('<br>'.join(str(x) for x in list(obj.contractusergroup_set.all())))
+
+    def performance_type(obj):
         return format_html('<br>'.join(str(x) for x in list(obj.performance_types.all())))
 
-    def attachment(self, obj):
+    def attachments(obj):
         return format_html('<br>'.join('<a href="%s">%s</a>'
                            % (x.get_file_url(), str(x)) for x in list(obj.attachments.all())))
 
+    def fixed_fee(obj):
+        if obj.consultancycontract.fixed_fee:
+            return obj.consultancycontract.fixed_fee
+        if obj.supportcontract.fixed_fee:
+            return obj.supportcontract.fixed_fee
+        return None
+
+    def fixed_fee_period(obj):
+        if obj.supportcontract.fixed_fee_period:
+            return obj.supportcontract.fixed_fee_period
+        return None
+
     base_model = models.Contract
-    child_models = (models.ProjectContract, models.ConsultancyContract, models.SupportContract)
-    list_display = ('name', 'active', '__str__', 'company', 'customer', 'contract_users',
-                    performance_types, 'starts_at', 'ends_at', 'description', 'attachment')
+    child_models = (
+        models.ProjectContract,
+        models.ConsultancyContract,
+        models.SupportContract,
+    )
+    list_display = ('__str__', 'name', 'company', 'customer', contract_users, contract_user_groups, performance_type,
+                    'active', 'starts_at', 'ends_at', 'description', attachments, fixed_fee, fixed_fee_period)
+
     list_filter = (
         PolymorphicChildModelFilter,
+        ContractStatusFilter,
         ('company', RelatedDropdownFilter),
         ('customer', RelatedDropdownFilter),
-        ('contractuser', RelatedDropdownFilter),
+        ('contractuser__user', RelatedDropdownFilter),
+        ('contractusergroup__group', RelatedDropdownFilter),
         ('performance_types', RelatedDropdownFilter),
         ('starts_at', DateRangeFilter),
         ('ends_at', DateRangeFilter),
         'active'
     )
     search_fields = ('name', 'description', 'company__name', 'customer__name', 'contractuser__user__first_name',
-                     'contractuser__user__last_name', 'contractuser__user__username', 'performance_types__name')
+                     'contractuser__user__last_name', 'contractuser__user__username', 'contractusergroup__group__name',
+                     'performance_types__name')
     ordering = ('name', 'company', 'starts_at', 'ends_at', '-customer',)
 
 
-class ContractAdmin(admin.ModelAdmin):
+class ContractChildAdmin(PolymorphicChildModelAdmin):
     """Base contract admin."""
 
-    def contract_users(self, obj):
-        return format_html('<br>'.join(str(x) for x in list(obj.contractuser_set.all())))
+    def get_queryset(self, request):
+        return (super().get_queryset(request)
+                .select_related('company', 'customer')
+                .prefetch_related('contractusergroup_set', 'contractusergroup_set__group',
+                                  'contractusergroup_set__contract_role', 'contractuser_set', 'contractuser_set__user',
+                                  'contractuser_set__contract_role',)
+                .distinct())
 
     inlines = [
         ContractUserGroupInline,
         ContractUserInline,
     ]
-
-    list_filter = (ContractStatusFilter, ('company', RelatedDropdownFilter),
-                   ('customer', RelatedDropdownFilter), ('contractuser__user', RelatedDropdownFilter))
-
-    form = ContractForm
+    base_model = models.Contract
+    base_form = ContractForm
+    show_in_index = True
+    list_display = ContractParentAdmin.list_display
+    list_filter = ContractParentAdmin.list_filter[1:]
+    search_fields = ContractParentAdmin.search_fields
+    ordering = ContractParentAdmin.ordering
 
 
 @admin.register(models.ConsultancyContract)
-class ConsultancyContractAdmin(ContractAdmin):
+class ConsultancyContractAdmin(ContractChildAdmin):
     """Consultancy contract admin."""
 
-    list_display = ('name', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'duration')
+    base_model = models.ConsultancyContract
 
 
 @admin.register(models.SupportContract)
-class SupportContractAdmin(ContractAdmin):
+class SupportContractAdmin(ContractChildAdmin):
     """Support contract admin."""
 
-    list_display = ('name', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'day_rate', 'fixed_fee', 'fixed_fee_period')
+    base_model = models.SupportContract
 
 
 @admin.register(models.ProjectContract)
-class ProjectContractAdmin(ContractAdmin):
+class ProjectContractAdmin(ContractChildAdmin):
     """Project contract admin."""
 
-    list_display = ('name', 'company', 'customer', 'contract_users', 'active', 'starts_at', 'ends_at', 'fixed_fee')
+    base_model = models.ProjectContract
 
 
 @admin.register(models.ContractRole)
 class ContractRoleAdmin(admin.ModelAdmin):
+    """Contract role admin."""
     list_display = ('__str__', 'name', 'description')
     ordering = ('name',)
 
