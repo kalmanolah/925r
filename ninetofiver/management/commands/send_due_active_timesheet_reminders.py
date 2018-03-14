@@ -22,6 +22,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Send a reminder about due active timesheets."""
         # Determine month and year to use when looking for due timesheets
+        today = datetime.date.today()
         date = datetime.date.today()
 
         # If today is not yet on or past the last weekday of the month, subtract 1 month
@@ -49,6 +50,15 @@ class Command(BaseCommand):
                 user_timesheets.setdefault(timesheet.user.id, []).append(timesheet)
 
             for user in users.values():
+                # Skip user if they don't have an active employment contract
+                employment_contract = (models.EmploymentContract.objects
+                                       .filter(Q(ended_at__isnull=True) | Q(ended_at__gte=today), user=user,
+                                               started_at__lte=today)
+                                       .first())
+                if not employment_contract:
+                    log.info('User %s skipped because they have no active employment contract' % user)
+                    continue
+
                 log.info('Sending reminder to %s' % user.email)
                 timesheets = user_timesheets[user.id]
 
