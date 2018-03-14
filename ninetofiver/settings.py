@@ -373,6 +373,12 @@ class Dev(Base):
         '127.0.0.1',
     ]
 
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+
     # Profiling
     SILKY_INTERCEPT_PERCENT = 100
 

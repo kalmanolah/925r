@@ -8,17 +8,58 @@ from ninetofiver import models, settings
 logger = logging.getLogger(__name__)
 
 
+def get_redmine_connector():
+    """Get a redmine connector."""
+    url = settings.REDMINE_URL
+    api_key = settings.REDMINE_API_KEY
+
+    if url and api_key:
+        return Redmine(url, key=api_key)
+
+    return None
+
+
+def get_redmine_project_choices():
+    """Get redmine project choices."""
+    choices = [[None, '-----------']]
+    redmine = get_redmine_connector()
+
+    if redmine:
+        res = redmine.project.all()
+        choices += [[x.id, x.name] for x in res]
+
+    return choices
+
+
+def get_user_redmine_id(user):
+    """Get redmine user ID for the given user."""
+    user_id = None
+
+    if user.userinfo and user.userinfo.redmine_id:
+        user_id = user.userinfo.redmine_id
+
+    if (not user_id) and user.email:
+        redmine = get_redmine_connector()
+
+        if redmine:
+            res = list(redmine.user.filter(name=user.username, limit=2))
+            if len(res) == 1:
+                user_id = res[0].id
+
+    return user_id
+
+
 def get_user_redmine_performances(user, from_date=None, to_date=None):
     """Get available Redmine performances for the given user."""
     data = []
 
     url = settings.REDMINE_URL
-    api_key = settings.REDMINE_API_KEY
-    if not (url and api_key):
+    redmine = get_redmine_connector()
+    if not redmine:
         logger.debug('No base URL and API key provided for connecting to Redmine')
         return data
 
-    user_id = user.userinfo.redmine_id if user.userinfo else None
+    user_id = get_user_redmine_id(user)
     if not user_id:
         logger.debug('No Redmine user ID found for user %s' % user.id)
         return data
@@ -29,7 +70,6 @@ def get_user_redmine_performances(user, from_date=None, to_date=None):
     if not to_date:
         to_date = datetime.date.today()
 
-    redmine = Redmine(url, key=api_key)
     time_entries = redmine.time_entry.filter(from_date=from_date, to_date=to_date, user_id=user_id)
 
     # Construct a dict mapping redmine project IDs to a user's contract IDs
