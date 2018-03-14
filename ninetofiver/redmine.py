@@ -26,7 +26,7 @@ def get_redmine_project_choices():
 
     if redmine:
         res = redmine.project.all()
-        choices += [[x.id, x.name] for x in res]
+        choices += sorted([[x.id, x.name] for x in res], key=lambda x: x[1].lower())
 
     return choices
 
