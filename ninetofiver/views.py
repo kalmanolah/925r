@@ -824,8 +824,13 @@ class MyTimesheetViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        user = self.request.user
-        return user.timesheet_set
+        return self.request.user.timesheet_set
+
+    def perform_destroy(self, instance):
+        if instance.status != models.STATUS_ACTIVE:
+            raise serializers.ValidationError({'status': _('Only active timesheets can be deleted.')})
+
+        return super().perform_destroy(instance)
 
 
 class MyContractViewSet(GenericHierarchicalReadOnlyViewSet):

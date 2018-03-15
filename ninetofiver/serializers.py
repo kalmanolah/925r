@@ -494,7 +494,9 @@ class MyLeaveDateSerializer(LeaveDateSerializer):
 
 
 class MyTimesheetSerializer(TimesheetSerializer):
+    """My timesheet serializer."""
     user = MinimalUserSerializer(read_only=True)
+
     class Meta(TimesheetSerializer.Meta):
         read_only_fields = TimesheetSerializer.Meta.read_only_fields + ('user', )
 
@@ -503,10 +505,9 @@ class MyTimesheetSerializer(TimesheetSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        user = self.context['request'].user
-        if not user.is_staff and not user.is_superuser:
-            if instance.status == models.STATUS_PENDING and validated_data['status'] == models.STATUS_ACTIVE:
-                raise serializers.ValidationError('DA MAG NIE HE MENNEKE')
+        if instance.status != models.STATUS_ACTIVE:
+            raise serializers.ValidationError({'status': _('Only active timesheets can be updated!')})
+
         return super().update(instance, validated_data)
 
 

@@ -397,6 +397,29 @@ class Timesheet(BaseModel):
         """Return a string representation."""
         return '%02d-%04d [%s]' % (self.month, self.year, self.user)
 
+    def perform_additional_validation(self):
+        """Perform additional validation on the object."""
+        super().perform_additional_validation()
+
+        # New timesheet creation
+        if not self.pk:
+            if self.status != STATUS_ACTIVE:
+                raise ValidationError({'status': _('Timesheets must be set to active when created.')})
+
+            existing = self.__class__.objects.filter(user=self.user, year=self.year, month=self.month).count()
+            if existing:
+                raise ValidationError({'year': _('A timesheet for this user, year and month already exists.')})
+
+        dirty = self.get_dirty_fields()
+        old_status = dirty.get('status', None)
+
+        # Deal with status changes
+        if old_status and (old_status != self.status):
+            if (old_status == STATUS_ACTIVE) and (self.status != STATUS_PENDING):
+                raise ValidationError({'status': _('Active timesheets can only be made pending.')})
+            elif (old_status == STATUS_PENDING) and (self.status not in [STATUS_CLOSED, STATUS_ACTIVE]):
+                raise ValidationError({'status': _('Pending timesheets can only be closed, reactivated.')})
+
 
 class Attachment(BaseModel):
 

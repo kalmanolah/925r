@@ -2,6 +2,7 @@
 from django.core.exceptions import ValidationError
 from rest_framework.views import exception_handler as base_exception_handler
 from rest_framework import serializers
+from rest_framework.utils.serializer_helpers import ReturnDict
 import re
 
 
@@ -52,7 +53,7 @@ def rest_validation_error_to_dict(exc):
     err_data = {}
     detail_type = type(exc.detail)
 
-    if detail_type is dict:
+    if detail_type in [dict, ReturnDict]:
         for field, err in exc.detail.items():
             err_data[field] = [{
                 'message': x,

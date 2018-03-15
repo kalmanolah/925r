@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_assured import testcases
 from django.utils.timezone import utc
-from ninetofiver import factories
+from ninetofiver import factories, models
 from decimal import Decimal
 from datetime import timedelta
 import logging
@@ -165,6 +165,67 @@ class ContractUserGroupTests(AuthenticatedAPITestCase):
         # Deleting the final contract user group should remove the final contract user
         contract_user_group_one.delete()
         self.assertEqual(contract.contractuser_set.count(), 0)
+
+
+class TimesheetTests(AuthenticatedAPITestCase):
+    """Timesheet tests."""
+
+    def test_extended_validation(self):
+        """Test non active timesheet creation."""
+        today = datetime.date.today()
+
+        # Creating a pending timesheet should fail
+        res = self.client.post('/api/v1/my_timesheets/', data={
+            'year': today.year,
+            'month': today.month,
+            'status': models.STATUS_PENDING,
+        })
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Creating an active timesheet should work
+        res = self.client.post('/api/v1/my_timesheets/', data={
+            'year': today.year,
+            'month': today.month,
+            'status': models.STATUS_ACTIVE,
+        })
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        ts_id = res.data['id']
+
+        # Attempting to update the timesheet to CLOSED should not work
+        res = self.client.patch('/api/v1/my_timesheets/%s/' % ts_id, data={
+            'year': today.year,
+            'month': today.month,
+            'status': models.STATUS_CLOSED,
+        })
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Attempting to update the timesheet to PENDING should work
+        res = self.client.patch('/api/v1/my_timesheets/%s/' % ts_id, data={
+            'year': today.year,
+            'month': today.month,
+            'status': models.STATUS_PENDING,
+        })
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        # Attempting to reopen the timesheet should not work
+        res = self.client.patch('/api/v1/my_timesheets/%s/' % ts_id, data={
+            'year': today.year,
+            'month': today.month,
+            'status': models.STATUS_ACTIVE,
+        })
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Attempting to close the timesheet should not work
+        res = self.client.patch('/api/v1/my_timesheets/%s/' % ts_id, data={
+            'year': today.year,
+            'month': today.month,
+            'status': models.STATUS_CLOSED,
+        })
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Attempting to delete the timesheet should not work
+        res = self.client.delete('/api/v1/my_timesheets/%s/' % ts_id)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class CompanyAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
@@ -809,7 +870,6 @@ class PerformanceImportServiceAPIViewTestCase(APITestCase):
 class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'mytimesheet'
     factory_class = factories.OpenTimesheetFactory
-    update_url = reverse('mytimesheet-list')
     user_factory = factories.AdminFactory
     create_data = {
         'status': 'active',
@@ -824,23 +884,6 @@ class MyTimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.
 
     def get_object(self, factory):
         return factory.create(user=self.user)
-
-    def test_pending_to_active_update(self):
-        user = factories.UserFactory.create()
-        timesheet = factories.TimesheetFactory(
-            status='pending',
-            year=now.year,
-            month=now.month,
-            user=user
-        )
-        update_data = {
-            'status': 'active',
-            'year': now.year,
-            'month': now.month
-        }
-        patch_invalid_status = self.client.patch(self.update_url, self.update_data, format='json')
-        # patch_invalid_status = self.client.patch('/api/v1/my_timesheets/', self.update_data, format='json')
-        self.assertEqual(patch_invalid_status.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class MyContractAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
