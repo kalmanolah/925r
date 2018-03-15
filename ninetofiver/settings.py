@@ -16,6 +16,7 @@ import yaml
 from configurations import Configuration, values
 from django_auth_ldap.config import LDAPSearch
 from django_auth_ldap.config import LDAPSearchUnion
+from ninetofiver.utils import get_django_environment
 
 CFG_FILE_PATH = os.path.expanduser(os.environ.get('CFG_FILE_PATH', '/etc/925r/config.yml'))
 
@@ -23,7 +24,7 @@ CFG_FILE_PATH = os.path.expanduser(os.environ.get('CFG_FILE_PATH', '/etc/925r/co
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-ENVIRONMENT = os.getenv('ENVIRONMENT', 'dev')
+ENVIRONMENT = get_django_environment()
 
 
 class Base(Configuration):

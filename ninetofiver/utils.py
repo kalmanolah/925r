@@ -6,9 +6,17 @@ from django.core.mail import send_mail as base_send_mail
 from django.template.loader import render_to_string
 
 
+DEFAULT_DJANGO_ENVIRONMENT = 'dev'
+
+
+def get_django_environment():
+    """Get the django environment."""
+    return os.getenv('ENVIRONMENT', DEFAULT_DJANGO_ENVIRONMENT)
+
+
 def get_django_configuration():
     """Get the django configuration name based on the current environment."""
-    env = os.getenv('ENVIRONMENT', 'dev')
+    env = get_django_environment()
 
     env_map = {
         'staging': 'Stag',
