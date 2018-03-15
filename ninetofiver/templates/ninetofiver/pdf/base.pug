@@ -53,11 +53,11 @@ html(lang='en')
     )
     link(
       rel='stylesheet'
-      href='{% static "ninetofiver/css/layout.css" %}'
+      href='{{ settings.BASE_URL }}{% static "ninetofiver/css/layout.css" %}'
     )
     link(
       rel='stylesheet'
-      href='{% static "ninetofiver/css/pdf.css" %}'
+      href='{{ settings.BASE_URL }}{% static "ninetofiver/css/pdf.css" %}'
     )
   body
     block body
