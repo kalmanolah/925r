@@ -64,6 +64,7 @@ urlpatterns += [
         url(r'^services/range_availability/$', views.RangeAvailabilityServiceAPIView.as_view(), name='range_availability_service'),
         url(r'^services/range_info/$', views.RangeInfoServiceAPIView.as_view(), name='range_info_service'),
         url(r'^services/download_attachment/(?P<slug>[A-Za-z0-9_-]+)/$', ObjectDownloadView.as_view(model=models.Attachment, file_field='file'), name='download_attachment_service'),
+        url(r'^services/download_company_logo/(?P<pk>[0-9]+)/$', ObjectDownloadView.as_view(model=models.Company, file_field='logo', attachment=False), name='download_company_logo_service'),
         url(r'^services/my_timesheet_contract_pdf_export/(?P<timesheet_pk>[0-9]+)/(?P<contract_pk>[0-9_-]+)/$', views.MyTimesheetContractPdfExportServiceAPIView.as_view(), name='my_timesheet_contract_pdf_export_service'),
         url(r'^services/feeds/leaves\.ics$', views.LeaveFeedServiceAPIView.as_view()),
     ])),

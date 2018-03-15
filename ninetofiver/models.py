@@ -113,6 +113,10 @@ class Company(BaseModel):
 
     """
 
+    def generate_file_path(instance, filename):
+        """Generate a file path."""
+        return 'companies/company_%s/%s' % (instance.id, filename)
+
     vat_identification_number = models.CharField(
         max_length=15,
         unique=True,
@@ -127,7 +131,7 @@ class Company(BaseModel):
     address = models.TextField(max_length=255)
     country = CountryField()
     internal = models.BooleanField(default=False)
-    logo_url = models.CharField(max_length=255, blank=True, null=True)
+    logo = models.FileField(upload_to=generate_file_path, blank=True, null=True)
 
     class Meta(BaseModel.Meta):
         verbose_name_plural = 'companies'
@@ -137,6 +141,10 @@ class Company(BaseModel):
         """Return a string representation."""
         # return '%s [%s]' % (self.name, self.vat_identification_number)
         return self.name
+
+    def get_logo_url(self):
+        """Get a URL to the logo."""
+        return reverse('download_company_logo_service', kwargs={'pk': self.pk})
 
 
 class WorkSchedule(BaseModel):

@@ -118,7 +118,11 @@ class ContractStatusFilter(admin.SimpleListFilter):
 
 @admin.register(models.Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'name', 'vat_identification_number', 'address', 'country', 'internal')
+    """Company admin."""
+    def logo(obj):
+        return format_html('<a href="%s">%s</a>' % (obj.get_logo_url(), _('Link')))
+
+    list_display = ('__str__', 'name', 'vat_identification_number', 'address', 'country', 'internal', logo)
     ordering = ('-internal', 'name')
 
 

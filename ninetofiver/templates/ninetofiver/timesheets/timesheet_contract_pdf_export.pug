@@ -8,8 +8,8 @@ block body
       div(class='col-5 align-self-center')
         div(class='row justify-content-center')
           div(class='col-6')
-            - if contract.company.logo_url
-              img(class='img-fluid' src='{{ contract.company.logo_url }}')
+            - if contract.company.logo
+              img(class='img-fluid' src='{{ settings.BASE_URL }}{{ contract.company.get_logo_url }}')
       div(class='col-7')
         div(class='card')
           div(class='card-header text-center') Timesheet &mdash; Monthly time report
