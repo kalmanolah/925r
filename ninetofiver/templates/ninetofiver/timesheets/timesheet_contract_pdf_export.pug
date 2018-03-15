@@ -26,8 +26,8 @@ block body
                 th Month
                 td {{ timesheet.month }}
               tr
-                th Project
-                td {{ contract }}
+                th Contract
+                td {{ contract.name }}
                 th
                 td
 
@@ -43,7 +43,7 @@ block body
       tbody
         each performance, i in performances
           tr
-            td(class='text-nowrap') {{ performance.get_date | date:'d (D)' }}
+            td(class='text-nowrap') {{ performance.get_date | date:'D d F' }}
             td
               - if performance.description
                 span {{ performance.description | markdown }}
