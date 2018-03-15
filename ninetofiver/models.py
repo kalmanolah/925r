@@ -425,16 +425,21 @@ class Attachment(BaseModel):
 
     """Attachment model."""
 
+    def generate_file_path(instance, filename):
+        """Generate a file path."""
+        return 'attachments/user_%s/%s/%s' % (instance.user.id, instance.slug, filename)
+
     user = models.ForeignKey(auth_models.User, on_delete=models.PROTECT)
     name = models.CharField(max_length=255)
     description = models.TextField(max_length=255, blank=True, null=True)
-    file = models.FileField()
+    file = models.FileField(upload_to=generate_file_path)
     slug = models.SlugField(default=uuid.uuid4, editable=False)
 
     def __str__(self):
         """Return a string representation."""
         if self.file:
-            return '%s (%s - %s) [%s]' % (self.name, self.file.name, humanize.naturalsize(self.file.size), self.user)
+            return '%s (%s - %s) [%s]' % (self.name, self.file.name.split('/')[-1],
+                                          humanize.naturalsize(self.file.size), self.user)
         return '- [%s]' % self.user
 
     def get_file_url(self):

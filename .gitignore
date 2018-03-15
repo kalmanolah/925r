@@ -10,7 +10,8 @@ MANIFEST
 /static/
 ninetofiver_venv/
 docs/_build/
-/media/
+/media/*
+!/media/.gitkeep
 *.log
 .tox/
 .env

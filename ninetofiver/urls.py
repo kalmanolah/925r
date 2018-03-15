@@ -9,7 +9,7 @@ from rest_framework import routers
 from django_downloadview import ObjectDownloadView
 from oauth2_provider import views as oauth2_views
 from registration.backends.hmac import views as registration_views
-from ninetofiver import views, models, feeds
+from ninetofiver import views, models
 
 
 urlpatterns = [
