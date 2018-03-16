@@ -43,6 +43,7 @@ markdown = "*"
 django-dirtyfields = "*"
 pytz = "==2018.3"
 django-ical = "*"
+"django-tables2" = "*"
 
 
 [dev-packages]

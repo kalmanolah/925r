@@ -15,6 +15,7 @@ from model_utils import Choices
 from polymorphic.models import PolymorphicManager
 from polymorphic.models import PolymorphicModel
 from dirtyfields import DirtyFieldsMixin
+from dateutil.relativedelta import relativedelta
 from ninetofiver.utils import days_in_month
 
 
@@ -404,6 +405,12 @@ class Timesheet(BaseModel):
     def __str__(self):
         """Return a string representation."""
         return '%02d-%04d [%s]' % (self.month, self.year, self.user)
+
+    def get_date_range(self):
+        """Get the date range for this timesheet."""
+        from_date = date.today().replace(year=self.year, month=self.month, day=1)
+        until_date = from_date.replace() + relativedelta(months=1) - relativedelta(days=1)
+        return [from_date, until_date]
 
     def perform_additional_validation(self):
         """Perform additional validation on the object."""

@@ -140,6 +140,8 @@ urlpatterns += [
     # Custom admin routes
     url(r'^admin/ninetofiver/leave/approve/(?P<leave_pk>[0-9,]+)/$', views.admin_leave_approve_view, name='admin_leave_approve'),  # noqa
     url(r'^admin/ninetofiver/leave/reject/(?P<leave_pk>[0-9,]+)/$', views.admin_leave_reject_view, name='admin_leave_reject'),  # noqa
+    url(r'^admin/ninetofiver/report/timesheet_contract_overview/$', views.admin_report_timesheet_contract_overview_view, name='admin_report_timesheet_contract_overview'),  # noqa
+    url(r'^admin/ninetofiver/timesheet_contract_pdf_export/(?P<user_pk>[0-9]+)/(?P<timesheet_pk>[0-9]+)/(?P<contract_pk>[0-9_-]+)/$', views.AdminTimesheetContractPdfExportView.as_view(), name='admin_timesheet_contract_pdf_export'),  # noqa
 
     # Admin
     url(r'^admin/', admin.site.urls),

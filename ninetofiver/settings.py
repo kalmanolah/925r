@@ -92,6 +92,7 @@ class Base(Configuration):
         'django_admin_listfilter_dropdown',
         'silk',
         'wkhtmltopdf',
+        'django_tables2',
     ]
 
     MIDDLEWARE = [

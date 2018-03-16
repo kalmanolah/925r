@@ -28,9 +28,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
-from ninetofiver.utils import days_in_month
-from ninetofiver import settings
+from ninetofiver import settings, tables, calculation, pagination
 from django.db.models import Q
+from django_tables2 import RequestConfig
 from datetime import datetime, date, timedelta
 from wkhtmltopdf.views import PDFTemplateView
 from dateutil import parser
@@ -41,6 +41,37 @@ import copy
 logger = logging.getLogger(__name__)
 
 
+# Reused classes
+
+class BaseTimesheetContractPdfExportServiceAPIView(PDFTemplateView, generics.GenericAPIView):
+    """Export a timesheet contract to PDF."""
+
+    filename = 'timesheet_contract.pdf'
+    template_name = 'ninetofiver/timesheets/timesheet_contract_pdf_export.pug'
+
+    def resolve_user(self, context):
+        """Resolve the user for this export."""
+        raise NotImplementedError()
+
+    def render_to_response(self, context, **response_kwargs):
+        user = self.resolve_user(context)
+        timesheet = get_object_or_404(models.Timesheet, pk=context.get('timesheet_pk', None), user=user)
+        contract = get_object_or_404(models.Contract, pk=context.get('contract_pk', None), contractuser__user=user)
+
+        context['user'] = user
+        context['timesheet'] = timesheet
+        context['contract'] = contract
+        context['performances'] = (models.ActivityPerformance.objects
+                                   .filter(timesheet=timesheet, contract=contract)
+                                   .order_by('day')
+                                   .all())
+        context['total_performed_hours'] = sum([x.duration for x in context['performances']])
+        context['total_performed_days'] = round(context['total_performed_hours'] / 8, 2)
+
+        return super().render_to_response(context, **response_kwargs)
+
+
+# Homepage and others
 def home_view(request):
     """Homepage."""
     context = {}
@@ -54,6 +85,16 @@ def account_view(request):
     return render(request, 'ninetofiver/account/index.pug', context)
 
 
+@api_view(exclude_from_schema=True)
+@renderer_classes([OpenAPIRenderer, SwaggerUIRenderer, CoreJSONRenderer])
+@permission_classes((permissions.IsAuthenticated,))
+def schema_view(request):
+    """API documentation."""
+    generator = schemas.SchemaGenerator(title='Ninetofiver API')
+    return response.Response(generator.get_schema(request=request))
+
+
+# Admin-only
 @staff_member_required
 def admin_leave_approve_view(request, leave_pk):
     """Approve the selected leaves."""
@@ -98,15 +139,52 @@ def admin_leave_reject_view(request, leave_pk):
     return render(request, 'ninetofiver/admin/leaves/reject.pug', context)
 
 
-@api_view(exclude_from_schema=True)
-@renderer_classes([OpenAPIRenderer, SwaggerUIRenderer, CoreJSONRenderer])
-@permission_classes((permissions.IsAuthenticated,))
-def schema_view(request):
-    """API documentation."""
-    generator = schemas.SchemaGenerator(title='Ninetofiver API')
-    return response.Response(generator.get_schema(request=request))
+@staff_member_required
+def admin_report_timesheet_contract_overview_view(request):
+    """Timesheet contract overview report."""
+    fltr = filters.AdminReportTimesheetContractOverviewFilter(request.GET, models.Timesheet.objects)
+    timesheets = fltr.qs.select_related('user')
+    try:
+        contract = int(request.GET.get('performance__contract', None))
+    except Exception:
+        contract = None
+
+    data = []
+    for timesheet in timesheets:
+        date_range = timesheet.get_date_range()
+        range_info = calculation.get_range_info([timesheet.user], date_range[0], date_range[1], summary=True)
+
+        for contract_performance in range_info[timesheet.user.id]['summary']['performances']:
+            if (not contract) or (contract == contract_performance['contract'].id):
+                data.append({
+                    'contract': contract_performance['contract'],
+                    'duration': contract_performance['duration'],
+                    'timesheet': timesheet,
+                })
+
+    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
+    table = tables.TimesheetContractOverviewTable(data)
+    config.configure(table)
+
+    context = {
+        'title': _('Timesheet contract overview'),
+        'table': table,
+        'filter': fltr,
+    }
+
+    return render(request, 'ninetofiver/admin/reports/timesheet_contract_overview.pug', context)
 
 
+class AdminTimesheetContractPdfExportView(BaseTimesheetContractPdfExportServiceAPIView):
+    """Export a timesheet contract to PDF."""
+
+    permission_classes = (permissions.IsAdminUser,)
+
+    def resolve_user(self, context):
+        return get_object_or_404(auth_models.User, pk=context.get('user_pk', None))
+
+
+# API calls
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """API endpoint that allows users to be viewed."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -493,7 +571,6 @@ class RangeInfoServiceAPIView(APIView):
     def get(self, request, format=None):
         """Get date range information."""
         user = request.user
-        user_info = user.userinfo
 
         from_date = parser.parse(request.query_params.get('from', None)).date()
         until_date = parser.parse(request.query_params.get('until', None)).date()
@@ -501,153 +578,9 @@ class RangeInfoServiceAPIView(APIView):
         detailed = request.query_params.get('detailed', 'false') == 'true'
         summary = request.query_params.get('summary', 'false') == 'true'
 
-        work_hours = 0
-        holiday_hours = 0
-        leave_hours = 0
-        performed_hours = 0
-        remaining_hours = 0
-        total_hours = 0
-
-        daily_data = {}
-        # Determine amount of days we are going to process leaves for, so we can
-        # iterate over the dates
-        day_count = (until_date - from_date).days + 1
-
-        work_schedule = None
-        employment_contract = None
-
-        performances = []
-
-        # Fetch holidays
-        holidays = []
-        if user_info and user_info.country:
-            holidays = list(models.Holiday.objects.filter(country=user_info.country, date__gte=from_date,
-                                                          date__lte=until_date))
-
-        # Fetch all approved leave dates
-        leave_dates = list(models.LeaveDate.objects
-                           .filter(leave__user=user, leave__status=models.STATUS_APPROVED,
-                                   starts_at__date__gte=from_date,
-                                   starts_at__date__lte=until_date)
-                           .select_related('leave', 'leave__leave_type', 'leave__user')
-                           .prefetch_related('leave__attachments', 'leave__leavedate_set'))
-
-        for i in range(day_count):
-            day_work_hours = 0
-            day_holiday_hours = 0
-            day_leave_hours = 0
-            day_remaining_hours = 0
-            day_performed_hours = 0
-            day_total_hours = 0
-
-            day_holidays = []
-            day_leaves = []
-            day_performances = []
-
-            # Determine date for this day
-            current_date = copy.deepcopy(from_date) + timedelta(days=i)
-
-            # For the given date, determine the active work schedule
-            if ((not employment_contract) or (employment_contract.started_at > current_date) or
-                    (employment_contract.ended_at and (employment_contract.ended_at < current_date))):
-                employment_contract = models.EmploymentContract.objects.filter(
-                    Q(user=user, started_at__lte=current_date) &
-                    (Q(ended_at__isnull=True) | Q(ended_at__gte=current_date))
-                ).select_related('work_schedule').first()
-                work_schedule = employment_contract.work_schedule if employment_contract else None
-
-            # Determine work hours
-            if work_schedule:
-                duration = getattr(work_schedule, current_date.strftime('%A').lower(), Decimal(0.00))
-                work_hours += duration
-                day_work_hours += duration
-
-            # Determine holidays
-            for holiday in holidays:
-                if holiday.date == current_date:
-                    duration = getattr(work_schedule, holiday.date.strftime('%A').lower(), Decimal(0.00))
-                    holiday_hours += duration
-                    day_holiday_hours += duration
-                    day_holidays.append(holiday)
-                    break
-
-            # Determine leave hours
-            for leave_date in leave_dates:
-                if leave_date.starts_at.date() == current_date:
-                    duration = Decimal(round((leave_date.ends_at - leave_date.starts_at).total_seconds() / 3600, 2))
-                    leave_hours += duration
-                    day_leave_hours += duration
-                    day_leaves.append(leave_date.leave)
-
-            # Determine performed hours
-            day_performances = list(models.ActivityPerformance.objects
-                                    .filter(timesheet__user=user, timesheet__month=current_date.month,
-                                            timesheet__year=current_date.year, day=current_date.day)
-                                    .select_related('performance_type', 'contract_role', 'contract',
-                                                    'contract__customer', 'timesheet', 'timesheet__user'))
-
-            for performance in day_performances:
-                duration = Decimal(performance.duration)
-                performed_hours += duration
-                day_performed_hours += duration
-                performances.append(performance)
-
-            day_total_hours = (day_holiday_hours + day_leave_hours + day_performed_hours)
-            day_remaining_hours = day_work_hours - day_total_hours
-            day_remaining_hours = max(0, day_remaining_hours)
-
-            if daily:
-                day_detail = {
-                    'work_hours': day_work_hours,
-                    'holiday_hours': day_holiday_hours,
-                    'leave_hours': day_leave_hours,
-                    'remaining_hours': day_remaining_hours,
-                    'performed_hours': day_performed_hours,
-                    'total_hours': day_total_hours,
-                }
-
-                if detailed:
-                    day_detail['holidays'] = serializers.HolidaySerializer(day_holidays, many=True).data
-                    day_detail['leaves'] = serializers.LeaveSerializer(day_leaves, many=True).data
-                    day_detail['performances'] = serializers.ActivityPerformanceSerializer(day_performances,
-                                                                                           many=True).data
-
-                # Insert day detail into daily data
-                daily_data[str(current_date)] = day_detail
-
-        total_hours = holiday_hours + leave_hours + performed_hours
-        remaining_hours = work_hours - total_hours
-        remaining_hours = max(0, remaining_hours)
-
-        data = {
-            'work_hours': work_hours,
-            'holiday_hours': holiday_hours,
-            'leave_hours': leave_hours,
-            'remaining_hours': remaining_hours,
-            'performed_hours': performed_hours,
-            'total_hours': total_hours,
-            'from': from_date,
-            'until': until_date,
-        }
-
-        if daily:
-            data['details'] = daily_data
-
-        if summary:
-            summary_performances = {}
-
-            for performance in performances:
-                if performance.contract.id not in summary_performances:
-                    summary_performances[performance.contract.id] = {
-                        'contract': serializers.MinimalContractSerializer(performance.contract).data,
-                        'duration': 0,
-                    }
-
-                summary_performances[performance.contract.id]['duration'] += performance.duration
-
-            data['summary'] = {
-                'performances': summary_performances.values()
-            }
+        data = calculation.get_range_info([user], from_date, until_date, daily=daily, detailed=detailed,
+                                          summary=summary, serialize=True)
+        data = data[user.id]
 
         return Response(data)
 
@@ -767,29 +700,14 @@ class LeaveRequestServiceAPIView(APIView):
         return Response(data)
 
 
-class MyTimesheetContractPdfExportServiceAPIView(PDFTemplateView, generics.GenericAPIView):
-    """Exporting a timesheet contract to PDF."""
+class MyTimesheetContractPdfExportServiceAPIView(BaseTimesheetContractPdfExportServiceAPIView):
+    """Export a timesheet contract to PDF."""
 
-    filename = 'timesheet_contract.pdf'
-    template_name = 'ninetofiver/timesheets/timesheet_contract_pdf_export.pug'
     permission_classes = (permissions.IsAuthenticated,)
 
-    def render_to_response(self, context, **response_kwargs):
-        user = context['view'].request.user
-        timesheet = get_object_or_404(models.Timesheet, pk=context.get('timesheet_pk', None), user=user)
-        contract = get_object_or_404(models.Contract, pk=context.get('contract_pk', None), contractuser__user=user)
-
-        context['user'] = user
-        context['timesheet'] = timesheet
-        context['contract'] = contract
-        context['performances'] = (models.ActivityPerformance.objects
-                                   .filter(timesheet=timesheet, contract=contract)
-                                   .order_by('day')
-                                   .all())
-        context['total_performed_hours'] = sum([x.duration for x in context['performances']])
-        context['total_performed_days'] = round(context['total_performed_hours'] / 8, 2)
-
-        return super().render_to_response(context, **response_kwargs)
+    def resolve_user(self, context):
+        """Resolve the user for this export."""
+        return context['view'].request.user
 
 
 class MyLeaveViewSet(viewsets.ModelViewSet):

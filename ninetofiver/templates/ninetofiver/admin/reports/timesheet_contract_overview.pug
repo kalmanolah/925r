@@ -1,0 +1,10 @@
+extends ninetofiver/admin/reports/base.pug
+- load django_tables2 crispy_forms_tags
+
+
+block content
+    div(class='report')
+        div(class='report-table')
+            - render_table table
+        div(class='report-filters')
+            - crispy filter.form filter.form.helper
