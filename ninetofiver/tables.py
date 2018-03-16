@@ -47,7 +47,6 @@ class TimesheetContractOverviewTable(BaseTable):
     def render_actions(self, record):
         buttons = []
         buttons.append(('<a class="button" href="%(url)s?' +
-                        'polymorphic_ctype=15&' +
                         'contract__id__exact=%(contract)s&' +
                         'timesheet__user__id__exact=%(user)s&' +
                         'timesheet__year=%(year)s&' +
