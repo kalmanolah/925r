@@ -3,8 +3,9 @@ extends ninetofiver/admin/reports/base.pug
 
 
 block content
-    div(class='report')
-        div(class='report-table')
-            - render_table table
-        div(class='report-filters')
+    hr
+    div(class='report row')
+        div(class='report-filters col-md-2 order-md-12')
             - crispy filter.form filter.form.helper
+        div(class='report-table col')
+            - render_table table
