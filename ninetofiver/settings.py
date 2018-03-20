@@ -93,6 +93,7 @@ class Base(Configuration):
         'silk',
         'wkhtmltopdf',
         'django_tables2',
+        'phonenumber_field',
     ]
 
     MIDDLEWARE = [

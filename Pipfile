@@ -44,6 +44,7 @@ django-dirtyfields = "*"
 pytz = "==2018.3"
 django-ical = "*"
 "django-tables2" = "*"
+django-phonenumber-field = "*"
 
 
 [dev-packages]

@@ -16,6 +16,7 @@ from polymorphic.models import PolymorphicManager
 from polymorphic.models import PolymorphicModel
 from dirtyfields import DirtyFieldsMixin
 from dateutil.relativedelta import relativedelta
+from phonenumber_field.modelfields import PhoneNumberField
 from ninetofiver.utils import days_in_month
 
 
@@ -347,6 +348,7 @@ class UserInfo(BaseModel):
     birth_date = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=2, choices=GENDER_CHOICES, null=True, blank=True)
     country = CountryField(null=True, blank=True)
+    phone_number = PhoneNumberField(blank=True)
     redmine_id = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):

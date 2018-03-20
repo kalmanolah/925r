@@ -242,7 +242,7 @@ class UserInfoSerializer(CountryFieldMixin, BaseSerializer):
 
     class Meta(BaseSerializer.Meta):
         model = models.UserInfo
-        fields = BaseSerializer.Meta.fields + ('user', 'birth_date', 'gender', 'country', 'join_date', 'redmine_id')
+        fields = BaseSerializer.Meta.fields + ('user', 'birth_date', 'gender', 'country', 'join_date', 'phone_number')
 
     def get_join_date(self, obj):
         return obj.get_join_date()
