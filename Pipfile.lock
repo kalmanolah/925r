@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1dbb7b9699cd125b1bd2df94c7aabdd7735ca3e6058dc68c88025440b30c192e"
+            "sha256": "df555123dcc3fc400be8e151d65d5040eae923f048e17c0bb516c900e2e2a7c4"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -339,6 +339,13 @@
                 "sha256:1bce63289edf53c601ea3683120641407ff6b708803b8954c8a876fe778d2145"
             ],
             "version": "==1.3.2"
+        },
+        "phonenumberslite": {
+            "hashes": [
+                "sha256:47a60dc0d2649b08fd88feea37885ea7a08467b3d1e7092781c060779930bfab",
+                "sha256:f28d0ff6b553b4dd91442a32cea1ddd078c83e572c74164db61803bf3c698b16"
+            ],
+            "version": "==8.9.1"
         },
         "pyasn1": {
             "hashes": [
