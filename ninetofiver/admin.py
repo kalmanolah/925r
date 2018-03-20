@@ -308,6 +308,12 @@ class ContractUserInline(admin.TabularInline):
     model = models.ContractUser
     ordering = ("user__first_name", "user__last_name",)
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Form field for foreign key."""
+        if db_field.name == 'user':
+            kwargs['queryset'] = auth_models.User.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 class ContractUserGroupInline(admin.TabularInline):
     model = models.ContractUserGroup
