@@ -33,7 +33,9 @@ def user_str(self):
 auth_models.User.__str__ = user_str
 
 # Define ordering of the User
-auth_models.User._meta.ordering = ['first_name', 'last_name']
+user_ordering = ['first_name', 'last_name']
+auth_models.User.Meta.ordering = user_ordering
+auth_models.User._meta.ordering = user_ordering
 
 
 # Genders
