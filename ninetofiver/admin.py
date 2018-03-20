@@ -476,6 +476,12 @@ class ProjectEstimateAdmin(admin.ModelAdmin):
 
 @admin.register(models.Timesheet)
 class TimesheetAdmin(admin.ModelAdmin):
+    """Timesheet admin."""
+
+    def get_queryset(self, request):
+        """Get the queryset."""
+        return super().get_queryset(request).select_related('user')
+
     def make_closed(self, request, queryset):
         for timesheet in queryset:
             timesheet.status = models.STATUS_CLOSED
@@ -494,7 +500,19 @@ class TimesheetAdmin(admin.ModelAdmin):
             timesheet.save(validate=False)
     make_pending.short_description = _('Set selected timesheets to pending')
 
-    list_display = ('__str__', 'user', 'month', 'year', 'status')
+    def item_actions(self, obj):
+        """Actions."""
+        actions = []
+
+        if obj.status == models.STATUS_PENDING:
+            actions.append('<a class="button" href="%s?return=true">%s</a>' %
+                           (reverse('admin_timesheet_close', kwargs={'timesheet_pk': obj.id}), _('Close')))
+            actions.append('<a class="button" href="%s?return=true">%s</a>' %
+                           (reverse('admin_timesheet_activate', kwargs={'timesheet_pk': obj.id}), _('Reopen')))
+
+        return format_html('&nbsp;'.join(actions))
+
+    list_display = ('__str__', 'user', 'month', 'year', 'status', 'item_actions')
     list_filter = (
         'status',
         ('user', RelatedDropdownFilter),
@@ -506,6 +524,12 @@ class TimesheetAdmin(admin.ModelAdmin):
         'make_active',
         'make_pending',
     ]
+    search_fields = (
+        'user__username',
+        'user__first_name',
+        'user__last_name',
+        'status',
+    )
     ordering = ('-year', 'month', 'user__first_name', 'user__last_name')
 
 
@@ -531,6 +555,8 @@ class StandbyPerformanceChildAdmin(PerformanceChildAdmin):
 
 @admin.register(models.Performance)
 class PerformanceParentAdmin(PolymorphicParentModelAdmin):
+    """Performance parent admin."""
+
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('activityperformance',
                                                             'activityperformance__performance_type',
@@ -562,6 +588,7 @@ class PerformanceParentAdmin(PolymorphicParentModelAdmin):
         ('timesheet__user', RelatedDropdownFilter),
         ('timesheet__year', DropdownFilter),
         ('timesheet__month', DropdownFilter),
+        ('day', DropdownFilter),
         ('activityperformance__contract_role', RelatedDropdownFilter),
         ('activityperformance__performance_type', RelatedDropdownFilter),
     )

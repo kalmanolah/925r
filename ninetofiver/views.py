@@ -99,7 +99,7 @@ def schema_view(request):
 def admin_leave_approve_view(request, leave_pk):
     """Approve the selected leaves."""
     leave_pks = list(map(int, leave_pk.split(',')))
-    return_to_referer = request.GET.get('return', 'fase').lower() == 'true'
+    return_to_referer = request.GET.get('return', 'false').lower() == 'true'
 
     leaves = models.Leave.objects.filter(id__in=leave_pks, status=models.STATUS_PENDING)
 
@@ -121,7 +121,7 @@ def admin_leave_approve_view(request, leave_pk):
 def admin_leave_reject_view(request, leave_pk):
     """Reject the selected leaves."""
     leave_pks = list(map(int, leave_pk.split(',')))
-    return_to_referer = request.GET.get('return', 'fase').lower() == 'true'
+    return_to_referer = request.GET.get('return', 'false').lower() == 'true'
 
     leaves = models.Leave.objects.filter(id__in=leave_pks, status=models.STATUS_PENDING)
 
@@ -137,6 +137,50 @@ def admin_leave_reject_view(request, leave_pk):
         return redirect(request.META.get('HTTP_REFERER'))
 
     return render(request, 'ninetofiver/admin/leaves/reject.pug', context)
+
+
+@staff_member_required
+def admin_timesheet_close_view(request, timesheet_pk):
+    """Close the selected timesheets."""
+    timesheet_pks = list(map(int, timesheet_pk.split(',')))
+    return_to_referer = request.GET.get('return', 'false').lower() == 'true'
+
+    timesheets = models.Timesheet.objects.filter(id__in=timesheet_pks, status=models.STATUS_PENDING)
+
+    for timesheet in timesheets:
+        timesheet.status = models.STATUS_CLOSED
+        timesheet.save()
+
+    context = {
+        'timesheets': timesheets,
+    }
+
+    if return_to_referer and request.META.get('HTTP_REFERER', None):
+        return redirect(request.META.get('HTTP_REFERER'))
+
+    return render(request, 'ninetofiver/admin/timesheets/close.pug', context)
+
+
+@staff_member_required
+def admin_timesheet_activate_view(request, timesheet_pk):
+    """Activate the selected timesheets."""
+    timesheet_pks = list(map(int, timesheet_pk.split(',')))
+    return_to_referer = request.GET.get('return', 'false').lower() == 'true'
+
+    timesheets = models.Timesheet.objects.filter(id__in=timesheet_pks, status=models.STATUS_PENDING)
+
+    for timesheet in timesheets:
+        timesheet.status = models.STATUS_ACTIVE
+        timesheet.save()
+
+    context = {
+        'timesheets': timesheets,
+    }
+
+    if return_to_referer and request.META.get('HTTP_REFERER', None):
+        return redirect(request.META.get('HTTP_REFERER'))
+
+    return render(request, 'ninetofiver/admin/timesheets/activate.pug', context)
 
 
 @staff_member_required
@@ -173,6 +217,71 @@ def admin_report_timesheet_contract_overview_view(request):
     }
 
     return render(request, 'ninetofiver/admin/reports/timesheet_contract_overview.pug', context)
+
+
+@staff_member_required
+def admin_report_timesheet_overview_view(request):
+    """Timesheet overview report."""
+    fltr = filters.AdminReportTimesheetOverviewFilter(request.GET, models.Timesheet.objects)
+    timesheets = fltr.qs.select_related('user')
+
+    data = []
+    for timesheet in timesheets:
+        date_range = timesheet.get_date_range()
+        range_info = calculation.get_range_info([timesheet.user], date_range[0], date_range[1])
+        range_info = range_info[timesheet.user.id]
+
+        data.append({
+            'timesheet': timesheet,
+            'range_info': range_info,
+        })
+
+    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
+    table = tables.TimesheetOverviewTable(data)
+    config.configure(table)
+
+    context = {
+        'title': _('Timesheet overview'),
+        'table': table,
+        'filter': fltr,
+    }
+
+    return render(request, 'ninetofiver/admin/reports/timesheet_overview.pug', context)
+
+
+@staff_member_required
+def admin_report_user_range_info_view(request):
+    """User range info report."""
+    fltr = filters.AdminReportUserRangeInfoFilter(request.GET, models.Timesheet.objects.all())
+    user = get_object_or_404(auth_models.User.objects,
+                             pk=request.GET.get('user', None), is_active=True) if request.GET.get('user') else None
+    from_date = parser.parse(request.GET.get('from_date', None)).date() if request.GET.get('from_date') else None
+    until_date = parser.parse(request.GET.get('until_date', None)).date() if request.GET.get('until_date') else None
+
+    data = []
+
+    if user and from_date and until_date and (until_date >= from_date):
+        range_info = calculation.get_range_info([user], from_date, until_date, daily=True)[user.id]
+
+        for day in sorted(range_info['details'].keys()):
+            day_detail = range_info['details'][day]
+            data.append({
+                'day_detail': day_detail,
+                'date': parser.parse(day),
+                'user': user,
+            })
+
+    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
+    table = tables.UserRangeInfoTable(data)
+    config.configure(table)
+
+    context = {
+        'title': _('User range info'),
+        'table': table,
+        'filter': fltr,
+    }
+
+    return render(request, 'ninetofiver/admin/reports/user_range_info.pug', context)
 
 
 class AdminTimesheetContractPdfExportView(BaseTimesheetContractPdfExportServiceAPIView):

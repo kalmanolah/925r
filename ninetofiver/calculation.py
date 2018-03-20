@@ -84,6 +84,7 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
         user_res['performed_hours'] = 0
         user_res['remaining_hours'] = 0
         user_res['total_hours'] = 0
+        user_res['overtime_hours'] = 0
         user_res['details'] = {}
         user_res['summary'] = {
             'performances': {},
@@ -101,6 +102,7 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
             day_res['performed_hours'] = 0
             day_res['remaining_hours'] = 0
             day_res['total_hours'] = 0
+            day_res['overtime_hours'] = 0
             day_res['holidays'] = []
             day_res['leaves'] = []
             day_res['performances'] = []
@@ -121,14 +123,14 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
 
             # Work hours
             if work_schedule:
-                duration = getattr(work_schedule, current_date.strftime('%A').lower(), Decimal(0.00))
+                duration = getattr(work_schedule, current_date.strftime('%A').lower(), Decimal('0.00'))
                 user_res['work_hours'] += duration
                 day_res['work_hours'] += duration
 
             # Holidays
             try:
                 if country and holiday_data[str(current_date)][country]:
-                    duration = getattr(work_schedule, current_date.strftime('%A').lower(), Decimal(0.00))
+                    duration = getattr(work_schedule, current_date.strftime('%A').lower(), Decimal('0.00'))
                     user_res['holiday_hours'] += duration
                     day_res['holiday_hours'] += duration
                     day_res['holidays'].append(holiday)
@@ -138,7 +140,8 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
             # Leave
             try:
                 for leave_date in leave_date_data[str(current_date)][user.id]:
-                    duration = Decimal(round((leave_date.ends_at - leave_date.starts_at).total_seconds() / 3600, 2))
+                    duration = round((leave_date.ends_at - leave_date.starts_at).total_seconds() / 3600, 2)
+                    duration = Decimal(str(duration))
                     user_res['leave_hours'] += duration
                     day_res['leave_hours'] += duration
                     day_res['leaves'].append(leave_date.leave)
@@ -160,12 +163,12 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
                 pass
 
             day_res['total_hours'] = (day_res['holiday_hours'] + day_res['leave_hours'] + day_res['performed_hours'])
-            day_res['remaining_hours'] = day_res['work_hours'] - day_res['total_hours']
-            day_res['remaining_hours'] = max(0, day_res['remaining_hours'])
+            day_res['overtime_hours'] = abs(min(0, day_res['work_hours'] - day_res['total_hours']))
+            day_res['remaining_hours'] = max(0, day_res['work_hours'] - day_res['total_hours'])
 
         user_res['total_hours'] = user_res['holiday_hours'] + user_res['leave_hours'] + user_res['performed_hours']
-        user_res['remaining_hours'] = user_res['work_hours'] - user_res['total_hours']
-        user_res['remaining_hours'] = max(0, user_res['remaining_hours'])
+        user_res['overtime_hours'] = abs(min(0, user_res['work_hours'] - user_res['total_hours']))
+        user_res['remaining_hours'] = max(0, user_res['work_hours'] - user_res['total_hours'])
         user_res['summary']['performances'] = user_res['summary']['performances'].values()
 
         if not summary:

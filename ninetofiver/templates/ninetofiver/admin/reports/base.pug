@@ -13,3 +13,13 @@ block extrastyle
       rel='stylesheet'
       href='{% static "ninetofiver/css/reports.css" %}'
     )
+    
+    link(rel="stylesheet" href="/static/admin/css/forms.css")
+    link(rel="stylesheet" href="/static/admin/css/widgets.css")
+
+block extrahead
+    | {{ block.super }}
+    script(type="text/javascript" src="/static/admin/js/vendor/jquery/jquery.min.js")
+    script(type="text/javascript" src="/static/admin/js/jquery.init.js")
+    script(type="text/javascript" src="/static/admin/js/core.js")
+    script(type="text/javascript" src="{% url 'admin:jsi18n' %}")

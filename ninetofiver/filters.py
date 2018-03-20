@@ -10,7 +10,8 @@ import rest_framework_filters as filters
 from ninetofiver import models
 from ninetofiver.utils import merge_dicts
 from rest_framework import generics
-
+from django.forms import DateInput
+from django.contrib.admin import widgets as admin_widgets
 from django.contrib.auth import models as auth_models
 from django.core.exceptions import ValidationError
 import dateutil
@@ -545,4 +546,33 @@ class AdminReportTimesheetContractOverviewFilter(FilterSet):
             'status': ['exact'],
             'year': ['exact'],
             'month': ['exact'],
+        }
+
+
+class AdminReportTimesheetOverviewFilter(FilterSet):
+    """Timesheet overview admin report filter."""
+    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True))
+    year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in models.Timesheet.objects.values_list('year', flat=True).order_by('year').distinct()])
+    month = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in models.Timesheet.objects.values_list('month', flat=True).order_by('month').distinct()])
+
+    class Meta:
+        model = models.Timesheet
+        fields = {
+            'user': ['exact'],
+            'status': ['exact'],
+            'year': ['exact'],
+            'month': ['exact'],
+        }
+
+
+class AdminReportUserRangeInfoFilter(FilterSet):
+    """User range info admin report filter."""
+    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True))
+    from_date = django_filters.DateFilter(label='From', widget=admin_widgets.AdminDateWidget())
+    until_date = django_filters.DateFilter(label='Until', widget=admin_widgets.AdminDateWidget())
+
+    class Meta:
+        model = models.Timesheet
+        fields = {
+            'user': ['exact'],
         }

@@ -1,0 +1,7 @@
+extends ninetofiver/base/page.pug
+- load static
+
+block content
+  div(class='alert alert-info text-center')
+    | {{ timesheets | length }} timesheet{{ timesheets | length | pluralize:'s' }} {{ timesheets | length | pluralize:'has,have' }} been activated.
+    | You may close this window.
