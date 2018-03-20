@@ -13,7 +13,7 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
     # Fetch all employment contracts for this period
     employment_contracts = (models.EmploymentContract.objects
                             .filter(
-                                (Q(ended_at__isnull=True) & Q(started_at__lte=from_date)) |
+                                (Q(ended_at__isnull=True) & Q(started_at__lte=until_date)) |
                                 (Q(started_at__lte=until_date) & Q(ended_at__gte=from_date)),
                                 user__in=users)
                             .order_by('started_at')
