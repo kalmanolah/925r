@@ -35,7 +35,9 @@ block extrahead
       integrity='sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1'
       crossorigin='anonymous'
     )
-    script(type="text/javascript" src="/static/admin/js/jquery.init.js")
+    script(type='text/javascript')
+        | var django = django || {};
+        | django.jQuery = jQuery.noConflict(false);
     script(type="text/javascript" src="/static/admin/js/core.js")
     script(type="text/javascript" src="{% url 'admin:jsi18n' %}")
 

@@ -47,6 +47,7 @@ phonenumberslite = "*"
 django-phonenumber-field = "*"
 "markdown2" = "*"
 tablib = "*"
+"django-select2" = "*"
 
 
 [dev-packages]

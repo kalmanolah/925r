@@ -94,6 +94,7 @@ class Base(Configuration):
         'wkhtmltopdf',
         'django_tables2',
         'phonenumber_field',
+        'django_select2',
     ]
 
     MIDDLEWARE = [

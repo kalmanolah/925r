@@ -1,22 +1,18 @@
+"""Filters."""
+import datetime
+import dateutil
+import logging
 import django_filters
-
-from datetime import datetime, timedelta, date
-from django.db.models import Q
-
-from collections import Counter
-from django.db.models import Func
-from django_filters.rest_framework import FilterSet
 import rest_framework_filters as filters
-from ninetofiver import models
-from ninetofiver.utils import merge_dicts
-from rest_framework import generics
-from django.forms import DateInput
+from django_filters.rest_framework import FilterSet
+from django.db.models import Q, Func
 from django.contrib.admin import widgets as admin_widgets
 from django.contrib.auth import models as auth_models
-from django.core.exceptions import ValidationError
-import dateutil
+from django_select2.forms import Select2Widget
+from ninetofiver import models
+from ninetofiver.utils import merge_dicts
 
-import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -121,11 +117,11 @@ class EmploymentContractFilter(FilterSet):
 
         if value is True:
             return queryset.filter(
-                Q(ended_at__isnull=True) | Q(ended_at__gt=datetime.now())
+                Q(ended_at__isnull=True) | Q(ended_at__gt=datetime.datetime.now())
             ).distinct()
         elif value is False:
             return queryset.filter(
-                Q(ended_at__isnull=False) & Q(ended_at__lte=datetime.now())
+                Q(ended_at__isnull=False) & Q(ended_at__lte=datetime.datetime.now())
             ).distinct()
         else:
             return queryset
@@ -151,9 +147,9 @@ class WorkScheduleFilter(FilterSet):
 
     def current_filter(self, queryset, name, value):
         if value is True:
-            return queryset.filter(Q(employmentcontract__started_at__lte=datetime.now()),
+            return queryset.filter(Q(employmentcontract__started_at__lte=datetime.datetime.now()),
                                    Q(employmentcontract__ended_at__isnull=True) |
-                                   Q(employmentcontract__ended_at__gte=datetime.now()))
+                                   Q(employmentcontract__ended_at__gte=datetime.datetime.now()))
 
         return queryset
 
@@ -306,8 +302,8 @@ class ContractFilter(FilterSet):
         try:
             # Split value.
             values = value.split(',')
-            start_date = datetime.strptime(values[0], "%Y-%m-%d")
-            end_date = datetime.strptime(values[1], "%Y-%m-%d")
+            start_date = datetime.datetime.strptime(values[0], "%Y-%m-%d")
+            end_date = datetime.datetime.strptime(values[1], "%Y-%m-%d")
         except:
             # Raise validation error.
             raise ValidationError('Datetimes have to be in the correct \'YYYY-MM-DD\' format.')
@@ -325,7 +321,7 @@ class ContractFilter(FilterSet):
         return queryset.filter(contractuser__user__id__iexact=value).distinct()
 
     contractuser__user__id = django_filters.NumberFilter(method='contract_user_id_distinct')
-    contract__ends_at__range=django_filters.CharFilter(method='contract_range_distinct')
+    contract__ends_at__range = django_filters.CharFilter(method='contract_range_distinct')
     order_fields = ('name', 'description', 'active', 'contractuser__user__username', 'contractuser__user__first_name',
         'contractuser__user__last_name', 'contractuser__user__groups', 'company__vat_identification_number', 'customer__vat_identification_number',
         'company__name', 'customer__name', 'company__country', 'customer_country', 'company__internal', 'customer__internal',
@@ -533,10 +529,18 @@ class StandbyPerformanceFilter(PerformanceFilter):
 # Filters for reports
 class AdminReportTimesheetContractOverviewFilter(FilterSet):
     """Timesheet contract overview admin report filter."""
-    performance__contract = django_filters.ModelChoiceFilter(label='Contract', queryset=models.Contract.objects.filter(active=True), distinct=True)
-    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True))
-    year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in models.Timesheet.objects.values_list('year', flat=True).order_by('year').distinct()])
-    month = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in models.Timesheet.objects.values_list('month', flat=True).order_by('month').distinct()])
+    performance__contract = django_filters.ModelChoiceFilter(label='Contract',
+                                                             queryset=models.Contract.objects.filter(active=True),
+                                                             distinct=True,
+                                                             widget=Select2Widget)
+    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True),
+                                            widget=Select2Widget)
+    year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
+                                                                         .values_list('year', flat=True)
+                                                                         .order_by('year').distinct())])
+    month = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
+                                                                          .values_list('month', flat=True)
+                                                                          .order_by('month').distinct())])
 
     class Meta:
         model = models.Timesheet
@@ -551,9 +555,14 @@ class AdminReportTimesheetContractOverviewFilter(FilterSet):
 
 class AdminReportTimesheetOverviewFilter(FilterSet):
     """Timesheet overview admin report filter."""
-    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True))
-    year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in models.Timesheet.objects.values_list('year', flat=True).order_by('year').distinct()])
-    month = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in models.Timesheet.objects.values_list('month', flat=True).order_by('month').distinct()])
+    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True),
+                                            widget=Select2Widget)
+    year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
+                                                                         .values_list('year', flat=True)
+                                                                         .order_by('year').distinct())])
+    month = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
+                                                                          .values_list('month', flat=True)
+                                                                          .order_by('month').distinct())])
 
     class Meta:
         model = models.Timesheet
@@ -567,7 +576,8 @@ class AdminReportTimesheetOverviewFilter(FilterSet):
 
 class AdminReportUserRangeInfoFilter(FilterSet):
     """User range info admin report filter."""
-    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True))
+    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True),
+                                            widget=Select2Widget)
     from_date = django_filters.DateFilter(label='From', widget=admin_widgets.AdminDateWidget())
     until_date = django_filters.DateFilter(label='Until', widget=admin_widgets.AdminDateWidget())
 
