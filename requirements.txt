@@ -41,7 +41,7 @@ icalendar==4.0.1
 idna==2.6
 itypes==1.1.0
 Jinja2==2.10
-Markdown==2.6.11
+markdown2==2.3.5
 MarkupSafe==1.0
 mysqlclient==1.3.10
 oauthlib==1.0.3

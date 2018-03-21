@@ -39,13 +39,13 @@ python-redmine = "==2.0.2"
 django-rest-framework = "*"
 django-silk = "*"
 django-wkhtmltopdf = "*"
-markdown = "*"
 django-dirtyfields = "*"
 pytz = "==2018.3"
 django-ical = "*"
 "django-tables2" = "*"
 phonenumberslite = "*"
 django-phonenumber-field = "*"
+"markdown2" = "*"
 
 
 [dev-packages]
