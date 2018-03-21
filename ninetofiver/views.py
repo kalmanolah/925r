@@ -31,6 +31,7 @@ from rest_framework_swagger.renderers import SwaggerUIRenderer
 from ninetofiver import settings, tables, calculation, pagination
 from django.db.models import Q
 from django_tables2 import RequestConfig
+from django_tables2.export.export import TableExport
 from datetime import datetime, date, timedelta
 from wkhtmltopdf.views import PDFTemplateView
 from dateutil import parser
@@ -220,6 +221,11 @@ def admin_report_timesheet_contract_overview_view(request):
     table = tables.TimesheetContractOverviewTable(data)
     config.configure(table)
 
+    export_format = request.GET.get('_export', None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table)
+        return exporter.response('table.{}'.format(export_format))
+
     context = {
         'title': _('Timesheet contract overview'),
         'table': table,
@@ -249,6 +255,11 @@ def admin_report_timesheet_overview_view(request):
     config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
     table = tables.TimesheetOverviewTable(data)
     config.configure(table)
+
+    export_format = request.GET.get('_export', None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table)
+        return exporter.response('table.{}'.format(export_format))
 
     context = {
         'title': _('Timesheet overview'),
@@ -284,6 +295,11 @@ def admin_report_user_range_info_view(request):
     config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
     table = tables.UserRangeInfoTable(data)
     config.configure(table)
+
+    export_format = request.GET.get('_export', None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table)
+        return exporter.response('table.{}'.format(export_format))
 
     context = {
         'title': _('User range info'),

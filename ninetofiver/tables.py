@@ -4,11 +4,20 @@ from django.utils.html import format_html
 from django.urls import reverse
 import django_tables2 as tables
 from django_tables2.utils import A
+from django_tables2.export.export import TableExport
 from ninetofiver import models
 
 
 class BaseTable(tables.Table):
     """Base table."""
+
+    # export_formats = TableExport.FORMATS
+    export_formats = [
+        TableExport.CSV,
+        TableExport.JSON,
+        TableExport.ODS,
+        TableExport.XLS,
+    ]
 
     class Meta:
         template_name = 'django_tables2/bootstrap4.html'
@@ -43,7 +52,7 @@ class TimesheetContractOverviewTable(BaseTable):
     duration = tables.Column(verbose_name='Duration (hours)',
                              footer=lambda table: _('Total: %(amount)s') %
                              {'amount': sum(x['duration'] for x in table.data)})
-    actions = tables.Column(accessor='timesheet', orderable=False)
+    actions = tables.Column(accessor='timesheet', orderable=False, exclude_from_export=True)
 
     def render_actions(self, record):
         buttons = []
@@ -112,7 +121,7 @@ class TimesheetOverviewTable(BaseTable):
         footer=lambda table: _('Total: %(amount)s') % {'amount':
                                                        sum(x['range_info']['remaining_hours'] for x in table.data)}
     )
-    actions = tables.Column(accessor='timesheet', orderable=False)
+    actions = tables.Column(accessor='timesheet', orderable=False, exclude_from_export=True)
 
     def render_actions(self, record):
         buttons = []
@@ -177,7 +186,7 @@ class UserRangeInfoTable(BaseTable):
         footer=lambda table: _('Total: %(amount)s') % {'amount':
                                                        sum(x['day_detail']['overtime_hours'] for x in table.data)}
     )
-    actions = tables.Column(accessor='date', orderable=False)
+    actions = tables.Column(accessor='date', orderable=False, exclude_from_export=True)
 
     def render_actions(self, record):
         buttons = []

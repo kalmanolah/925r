@@ -46,6 +46,7 @@ django-ical = "*"
 phonenumberslite = "*"
 django-phonenumber-field = "*"
 "markdown2" = "*"
+tablib = "*"
 
 
 [dev-packages]
