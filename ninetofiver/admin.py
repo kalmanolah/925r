@@ -16,6 +16,7 @@ from rangefilter.filter import DateTimeRangeFilter
 from django import forms
 from django.urls import reverse
 from ninetofiver import models, redmine
+from ninetofiver.templatetags.markdown import markdown
 from datetime import date
 import logging
 
@@ -539,20 +540,6 @@ class WhereaboutAdmin(admin.ModelAdmin):
     ordering = ('-day', )
 
 
-class PerformanceChildAdmin(PolymorphicChildModelAdmin):
-    base_model = models.Performance
-
-
-@admin.register(models.ActivityPerformance)
-class ActivityPerformanceChildAdmin(PerformanceChildAdmin):
-    base_model = models.ActivityPerformance
-
-
-@admin.register(models.StandbyPerformance)
-class StandbyPerformanceChildAdmin(PerformanceChildAdmin):
-    base_model = models.StandbyPerformance
-
-
 @admin.register(models.Performance)
 class PerformanceParentAdmin(PolymorphicParentModelAdmin):
     """Performance parent admin."""
@@ -572,7 +559,9 @@ class PerformanceParentAdmin(PolymorphicParentModelAdmin):
         return obj.activityperformance.performance_type
 
     def description(self, obj):
-        return obj.activityperformance.description
+        value = obj.activityperformance.description
+        value = markdown(value) if value else value
+        return value
 
     def contract_role(self, obj):
         return obj.activityperformance.contract_role
@@ -602,3 +591,17 @@ class PerformanceParentAdmin(PolymorphicParentModelAdmin):
         'description',
         'contract_role',
     )
+
+
+class PerformanceChildAdmin(PolymorphicChildModelAdmin):
+    base_model = models.Performance
+
+
+@admin.register(models.ActivityPerformance)
+class ActivityPerformanceChildAdmin(PerformanceChildAdmin):
+    base_model = models.ActivityPerformance
+
+
+@admin.register(models.StandbyPerformance)
+class StandbyPerformanceChildAdmin(PerformanceChildAdmin):
+    base_model = models.StandbyPerformance
