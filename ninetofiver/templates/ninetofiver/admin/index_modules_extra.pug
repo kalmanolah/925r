@@ -10,10 +10,4 @@ div(class='module' style='width: 100%')
           a(href="/admin/ninetofiver/timesheet/?status__exact=pending") Pending timesheets
       tr
         th(scope='row')
-          a(href="{% url 'admin_report_timesheet_contract_overview' %}?year={% now 'Y' %}&month={% now 'n' %}") Report: timesheet contract overview
-      tr
-        th(scope='row')
-          a(href="{% url 'admin_report_timesheet_overview' %}?year={% now 'Y' %}&month={% now 'n' %}") Report: timesheet overview
-      tr
-        th(scope='row')
-          a(href="{% url 'admin_report_user_range_info' %}?from_date={% now 'Y-m-d' %}&until_date={% now 'Y-m-d' %}&user={{ user.id }}") Report: user range info
+          a(href="{% url 'admin_report_index' %}") Reports

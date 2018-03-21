@@ -1,0 +1,16 @@
+extends ninetofiver/admin/reports/base.pug
+
+
+block content
+    hr
+    table(class="table table-bordered table-striped")
+      tbody
+        tr
+          th
+            a(href="{% url 'admin_report_timesheet_contract_overview' %}?year={% now 'Y' %}&month={% now 'n' %}") Timesheet contract overview
+        tr
+          th
+            a(href="{% url 'admin_report_timesheet_overview' %}?year={% now 'Y' %}&month={% now 'n' %}") Timesheet overview
+        tr
+          th
+            a(href="{% url 'admin_report_user_range_info' %}?from_date={% now 'Y-m-d' %}&until_date={% now 'Y-m-d' %}&user={{ user.id }}") User range info

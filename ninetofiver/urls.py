@@ -142,6 +142,7 @@ urlpatterns += [
     url(r'^admin/ninetofiver/leave/reject/(?P<leave_pk>[0-9,]+)/$', views.admin_leave_reject_view, name='admin_leave_reject'),  # noqa
     url(r'^admin/ninetofiver/timesheet/close/(?P<timesheet_pk>[0-9,]+)/$', views.admin_timesheet_close_view, name='admin_timesheet_close'),  # noqa
     url(r'^admin/ninetofiver/timesheet/activate/(?P<timesheet_pk>[0-9,]+)/$', views.admin_timesheet_activate_view, name='admin_timesheet_activate'),  # noqa
+    url(r'^admin/ninetofiver/report/$', views.admin_report_index_view, name='admin_report_index'),  # noqa
     url(r'^admin/ninetofiver/report/timesheet_contract_overview/$', views.admin_report_timesheet_contract_overview_view, name='admin_report_timesheet_contract_overview'),  # noqa
     url(r'^admin/ninetofiver/report/timesheet_overview/$', views.admin_report_timesheet_overview_view, name='admin_report_timesheet_overview'),  # noqa
     url(r'^admin/ninetofiver/report/user_range_info/$', views.admin_report_user_range_info_view, name='admin_report_user_range_info'),  # noqa

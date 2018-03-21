@@ -184,6 +184,16 @@ def admin_timesheet_activate_view(request, timesheet_pk):
 
 
 @staff_member_required
+def admin_report_index_view(request):
+    """Report index."""
+    context = {
+        'title': _('Reports'),
+    }
+
+    return render(request, 'ninetofiver/admin/reports/index.pug', context)
+
+
+@staff_member_required
 def admin_report_timesheet_contract_overview_view(request):
     """Timesheet contract overview report."""
     fltr = filters.AdminReportTimesheetContractOverviewFilter(request.GET, models.Timesheet.objects)
