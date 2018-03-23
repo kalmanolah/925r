@@ -319,6 +319,8 @@ def admin_report_user_leave_overview_view(request):
 
     if fltr.data.get('user', None) and fltr.data.get('year', None):
         year = int(fltr.data['year'])
+        user = get_object_or_404(auth_models.User.objects,
+                                 pk=request.GET.get('user', None), is_active=True) if request.GET.get('user') else None
 
         # Grab leave types, index them by ID
         leave_types = models.LeaveType.objects.all()
@@ -347,6 +349,7 @@ def admin_report_user_leave_overview_view(request):
             data.append({
                 'year': year,
                 'month': month,
+                'user': user,
                 'leave_type_hours': month_leave_type_hours,
             })
 
