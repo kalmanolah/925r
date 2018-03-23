@@ -292,7 +292,7 @@ def admin_report_user_range_info_view(request):
                 'user': user,
             })
 
-    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
+    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size * 2})
     table = tables.UserRangeInfoTable(data)
     config.configure(table)
 
