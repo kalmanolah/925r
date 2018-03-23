@@ -14,3 +14,6 @@ block content
         tr
           th
             a(href="{% url 'admin_report_user_range_info' %}?from_date={% now 'Y-m-d' %}&until_date={% now 'Y-m-d' %}&user={{ user.id }}") User range info
+        tr
+          th
+            a(href="{% url 'admin_report_user_leave_overview' %}?year={% now 'Y' %}&user={{ user.id }}") User leave overview

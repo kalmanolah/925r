@@ -29,6 +29,7 @@ from rest_framework.views import APIView
 from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
 from ninetofiver import settings, tables, calculation, pagination
+from ninetofiver.utils import month_date_range
 from django.db.models import Q
 from django_tables2 import RequestConfig
 from django_tables2.export.export import TableExport
@@ -308,6 +309,63 @@ def admin_report_user_range_info_view(request):
     }
 
     return render(request, 'ninetofiver/admin/reports/user_range_info.pug', context)
+
+
+@staff_member_required
+def admin_report_user_leave_overview_view(request):
+    """User leave overview report."""
+    fltr = filters.AdminReportUserLeaveOverviewFilter(request.GET, models.LeaveDate.objects.all())
+    data = []
+
+    if fltr.data.get('user', None) and fltr.data.get('year', None):
+        year = int(fltr.data['year'])
+
+        # Grab leave types, index them by ID
+        leave_types = models.LeaveType.objects.all()
+
+        # Grab leave dates, index them by year, then month, then leave type ID
+        leave_dates = fltr.qs.select_related('leave', 'leave__leave_type')
+        leave_date_data = {}
+        for leave_date in leave_dates:
+            (leave_date_data
+                .setdefault(leave_date.starts_at.year, {})
+                .setdefault(leave_date.starts_at.month, {})
+                .setdefault(leave_date.leave.leave_type.id, [])
+                .append(leave_date))
+
+        # Iterate over years, months to create monthly data
+        for month in range(1, 1 + 12):
+            month_leave_dates = leave_date_data.get(year, {}).get(month, {})
+            month_leave_type_hours = {}
+
+            # Iterate over leave types to gather totals
+            for leave_type in leave_types:
+                duration = sum([Decimal(str(round((x.ends_at - x.starts_at).total_seconds() / 3600, 2)))
+                                for x in month_leave_dates.get(leave_type.id, [])])
+                month_leave_type_hours[leave_type.name] = duration
+
+            data.append({
+                'year': year,
+                'month': month,
+                'leave_type_hours': month_leave_type_hours,
+            })
+
+    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
+    table = tables.UserLeaveOverviewTable(data)
+    config.configure(table)
+
+    export_format = request.GET.get('_export', None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table)
+        return exporter.response('table.{}'.format(export_format))
+
+    context = {
+        'title': _('User leave overview'),
+        'table': table,
+        'filter': fltr,
+    }
+
+    return render(request, 'ninetofiver/admin/reports/user_leave_overview.pug', context)
 
 
 class AdminTimesheetContractPdfExportView(BaseTimesheetContractPdfExportServiceAPIView):

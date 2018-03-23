@@ -230,3 +230,101 @@ class UserRangeInfoTable(BaseTable):
             })
 
         return format_html('%s' % ('&nbsp;'.join(buttons)))
+
+
+class UserLeaveOverviewTable(BaseTable):
+    """User leave overview table."""
+
+    class Meta(BaseTable.Meta):
+        pass
+
+    year = tables.Column()
+    month = tables.Column()
+
+    def __init__(self, *args, **kwargs):
+        """Constructor."""
+        # Create an additional column for every leave type
+        extra_columns = []
+        for leave_type in models.LeaveType.objects.order_by('name'):
+            column = tables.Column(accessor=A('leave_type_hours.%s' % leave_type.name),
+                                   footer=lambda table, column: _('Total: %(amount)s') %
+                                   {'amount': sum([column.accessor.resolve(x) for x in table.data])})
+            extra_columns.append([leave_type.name, column])
+        kwargs['extra_columns'] = extra_columns
+        super().__init__(*args, **kwargs)
+
+    # date = tables.DateColumn('D d F')
+    # work_hours = tables.Column(
+    #     accessor='day_detail.work_hours',
+    #     footer=lambda table: _('Total: %(amount)s') % {'amount':
+    #                                                    sum(x['day_detail']['work_hours'] for x in table.data)}
+    # )
+    # performed_hours = tables.Column(
+    #     accessor='day_detail.performed_hours',
+    #     footer=lambda table: _('Total: %(amount)s') % {'amount':
+    #                                                    sum(x['day_detail']['performed_hours'] for x in table.data)}
+    # )
+    # leave_hours = tables.Column(
+    #     accessor='day_detail.leave_hours',
+    #     footer=lambda table: _('Total: %(amount)s') % {'amount':
+    #                                                    sum(x['day_detail']['leave_hours'] for x in table.data)}
+    # )
+    # holiday_hours = tables.Column(
+    #     accessor='day_detail.holiday_hours',
+    #     footer=lambda table: _('Total: %(amount)s') % {'amount':
+    #                                                    sum(x['day_detail']['holiday_hours'] for x in table.data)}
+    # )
+    # remaining_hours = tables.Column(
+    #     accessor='day_detail.remaining_hours',
+    #     footer=lambda table: _('Total: %(amount)s') % {'amount':
+    #                                                    sum(x['day_detail']['remaining_hours'] for x in table.data)}
+    # )
+    # overtime_hours = tables.Column(
+    #     accessor='day_detail.overtime_hours',
+    #     footer=lambda table: _('Total: %(amount)s') % {'amount':
+    #                                                    sum(x['day_detail']['overtime_hours'] for x in table.data)}
+    # )
+    # actions = tables.Column(accessor='date', orderable=False, exclude_from_export=True)
+    #
+    # def render_actions(self, record):
+    #     buttons = []
+    #
+    #     if record['day_detail']['performed_hours']:
+    #         buttons.append(('<a class="button" href="%(url)s?' +
+    #                         'timesheet__user__id__exact=%(user)s&' +
+    #                         'timesheet__year=%(year)s&' +
+    #                         'timesheet__month=%(month)s&' +
+    #                         'day=%(day)s">Performance</a>') % {
+    #             'url': reverse('admin:ninetofiver_performance_changelist'),
+    #             'user': record['user'].id,
+    #             'year': record['date'].year,
+    #             'month': record['date'].month,
+    #             'day': record['date'].day,
+    #         })
+    #
+    #     if record['day_detail']['holiday_hours']:
+    #         buttons.append(('<a class="button" href="%(url)s?' +
+    #                         'date__gte=%(date)s&' +
+    #                         'date__lte=%(date)s">Holidays</a>') % {
+    #             'url': reverse('admin:ninetofiver_holiday_changelist'),
+    #             'date': record['date'].strftime('%Y-%m-%d'),
+    #         })
+    #
+    #     if record['day_detail']['leave_hours']:
+    #         buttons.append(('<a class="button" href="%(url)s?' +
+    #                         'user__id__exact=%(user)s&' +
+    #                         'status__exact=%(status)s&' +
+    #                         'leavedate__starts_at__gte_0=%(leavedate__starts_at__gte_0)s&' +
+    #                         'leavedate__starts_at__gte_1=%(leavedate__starts_at__gte_1)s&' +
+    #                         'leavedate__starts_at__lte_0=%(leavedate__starts_at__lte_0)s&' +
+    #                         'leavedate__starts_at__lte_1=%(leavedate__starts_at__lte_1)s">Leave</a>') % {
+    #             'url': reverse('admin:ninetofiver_leave_changelist'),
+    #             'user': record['user'].id,
+    #             'status': models.STATUS_APPROVED,
+    #             'leavedate__starts_at__gte_0': record['date'].strftime('%Y-%m-%d'),
+    #             'leavedate__starts_at__gte_1': '00:00:00',
+    #             'leavedate__starts_at__lte_0': record['date'].strftime('%Y-%m-%d'),
+    #             'leavedate__starts_at__lte_1': '23:59:59',
+    #         })
+    #
+    #     return format_html('%s' % ('&nbsp;'.join(buttons)))

@@ -1,6 +1,8 @@
 """Utils."""
 from importlib import import_module
 from calendar import monthrange
+from dateutil.relativedelta import relativedelta
+import datetime
 import os
 from django.core.mail import send_mail as base_send_mail
 from django.template.loader import render_to_string
@@ -47,6 +49,13 @@ def merge_dicts(*dicts):
 def days_in_month(year, month):
     """Get the amount of days in a month."""
     return monthrange(year, month)[1]
+
+
+def month_date_range(year, month):
+    """Get the date range for the given month."""
+    from_date = datetime.date.today().replace(year=year, month=month, day=1)
+    until_date = from_date.replace() + relativedelta(months=1) - relativedelta(days=1)
+    return [from_date, until_date]
 
 
 def send_mail(recipients, subject, template, context={}):
