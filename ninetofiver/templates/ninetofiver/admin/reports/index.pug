@@ -17,3 +17,6 @@ block content
         tr
           th
             a(href="{% url 'admin_report_user_leave_overview' %}?year={% now 'Y' %}&user={{ user.id }}") User leave overview
+        tr
+          th
+            a(href="{% url 'admin_report_user_work_ratio_overview' %}?year={% now 'Y' %}&user={{ user.id }}") User work ratio overview

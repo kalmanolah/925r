@@ -371,6 +371,71 @@ def admin_report_user_leave_overview_view(request):
     return render(request, 'ninetofiver/admin/reports/user_leave_overview.pug', context)
 
 
+@staff_member_required
+def admin_report_user_work_ratio_overview_view(request):
+    """User work ratio overview report."""
+    fltr = filters.AdminReportUserWorkRatioOverviewFilter(request.GET, models.Timesheet.objects)
+    data = []
+
+    if fltr.data.get('user', None) and fltr.data.get('year', None):
+        year = int(fltr.data['year'])
+        user = get_object_or_404(auth_models.User.objects,
+                                 pk=request.GET.get('user', None), is_active=True) if request.GET.get('user') else None
+
+        timesheets = fltr.qs.select_related('user')
+
+        for timesheet in timesheets:
+            date_range = timesheet.get_date_range()
+            range_info = calculation.get_range_info([timesheet.user], date_range[0], date_range[1], summary=True)
+            range_info = range_info[timesheet.user.id]
+
+            total_hours = range_info['performed_hours'] + range_info['leave_hours']
+            leave_hours = range_info['leave_hours']
+            consultancy_hours = sum([x['duration'] for x in range_info['summary']['performances']
+                                    if x['contract'].get_real_instance_class() == models.ConsultancyContract])
+            project_hours = sum([x['duration'] for x in range_info['summary']['performances']
+                                if x['contract'].get_real_instance_class() == models.ProjectContract])
+            support_hours = sum([x['duration'] for x in range_info['summary']['performances']
+                                if x['contract'].get_real_instance_class() == models.SupportContract])
+
+            consultancy_pct = round((consultancy_hours / (total_hours if total_hours else 1.0)) * 100, 2)
+            project_pct = round((project_hours / (total_hours if total_hours else 1.0)) * 100, 2)
+            support_pct = round((support_hours / (total_hours if total_hours else 1.0)) * 100, 2)
+            leave_pct = round((leave_hours / (total_hours if total_hours else 1.0)) * 100, 2)
+
+            data.append({
+                'year': timesheet.year,
+                'month': timesheet.month,
+                'user': timesheet.user,
+                'total_hours': total_hours,
+                'leave_hours': leave_hours,
+                'consultancy_hours': consultancy_hours,
+                'project_hours': project_hours,
+                'support_hours': support_hours,
+                'leave_pct': leave_pct,
+                'consultancy_pct': consultancy_pct,
+                'project_pct': project_pct,
+                'support_pct': support_pct,
+            })
+
+    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
+    table = tables.UserWorkRatioOverviewTable(data)
+    config.configure(table)
+
+    export_format = request.GET.get('_export', None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table)
+        return exporter.response('table.{}'.format(export_format))
+
+    context = {
+        'title': _('User work ratio overview'),
+        'table': table,
+        'filter': fltr,
+    }
+
+    return render(request, 'ninetofiver/admin/reports/user_work_ratio_overview.pug', context)
+
+
 class AdminTimesheetContractPdfExportView(BaseTimesheetContractPdfExportServiceAPIView):
     """Export a timesheet contract to PDF."""
 

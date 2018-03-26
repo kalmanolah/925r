@@ -242,8 +242,7 @@ class UserLeaveOverviewTable(BaseTable):
 
     year = tables.Column()
     month = tables.Column()
-
-    actions = tables.Column(accessor='year', orderable=False, exclude_from_export=True)
+    actions = tables.Column(accessor='user', orderable=False, exclude_from_export=True)
 
     def __init__(self, *args, **kwargs):
         """Constructor."""
@@ -256,6 +255,65 @@ class UserLeaveOverviewTable(BaseTable):
             extra_columns.append([leave_type.name, column])
         kwargs['extra_columns'] = extra_columns
         super().__init__(*args, **kwargs)
+
+    def render_actions(self, record):
+        buttons = []
+
+        date_range = month_date_range(record['year'], record['month'])
+
+        buttons.append(('<a class="button" href="%(url)s?' +
+                        'user__id__exact=%(user)s&' +
+                        'status__exact=%(status)s&' +
+                        'leavedate__starts_at__gte_0=%(leavedate__starts_at__gte_0)s&' +
+                        'leavedate__starts_at__gte_1=%(leavedate__starts_at__gte_1)s&' +
+                        'leavedate__starts_at__lte_0=%(leavedate__starts_at__lte_0)s&' +
+                        'leavedate__starts_at__lte_1=%(leavedate__starts_at__lte_1)s">Leave</a>') % {
+            'url': reverse('admin:ninetofiver_leave_changelist'),
+            'user': record['user'].id,
+            'status': models.STATUS_APPROVED,
+            'leavedate__starts_at__gte_0': date_range[0].strftime('%Y-%m-%d'),
+            'leavedate__starts_at__gte_1': '00:00:00',
+            'leavedate__starts_at__lte_0': date_range[1].strftime('%Y-%m-%d'),
+            'leavedate__starts_at__lte_1': '23:59:59',
+        })
+
+        return format_html('%s' % ('&nbsp;'.join(buttons)))
+
+
+class UserWorkRatioOverviewTable(BaseTable):
+    """User work ratio overview table."""
+
+    class Meta(BaseTable.Meta):
+        pass
+
+    year = tables.Column()
+    month = tables.Column()
+    total_hours = tables.Column(footer=lambda table: _('Total: %(amount)s') %
+                                {'amount': sum(x['total_hours'] for x in table.data)})
+    consultancy_hours = tables.Column(footer=lambda table: _('Total: %(amount)s') %
+                                      {'amount': sum(x['consultancy_hours'] for x in table.data)})
+    project_hours = tables.Column(footer=lambda table: _('Total: %(amount)s') %
+                                  {'amount': sum(x['project_hours'] for x in table.data)})
+    support_hours = tables.Column(footer=lambda table: _('Total: %(amount)s') %
+                                  {'amount': sum(x['support_hours'] for x in table.data)})
+    leave_hours = tables.Column(footer=lambda table: _('Total: %(amount)s') %
+                                {'amount': sum(x['leave_hours'] for x in table.data)})
+    consultancy_pct = tables.Column(attrs={'th': {'class': 'bg-success'}})
+    project_pct = tables.Column(attrs={'th': {'class': 'bg-info'}})
+    support_pct = tables.Column(attrs={'th': {'class': 'bg-warning'}})
+    leave_pct = tables.Column(attrs={'th': {'class': 'bg-danger'}})
+    ratio = tables.Column(accessor='user', orderable=False, exclude_from_export=True)
+    actions = tables.Column(accessor='user', orderable=False, exclude_from_export=True)
+
+    def render_ratio(self, record):
+        res = ('<div class="progress" style="min-width: 300px;">' +
+               '<div class="progress-bar bg-success" role="progressbar" style="width: %(consultancy_pct)s%%">%(consultancy_pct)s%%</div>' +
+               '<div class="progress-bar bg-info" role="progressbar" style="width: %(project_pct)s%%">%(project_pct)s%%</div>' +
+               '<div class="progress-bar bg-warning" role="progressbar" style="width: %(support_pct)s%%">%(support_pct)s%%</div>' +
+               '<div class="progress-bar bg-danger" role="progressbar" style="width: %(leave_pct)s%%">%(leave_pct)s%%</div>' +
+               '</div>') % record
+
+        return format_html(res)
 
     def render_actions(self, record):
         buttons = []
