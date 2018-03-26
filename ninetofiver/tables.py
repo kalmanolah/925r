@@ -320,20 +320,32 @@ class UserWorkRatioOverviewTable(BaseTable):
 
         date_range = month_date_range(record['year'], record['month'])
 
-        buttons.append(('<a class="button" href="%(url)s?' +
-                        'user__id__exact=%(user)s&' +
-                        'status__exact=%(status)s&' +
-                        'leavedate__starts_at__gte_0=%(leavedate__starts_at__gte_0)s&' +
-                        'leavedate__starts_at__gte_1=%(leavedate__starts_at__gte_1)s&' +
-                        'leavedate__starts_at__lte_0=%(leavedate__starts_at__lte_0)s&' +
-                        'leavedate__starts_at__lte_1=%(leavedate__starts_at__lte_1)s">Leave</a>') % {
-            'url': reverse('admin:ninetofiver_leave_changelist'),
-            'user': record['user'].id,
-            'status': models.STATUS_APPROVED,
-            'leavedate__starts_at__gte_0': date_range[0].strftime('%Y-%m-%d'),
-            'leavedate__starts_at__gte_1': '00:00:00',
-            'leavedate__starts_at__lte_0': date_range[1].strftime('%Y-%m-%d'),
-            'leavedate__starts_at__lte_1': '23:59:59',
-        })
+        if record['consultancy_hours'] or record['project_hours'] or record['support_hours']:
+            buttons.append(('<a class="button" href="%(url)s?' +
+                            'timesheet__user__id__exact=%(user)s&' +
+                            'timesheet__year=%(year)s&' +
+                            'timesheet__month=%(month)s">Performance</a>') % {
+                'url': reverse('admin:ninetofiver_performance_changelist'),
+                'user': record['user'].id,
+                'year': record['year'],
+                'month': record['month'],
+            })
+
+        if record['leave_hours']:
+            buttons.append(('<a class="button" href="%(url)s?' +
+                            'user__id__exact=%(user)s&' +
+                            'status__exact=%(status)s&' +
+                            'leavedate__starts_at__gte_0=%(leavedate__starts_at__gte_0)s&' +
+                            'leavedate__starts_at__gte_1=%(leavedate__starts_at__gte_1)s&' +
+                            'leavedate__starts_at__lte_0=%(leavedate__starts_at__lte_0)s&' +
+                            'leavedate__starts_at__lte_1=%(leavedate__starts_at__lte_1)s">Leave</a>') % {
+                'url': reverse('admin:ninetofiver_leave_changelist'),
+                'user': record['user'].id,
+                'status': models.STATUS_APPROVED,
+                'leavedate__starts_at__gte_0': date_range[0].strftime('%Y-%m-%d'),
+                'leavedate__starts_at__gte_1': '00:00:00',
+                'leavedate__starts_at__lte_0': date_range[1].strftime('%Y-%m-%d'),
+                'leavedate__starts_at__lte_1': '23:59:59',
+            })
 
         return format_html('%s' % ('&nbsp;'.join(buttons)))
