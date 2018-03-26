@@ -1106,7 +1106,7 @@ class MyWorkScheduleViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class LeaveFeedServiceAPIView(APIView):
-    """Get leaves as an ICS feed."""
+    """Get leave as an ICS feed."""
 
     permission_classes = (permissions.IsAuthenticated,)
 
