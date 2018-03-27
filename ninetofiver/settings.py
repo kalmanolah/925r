@@ -309,6 +309,7 @@ class Base(Configuration):
     # REDMINE
     REDMINE_URL = values.Value(None)
     REDMINE_API_KEY = values.Value(None)
+    REDMINE_ISSUE_CONTRACT_FIELD = values.Value('925r_contract')
 
     EMAIL_HOST = values.Value('localhost')
     EMAIL_PORT = values.Value(25)
