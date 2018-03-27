@@ -6,6 +6,8 @@ from django.core.cache import cache
 from django.db.models import Q
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
+from django import forms
+from django.urls import reverse
 from django_admin_listfilter_dropdown.filters import DropdownFilter
 from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
 from polymorphic.admin import PolymorphicChildModelAdmin
@@ -13,8 +15,8 @@ from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin import PolymorphicParentModelAdmin
 from rangefilter.filter import DateRangeFilter
 from rangefilter.filter import DateTimeRangeFilter
-from django import forms
-from django.urls import reverse
+from import_export.admin import ExportMixin
+from import_export.resources import ModelResource
 from ninetofiver import models, redmine
 from ninetofiver.templatetags.markdown import markdown
 from datetime import date
@@ -540,9 +542,38 @@ class WhereaboutAdmin(admin.ModelAdmin):
     ordering = ('-day', )
 
 
+class PerformanceResource(ModelResource):
+    """Performance resource."""
+
+    class Meta:
+        """Performance resource meta class."""
+
+        model = models.Performance
+        fields = (
+            'id',
+            'timesheet__user__id',
+            'timesheet__user__username',
+            'timesheet__year',
+            'timesheet__month',
+            'timesheet__status',
+            'day',
+            'contract__id',
+            'contract__name',
+            'duration',
+            'description',
+            'activityperformance__performance_type__id',
+            'activityperformance__performance_type__name',
+            'activityperformance__contract_role__id',
+            'activityperformance__contract_role__name',
+            'polymorphic_ctype__model',
+        )
+
+
 @admin.register(models.Performance)
-class PerformanceParentAdmin(PolymorphicParentModelAdmin):
+class PerformanceParentAdmin(ExportMixin, PolymorphicParentModelAdmin):
     """Performance parent admin."""
+
+    resource_class = PerformanceResource
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('activityperformance',

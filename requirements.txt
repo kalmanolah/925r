@@ -4,6 +4,7 @@ certifi==2018.1.18
 chardet==3.0.4
 coreapi==2.3.1
 coreschema==0.0.4
+diff-match-patch==20121119
 Django==1.11.6
 django-admin-list-filter-dropdown==1.0.0
 django-admin-rangefilter==0.2.1
@@ -19,6 +20,7 @@ django-downloadview==1.9
 django-filter==1.1.0
 django-gravatar2==1.4.0
 django-ical==1.4
+django-import-export==1.0.0
 django-model-utils==2.6
 django-oauth-toolkit==0.10.0
 django-phonenumber-field==2.0.0

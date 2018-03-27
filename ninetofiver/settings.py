@@ -95,6 +95,7 @@ class Base(Configuration):
         'django_tables2',
         'phonenumber_field',
         'django_select2',
+        'import_export',
     ]
 
     MIDDLEWARE = [

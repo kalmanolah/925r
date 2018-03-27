@@ -48,6 +48,7 @@ django-phonenumber-field = "*"
 "markdown2" = "*"
 tablib = "*"
 "django-select2" = "*"
+django-import-export = "*"
 
 
 [dev-packages]
