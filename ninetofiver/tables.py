@@ -53,7 +53,44 @@ class TimesheetContractOverviewTable(BaseTable):
     duration = tables.Column(verbose_name='Duration (hours)',
                              footer=lambda table: _('Total: %(amount)s') %
                              {'amount': sum(x['duration'] for x in table.data)})
-    actions = tables.Column(accessor='timesheet', orderable=False, exclude_from_export=True)
+
+    def render_actions_footer(table, column, bound_column):
+        buttons = []
+
+        if table.data:
+            # Determine filters for given data
+            query = []
+            years = []
+            months = []
+            users = []
+            contracts = []
+            for record in table.data:
+                if record['timesheet'].year not in years:
+                    years.append(record['timesheet'].year)
+                if record['timesheet'].month not in months:
+                    months.append(record['timesheet'].month)
+                if record['timesheet'].user.id not in users:
+                    users.append(record['timesheet'].user.id)
+                if record['contract'].id not in contracts:
+                    contracts.append(record['contract'].id)
+            if len(years) == 1:
+                query.append('timesheet__year=%s' % years[0])
+            if len(months) == 1:
+                query.append('timesheet__month=%s' % months[0])
+            if len(users) == 1:
+                query.append('timesheet__user__id__exact=%s' % users[0])
+            if len(contracts) == 1:
+                query.append('contract__id__exact=%s' % contracts[0])
+
+            buttons.append(('<a class="button" href="%(url)s?%(query)s">Details</a>') % {
+                'url': reverse('admin:ninetofiver_performance_changelist'),
+                'query': '&'.join(query),
+            })
+
+        return format_html('%s' % ('&nbsp;'.join(buttons)))
+
+    actions = tables.Column(accessor='timesheet', orderable=False, exclude_from_export=True,
+                            footer=render_actions_footer)
 
     def render_actions(self, record):
         buttons = []
