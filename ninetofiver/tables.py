@@ -338,7 +338,7 @@ class UserWorkRatioOverviewTable(BaseTable):
     consultancy_pct = tables.Column(attrs={'th': {'class': 'bg-success'}})
     project_pct = tables.Column(attrs={'th': {'class': 'bg-info'}})
     support_pct = tables.Column(attrs={'th': {'class': 'bg-warning'}})
-    leave_pct = tables.Column(attrs={'th': {'class': 'bg-danger'}})
+    leave_pct = tables.Column(attrs={'th': {'class': 'bg-secondary'}})
     ratio = tables.Column(accessor='user', orderable=False, exclude_from_export=True)
     actions = tables.Column(accessor='user', orderable=False, exclude_from_export=True)
 
@@ -347,7 +347,7 @@ class UserWorkRatioOverviewTable(BaseTable):
                '<div class="progress-bar bg-success" role="progressbar" style="width: %(consultancy_pct)s%%">%(consultancy_pct)s%%</div>' +
                '<div class="progress-bar bg-info" role="progressbar" style="width: %(project_pct)s%%">%(project_pct)s%%</div>' +
                '<div class="progress-bar bg-warning" role="progressbar" style="width: %(support_pct)s%%">%(support_pct)s%%</div>' +
-               '<div class="progress-bar bg-danger" role="progressbar" style="width: %(leave_pct)s%%">%(leave_pct)s%%</div>' +
+               '<div class="progress-bar bg-secondary" role="progressbar" style="width: %(leave_pct)s%%">%(leave_pct)s%%</div>' +
                '</div>') % record
 
         return format_html(res)
