@@ -429,7 +429,6 @@ class ContractChildAdmin(PolymorphicChildModelAdmin):
     ]
     base_model = models.Contract
     base_form = ContractForm
-    show_in_index = True
     list_display = ContractParentAdmin.list_display
     list_filter = ContractParentAdmin.list_filter[1:]
     search_fields = ContractParentAdmin.search_fields
