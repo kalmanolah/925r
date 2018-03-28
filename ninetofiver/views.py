@@ -66,6 +66,7 @@ class BaseTimesheetContractPdfExportServiceAPIView(PDFTemplateView, generics.Gen
         context['performances'] = (models.ActivityPerformance.objects
                                    .filter(timesheet=timesheet, contract=contract)
                                    .order_by('day')
+                                   .select_related('performance_type')
                                    .all())
         context['total_performed_hours'] = sum([x.duration for x in context['performances']])
         context['total_performed_days'] = round(context['total_performed_hours'] / 8, 2)
