@@ -58,6 +58,11 @@ def month_date_range(year, month):
     return [from_date, until_date]
 
 
+def hours_to_days(hours):
+    """Convert hours to days."""
+    return round(hours / 8, 2)
+
+
 def send_mail(recipients, subject, template, context={}):
     """Send a mail from a template to the given recipients."""
     from ninetofiver.settings import DEFAULT_FROM_EMAIL

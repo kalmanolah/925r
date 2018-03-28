@@ -6,7 +6,7 @@ import django_tables2 as tables
 from django_tables2.utils import A
 from django_tables2.export.export import TableExport
 from ninetofiver import models
-from ninetofiver.utils import month_date_range
+from ninetofiver.utils import month_date_range, hours_to_days
 
 
 class BaseTable(tables.Table):
@@ -23,6 +23,24 @@ class BaseTable(tables.Table):
     class Meta:
         template_name = 'django_tables2/bootstrap4.html'
         attrs = {'class': 'table table-bordered table-striped table-hover'}
+
+
+class SummedHoursColumn(tables.Column):
+    """Summed hours column."""
+
+    def render(self, value):
+        """Render the value."""
+        return '%(amount).2fh (%(days).2fd)' % {'amount': value, 'days': hours_to_days(value)}
+
+    def value(self, value):
+        """Return the value."""
+        return value
+
+    def render_footer(self, table, column, bound_column):
+        """Render the footer."""
+        accessor = self.accessor if self.accessor else A(bound_column.name)
+        total = sum(accessor.resolve(x) for x in table.data)
+        return _('Total: %s') % self.render(total)
 
 
 class TimesheetContractOverviewTable(BaseTable):
@@ -50,9 +68,7 @@ class TimesheetContractOverviewTable(BaseTable):
         args=[A('contract.id')],
         order_by=['contract.name']
     )
-    duration = tables.Column(verbose_name='Duration (hours)',
-                             footer=lambda table: _('Total: %(amount)s') %
-                             {'amount': sum(x['duration'] for x in table.data)})
+    duration = SummedHoursColumn(verbose_name='Duration (hours)')
 
     def render_actions_footer(table, column, bound_column):
         buttons = []
@@ -131,34 +147,12 @@ class TimesheetOverviewTable(BaseTable):
         args=[A('timesheet.id')],
         order_by=['timesheet.year', 'timesheet.month']
     )
-    status = tables.Column(
-        accessor='timesheet.status'
-    )
-    work_hours = tables.Column(
-        accessor='range_info.work_hours',
-        footer=lambda table: _('Total: %(amount)s') % {'amount':
-                                                       sum(x['range_info']['work_hours'] for x in table.data)}
-    )
-    performed_hours = tables.Column(
-        accessor='range_info.performed_hours',
-        footer=lambda table: _('Total: %(amount)s') % {'amount':
-                                                       sum(x['range_info']['performed_hours'] for x in table.data)}
-    )
-    leave_hours = tables.Column(
-        accessor='range_info.leave_hours',
-        footer=lambda table: _('Total: %(amount)s') % {'amount':
-                                                       sum(x['range_info']['leave_hours'] for x in table.data)}
-    )
-    holiday_hours = tables.Column(
-        accessor='range_info.holiday_hours',
-        footer=lambda table: _('Total: %(amount)s') % {'amount':
-                                                       sum(x['range_info']['holiday_hours'] for x in table.data)}
-    )
-    remaining_hours = tables.Column(
-        accessor='range_info.remaining_hours',
-        footer=lambda table: _('Total: %(amount)s') % {'amount':
-                                                       sum(x['range_info']['remaining_hours'] for x in table.data)}
-    )
+    status = tables.Column(accessor='timesheet.status')
+    work_hours = SummedHoursColumn(accessor='range_info.work_hours')
+    performed_hours = SummedHoursColumn(accessor='range_info.performed_hours')
+    leave_hours = SummedHoursColumn(accessor='range_info.leave_hours')
+    holiday_hours = SummedHoursColumn(accessor='range_info.holiday_hours')
+    remaining_hours = SummedHoursColumn(accessor='range_info.remaining_hours')
     actions = tables.Column(accessor='timesheet', orderable=False, exclude_from_export=True)
 
     def render_actions(self, record):
@@ -194,36 +188,12 @@ class UserRangeInfoTable(BaseTable):
         pass
 
     date = tables.DateColumn('D d F')
-    work_hours = tables.Column(
-        accessor='day_detail.work_hours',
-        footer=lambda table: _('Total: %(amount)s') % {'amount':
-                                                       sum(x['day_detail']['work_hours'] for x in table.data)}
-    )
-    performed_hours = tables.Column(
-        accessor='day_detail.performed_hours',
-        footer=lambda table: _('Total: %(amount)s') % {'amount':
-                                                       sum(x['day_detail']['performed_hours'] for x in table.data)}
-    )
-    leave_hours = tables.Column(
-        accessor='day_detail.leave_hours',
-        footer=lambda table: _('Total: %(amount)s') % {'amount':
-                                                       sum(x['day_detail']['leave_hours'] for x in table.data)}
-    )
-    holiday_hours = tables.Column(
-        accessor='day_detail.holiday_hours',
-        footer=lambda table: _('Total: %(amount)s') % {'amount':
-                                                       sum(x['day_detail']['holiday_hours'] for x in table.data)}
-    )
-    remaining_hours = tables.Column(
-        accessor='day_detail.remaining_hours',
-        footer=lambda table: _('Total: %(amount)s') % {'amount':
-                                                       sum(x['day_detail']['remaining_hours'] for x in table.data)}
-    )
-    overtime_hours = tables.Column(
-        accessor='day_detail.overtime_hours',
-        footer=lambda table: _('Total: %(amount)s') % {'amount':
-                                                       sum(x['day_detail']['overtime_hours'] for x in table.data)}
-    )
+    work_hours = SummedHoursColumn(accessor='day_detail.work_hours')
+    performed_hours = SummedHoursColumn(accessor='day_detail.performed_hours')
+    leave_hours = SummedHoursColumn(accessor='day_detail.leave_hours')
+    holiday_hours = SummedHoursColumn(accessor='day_detail.holiday_hours')
+    remaining_hours = SummedHoursColumn(accessor='day_detail.remaining_hours')
+    overtime_hours = SummedHoursColumn(accessor='day_detail.overtime_hours')
     actions = tables.Column(accessor='date', orderable=False, exclude_from_export=True)
 
     def render_actions(self, record):
@@ -286,9 +256,7 @@ class UserLeaveOverviewTable(BaseTable):
         # Create an additional column for every leave type
         extra_columns = []
         for leave_type in models.LeaveType.objects.order_by('name'):
-            column = tables.Column(accessor=A('leave_type_hours.%s' % leave_type.name),
-                                   footer=lambda table, column: _('Total: %(amount)s') %
-                                   {'amount': sum([column.accessor.resolve(x) for x in table.data])})
+            column = SummedHoursColumn(accessor=A('leave_type_hours.%s' % leave_type.name))
             extra_columns.append([leave_type.name, column])
         kwargs['extra_columns'] = extra_columns
         super().__init__(*args, **kwargs)
@@ -325,16 +293,11 @@ class UserWorkRatioOverviewTable(BaseTable):
 
     year = tables.Column()
     month = tables.Column()
-    total_hours = tables.Column(footer=lambda table: _('Total: %(amount)s') %
-                                {'amount': sum(x['total_hours'] for x in table.data)})
-    consultancy_hours = tables.Column(footer=lambda table: _('Total: %(amount)s') %
-                                      {'amount': sum(x['consultancy_hours'] for x in table.data)})
-    project_hours = tables.Column(footer=lambda table: _('Total: %(amount)s') %
-                                  {'amount': sum(x['project_hours'] for x in table.data)})
-    support_hours = tables.Column(footer=lambda table: _('Total: %(amount)s') %
-                                  {'amount': sum(x['support_hours'] for x in table.data)})
-    leave_hours = tables.Column(footer=lambda table: _('Total: %(amount)s') %
-                                {'amount': sum(x['leave_hours'] for x in table.data)})
+    total_hours = SummedHoursColumn()
+    consultancy_hours = SummedHoursColumn()
+    project_hours = SummedHoursColumn()
+    support_hours = SummedHoursColumn()
+    leave_hours = SummedHoursColumn()
     consultancy_pct = tables.Column(attrs={'th': {'class': 'bg-success'}})
     project_pct = tables.Column(attrs={'th': {'class': 'bg-info'}})
     support_pct = tables.Column(attrs={'th': {'class': 'bg-warning'}})
