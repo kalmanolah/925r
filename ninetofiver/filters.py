@@ -557,6 +557,8 @@ class AdminReportTimesheetOverviewFilter(FilterSet):
     """Timesheet overview admin report filter."""
     user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True),
                                             widget=Select2Widget)
+    user__employmentcontract__company = django_filters.ModelChoiceFilter(
+        label='Company', queryset=models.Company.objects.filter(internal=True), widget=Select2Widget)
     year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
                                                                          .values_list('year', flat=True)
                                                                          .order_by('year').distinct())])
@@ -568,6 +570,7 @@ class AdminReportTimesheetOverviewFilter(FilterSet):
         model = models.Timesheet
         fields = {
             'user': ['exact'],
+            'user__employmentcontract__company': ['exact'],
             'status': ['exact'],
             'year': ['exact'],
             'month': ['exact'],

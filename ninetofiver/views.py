@@ -254,7 +254,7 @@ def admin_report_timesheet_overview_view(request):
             'range_info': range_info,
         })
 
-    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
+    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size * 4})
     table = tables.TimesheetOverviewTable(data)
     config.configure(table)
 
