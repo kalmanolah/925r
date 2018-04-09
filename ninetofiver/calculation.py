@@ -155,7 +155,7 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
                     duration = getattr(work_schedule, current_date.strftime('%A').lower(), Decimal('0.00'))
                     user_res['holiday_hours'] += duration
                     day_res['holiday_hours'] += duration
-                    day_res['holidays'].append(holiday)
+                    day_res['holidays'] += holiday_data[str(current_date)][country]
             except KeyError:
                 pass
 
