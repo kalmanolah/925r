@@ -36,6 +36,7 @@ from django_tables2.export.export import TableExport
 from datetime import datetime, date, timedelta
 from wkhtmltopdf.views import PDFTemplateView
 from dateutil import parser
+from collections import OrderedDict
 import logging
 import copy
 
@@ -63,13 +64,25 @@ class BaseTimesheetContractPdfExportServiceAPIView(PDFTemplateView, generics.Gen
         context['user'] = user
         context['timesheet'] = timesheet
         context['contract'] = contract
-        context['performances'] = (models.ActivityPerformance.objects
-                                   .filter(timesheet=timesheet, contract=contract)
-                                   .order_by('day')
-                                   .select_related('performance_type')
-                                   .all())
-        context['total_performed_hours'] = sum([x.duration for x in context['performances']])
+
+        context['activity_performances'] = (models.ActivityPerformance.objects
+                                            .filter(timesheet=timesheet, contract=contract)
+                                            .order_by('day')
+                                            .select_related('performance_type')
+                                            .all())
+        context['total_performed_hours'] = sum([x.duration for x in context['activity_performances']])
         context['total_performed_days'] = round(context['total_performed_hours'] / 8, 2)
+
+        context['standby_performances'] = (models.StandbyPerformance.objects
+                                           .filter(timesheet=timesheet, contract=contract)
+                                           .order_by('day')
+                                           .all())
+        context['total_standby_days'] = round(len(context['standby_performances']), 2)
+
+        # Create a performances dict, indexed by date
+        context['performances'] = OrderedDict()
+        [context['performances'].setdefault(str(x.get_date()), {}).setdefault('activity', []).append(x) for x in context['activity_performances']]
+        [context['performances'].setdefault(str(x.get_date()), {}).setdefault('standby', []).append(x) for x in context['standby_performances']]
 
         return super().render_to_response(context, **response_kwargs)
 
@@ -216,6 +229,7 @@ def admin_report_timesheet_contract_overview_view(request):
                 data.append({
                     'contract': contract_performance['contract'],
                     'duration': contract_performance['duration'],
+                    'standby_days': contract_performance['standby_days'],
                     'timesheet': timesheet,
                 })
 

@@ -50,24 +50,45 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
             .setdefault(holiday.country, [])
             .append(holiday))
 
-    # Fetch all performances for this period
-    performances = (models.ActivityPerformance.objects
-                    .filter(
-                        (Q(timesheet__year__gt=from_date.year) |
-                         Q(timesheet__year__exact=from_date.year, timesheet__month__gt=from_date.month) |
-                         Q(timesheet__year__exact=from_date.year, timesheet__month__exact=from_date.month,
-                           day__gte=from_date.day)),
-                        (Q(timesheet__year__lt=until_date.year) |
-                         Q(timesheet__year__exact=until_date.year, timesheet__month__lt=until_date.month) |
-                         Q(timesheet__year__exact=until_date.year, timesheet__month__exact=until_date.month,
-                           day__lte=until_date.day)),
-                        timesheet__user__in=users)
-                    .select_related('performance_type', 'contract_role', 'contract',
-                                    'contract__customer', 'timesheet', 'timesheet__user'))
-    # Index performances by day, then by user ID
-    performance_data = {}
-    for performance in performances:
-        (performance_data
+    # Fetch all activity performances for this period
+    activity_performances = (models.ActivityPerformance.objects
+                             .filter(
+                                 (Q(timesheet__year__gt=from_date.year) |
+                                  Q(timesheet__year__exact=from_date.year, timesheet__month__gt=from_date.month) |
+                                  Q(timesheet__year__exact=from_date.year, timesheet__month__exact=from_date.month,
+                                    day__gte=from_date.day)),
+                                 (Q(timesheet__year__lt=until_date.year) |
+                                  Q(timesheet__year__exact=until_date.year, timesheet__month__lt=until_date.month) |
+                                  Q(timesheet__year__exact=until_date.year, timesheet__month__exact=until_date.month,
+                                    day__lte=until_date.day)),
+                                 timesheet__user__in=users)
+                             .select_related('performance_type', 'contract_role', 'contract',
+                                             'contract__customer', 'timesheet', 'timesheet__user'))
+    # Index activity performances by day, then by user ID
+    activity_performance_data = {}
+    for performance in activity_performances:
+        (activity_performance_data
+            .setdefault(str(performance.get_date()), {})
+            .setdefault(performance.timesheet.user.id, [])
+            .append(performance))
+
+    # Fetch all standby performances for this period
+    standby_performances = (models.StandbyPerformance.objects
+                            .filter(
+                                (Q(timesheet__year__gt=from_date.year) |
+                                 Q(timesheet__year__exact=from_date.year, timesheet__month__gt=from_date.month) |
+                                 Q(timesheet__year__exact=from_date.year, timesheet__month__exact=from_date.month,
+                                   day__gte=from_date.day)),
+                                (Q(timesheet__year__lt=until_date.year) |
+                                 Q(timesheet__year__exact=until_date.year, timesheet__month__lt=until_date.month) |
+                                 Q(timesheet__year__exact=until_date.year, timesheet__month__exact=until_date.month,
+                                   day__lte=until_date.day)),
+                                timesheet__user__in=users)
+                            .select_related('contract', 'contract__customer', 'timesheet', 'timesheet__user'))
+    # Index standby performances by day, then by user ID
+    standby_performance_data = {}
+    for performance in standby_performances:
+        (standby_performance_data
             .setdefault(str(performance.get_date()), {})
             .setdefault(performance.timesheet.user.id, [])
             .append(performance))
@@ -105,7 +126,8 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
             day_res['overtime_hours'] = 0
             day_res['holidays'] = []
             day_res['leaves'] = []
-            day_res['performances'] = []
+            day_res['activity_performances'] = []
+            day_res['standby_performances'] = []
 
             # Get employment contract for this day
             # This allows us to determine the work schedule and country of the user
@@ -148,17 +170,30 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
             except KeyError:
                 pass
 
-            # Performance
+            # Activity performance
             try:
-                for performance in performance_data[str(current_date)][user.id]:
+                for performance in activity_performance_data[str(current_date)][user.id]:
                     duration = Decimal(performance.duration)
                     user_res['performed_hours'] += duration
                     day_res['performed_hours'] += duration
-                    day_res['performances'].append(performance)
+                    day_res['activity_performances'].append(performance)
                     user_res['summary']['performances'].setdefault(performance.contract.id, {
                         'contract': performance.contract,
                         'duration': 0,
+                        'standby_days': 0,
                     })['duration'] += performance.duration
+            except KeyError:
+                pass
+
+            # Standby performance
+            try:
+                for performance in standby_performance_data[str(current_date)][user.id]:
+                    day_res['standby_performances'].append(performance)
+                    user_res['summary']['performances'].setdefault(performance.contract.id, {
+                        'contract': performance.contract,
+                        'duration': 0,
+                        'standby_days': 0,
+                    })['standby_days'] += 1
             except KeyError:
                 pass
 
@@ -181,13 +216,16 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
             for day, day_data in user_res['details'].items():
                 day_data.pop('leaves', None)
                 day_data.pop('holidays', None)
-                day_data.pop('performances', None)
+                day_data.pop('activity_performances', None)
+                day_data.pop('standby_performances', None)
         elif serialize:
             for day, day_data in user_res['details'].items():
                 day_data['holidays'] = serializers.HolidaySerializer(day_data['holidays'], many=True).data
                 day_data['leaves'] = serializers.LeaveSerializer(day_data['leaves'], many=True).data
-                day_data['performances'] = serializers.ActivityPerformanceSerializer(day_data['performances'],
-                                                                                     many=True).data
+                day_data['activity_performances'] = serializers.ActivityPerformanceSerializer(
+                    day_data['activity_performances'], many=True).data
+                day_data['standby_performances'] = serializers.StandbyPerformanceSerializer(
+                    day_data['standby_performances'], many=True).data
 
         if not daily:
             user_res.pop('details', None)

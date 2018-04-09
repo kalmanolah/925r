@@ -41,26 +41,41 @@ block body
           th(class='text-right') Hours
           th(class='text-right') Type
       tbody
-        each performance, i in performances
-          tr
-            td(class='text-nowrap') {{ performance.get_date | date:'D d F' }}
-            td
-              - if performance.description
-                span {{ performance.description | markdown }}
-            td(class='text-nowrap text-right') {{ performance.duration }}
-            td(class='text-nowrap text-right') {{ performance.performance_type }}
+        each day, day_performances in performances.items
+          if day_performances.activity
+            each performance, i in day_performances.activity
+              tr
+                td(class='text-nowrap') {{ performance.get_date | date:'D d F' }}
+                td
+                  - if performance.description
+                    span {{ performance.description | markdown }}
+                td(class='text-nowrap text-right') {{ performance.duration }}
+                td(class='text-nowrap text-right') {{ performance.performance_type }}
 
-        tr
-          td
-          th Total
-          th(class='text-right') {{ total_performed_hours }}
-          td
-        tr
-          td
-          th Total in 8 hour days
-          th(class='text-right') {{ total_performed_days }}
-          td
-          
+          if day_performances.standby
+            each performance, i in day_performances.standby
+              tr
+                td(class='text-nowrap') {{ performance.get_date | date:'D d F' }}
+                td
+                td(class='text-nowrap text-right') -
+                td(class='text-nowrap text-right') Standby
+
+    table(class='table table-bordered table-sm')
+      tbody
+        if total_performed_hours
+          tr
+            th Total in hours
+            td(class='text-right') {{ total_performed_hours }}
+
+        if total_performed_days
+          tr
+            th Total in 8 hour days
+            td(class='text-right') {{ total_performed_days }}
+
+        if standby_performances
+          th Total standby days
+          td(class='text-right') {{ total_standby_days }}
+
     hr(class='my-4')
     
     div(class='row nobreak')

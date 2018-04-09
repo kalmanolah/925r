@@ -69,6 +69,7 @@ class TimesheetContractOverviewTable(BaseTable):
         order_by=['contract.name']
     )
     duration = SummedHoursColumn(verbose_name='Duration (hours)')
+    standby_days = tables.Column()
 
     def render_actions_footer(table, column, bound_column):
         buttons = []
