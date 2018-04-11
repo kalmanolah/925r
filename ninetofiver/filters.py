@@ -8,7 +8,7 @@ from django_filters.rest_framework import FilterSet
 from django.db.models import Q, Func
 from django.contrib.admin import widgets as admin_widgets
 from django.contrib.auth import models as auth_models
-from django_select2.forms import Select2Widget
+from django_select2.forms import Select2Widget, Select2MultipleWidget
 from ninetofiver import models
 from ninetofiver.utils import merge_dicts
 
@@ -529,10 +529,10 @@ class StandbyPerformanceFilter(PerformanceFilter):
 # Filters for reports
 class AdminReportTimesheetContractOverviewFilter(FilterSet):
     """Timesheet contract overview admin report filter."""
-    performance__contract = django_filters.ModelChoiceFilter(label='Contract',
+    performance__contract = django_filters.ModelMultipleChoiceFilter(label='Contract',
                                                              queryset=models.Contract.objects.filter(active=True),
                                                              distinct=True,
-                                                             widget=Select2Widget)
+                                                             widget=Select2MultipleWidget)
     user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True),
                                             widget=Select2Widget)
     year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects

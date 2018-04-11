@@ -214,10 +214,11 @@ def admin_report_timesheet_contract_overview_view(request):
     """Timesheet contract overview report."""
     fltr = filters.AdminReportTimesheetContractOverviewFilter(request.GET, models.Timesheet.objects)
     timesheets = fltr.qs.select_related('user')
+
     try:
-        contract = int(request.GET.get('performance__contract', None))
+        contracts = list(map(int, request.GET.getlist('performance__contract', [])))
     except Exception:
-        contract = None
+        contracts = None
 
     data = []
     for timesheet in timesheets:
@@ -225,7 +226,7 @@ def admin_report_timesheet_contract_overview_view(request):
         range_info = calculation.get_range_info([timesheet.user], date_range[0], date_range[1], summary=True)
 
         for contract_performance in range_info[timesheet.user.id]['summary']['performances']:
-            if (not contract) or (contract == contract_performance['contract'].id):
+            if (not contracts) or (contract_performance['contract'].id in contracts):
                 data.append({
                     'contract': contract_performance['contract'],
                     'duration': contract_performance['duration'],
