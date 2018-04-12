@@ -80,9 +80,15 @@ class BaseTimesheetContractPdfExportServiceAPIView(PDFTemplateView, generics.Gen
         context['total_standby_days'] = round(len(context['standby_performances']), 2)
 
         # Create a performances dict, indexed by date
+        performances = {}
+        [performances.setdefault(str(x.get_date()), {}).setdefault('activity', []).append(x)
+            for x in context['activity_performances']]
+        [performances.setdefault(str(x.get_date()), {}).setdefault('standby', []).append(x)
+            for x in context['standby_performances']]
+        # Sort performances dict by date
         context['performances'] = OrderedDict()
-        [context['performances'].setdefault(str(x.get_date()), {}).setdefault('activity', []).append(x) for x in context['activity_performances']]
-        [context['performances'].setdefault(str(x.get_date()), {}).setdefault('standby', []).append(x) for x in context['standby_performances']]
+        for day in sorted(performances):
+            context['performances'][day] = performances[day]
 
         return super().render_to_response(context, **response_kwargs)
 
