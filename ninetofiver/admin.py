@@ -361,27 +361,27 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
                            % (x.get_file_url(), str(x)) for x in list(obj.attachments.all())))
 
     def fixed_fee(obj):
-        if obj.projectcontract.fixed_fee:
-            return obj.consultancycontract.fixed_fee
-        elif obj.supportcontract.fixed_fee:
-            return obj.supportcontract.fixed_fee
+        real_obj = obj.get_real_instance()
+        if real_obj.__class__ in [models.ProjectContract, models.SupportContract]:
+            return real_obj.fixed_fee
         return None
 
     def fixed_fee_period(obj):
-        if obj.supportcontract.fixed_fee_period:
-            return obj.supportcontract.fixed_fee_period
+        real_obj = obj.get_real_instance()
+        if real_obj.__class__ is models.SupportContract:
+            return real_obj.fixed_fee_period
         return None
 
     def duration(obj):
-        if obj.consultancycontract.duration:
-            return obj.consultancycontract.duration
+        real_obj = obj.get_real_instance()
+        if real_obj.__class__ is models.ConsultancyContract:
+            return real_obj.duration
         return None
 
     def day_rate(obj):
-        if obj.consultancycontract.day_rate:
-            return obj.consultancycontract.day_rate
-        elif obj.supportcontract.day_rate:
-            return obj.supportcontract.day_rate
+        real_obj = obj.get_real_instance()
+        if real_obj.__class__ in [models.ConsultancyContract, models.SupportContract]:
+            return real_obj.day_rate
         return None
 
     base_model = models.Contract
