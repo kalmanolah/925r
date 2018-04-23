@@ -221,10 +221,35 @@ def admin_report_timesheet_contract_overview_view(request):
     fltr = filters.AdminReportTimesheetContractOverviewFilter(request.GET, models.Timesheet.objects)
     timesheets = fltr.qs.select_related('user')
 
+    contracts = (models.Contract.objects.all())
+
     try:
-        contracts = list(map(int, request.GET.getlist('performance__contract', [])))
+        contract_ids = list(map(int, request.GET.getlist('performance__contract', [])))
     except Exception:
-        contracts = None
+        contract_ids = None
+    try:
+        contract_types = list(map(str, request.GET.getlist('performance__contract__polymorphic_ctype__model', [])))
+    except Exception:
+        contract_types = None
+    try:
+        contract_companies = list(map(int, request.GET.getlist('performance__contract__company', [])))
+    except Exception:
+        contract_companies = None
+    try:
+        contract_customers = list(map(int, request.GET.getlist('performance__contract__customer', [])))
+    except Exception:
+        contract_customers = None
+
+    if contract_ids:
+        contracts = contracts.filter(id__in=contract_ids)
+    if contract_types:
+        contracts = contracts.filter(polymorphic_ctype__model__in=contract_types)
+    if contract_companies:
+        contracts = contracts.filter(company__id__in=contract_companies)
+    if contract_customers:
+        contracts = contracts.filter(customer__id__in=contract_customers)
+
+    contracts = contracts.values_list('id', flat=True)
 
     data = []
     for timesheet in timesheets:

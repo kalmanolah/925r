@@ -8,6 +8,7 @@ from django_filters.rest_framework import FilterSet
 from django.db.models import Q, Func
 from django.contrib.admin import widgets as admin_widgets
 from django.contrib.auth import models as auth_models
+from django.utils.translation import ugettext_lazy as _
 from django_select2.forms import Select2Widget, Select2MultipleWidget
 from ninetofiver import models
 from ninetofiver.utils import merge_dicts
@@ -529,12 +530,20 @@ class StandbyPerformanceFilter(PerformanceFilter):
 # Filters for reports
 class AdminReportTimesheetContractOverviewFilter(FilterSet):
     """Timesheet contract overview admin report filter."""
-    performance__contract = django_filters.ModelMultipleChoiceFilter(label='Contract',
-                                                             queryset=models.Contract.objects.filter(active=True),
-                                                             distinct=True,
-                                                             widget=Select2MultipleWidget)
-    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True),
-                                            widget=Select2Widget)
+    performance__contract = (django_filters.ModelMultipleChoiceFilter(
+                             label='Contract', queryset=models.Contract.objects.filter(active=True),  distinct=True,
+                             widget=Select2MultipleWidget))
+    performance__contract__polymorphic_ctype__model = (django_filters.MultipleChoiceFilter(
+                                               label='Contract type', choices=[('projectcontract', _('Project')), ('consultancycontract', _('Consultancy')), ('supportcontract', _('Support'))], distinct=True,
+                                               widget=Select2MultipleWidget))
+    performance__contract__customer = (django_filters.ModelMultipleChoiceFilter(
+                                       label='Contract customer', queryset=models.Company.objects.filter(),
+                                       distinct=True, widget=Select2MultipleWidget))
+    performance__contract__company = (django_filters.ModelMultipleChoiceFilter(
+                                      label='Contract internal company', queryset=models.Company.objects.filter(),
+                                      distinct=True, widget=Select2MultipleWidget))
+    user = django_filters.ModelMultipleChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True),
+                                                    widget=Select2MultipleWidget)
     year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
                                                                          .values_list('year', flat=True)
                                                                          .order_by('year').distinct())])
@@ -546,6 +555,9 @@ class AdminReportTimesheetContractOverviewFilter(FilterSet):
         model = models.Timesheet
         fields = {
             'performance__contract': ['exact'],
+            'performance__contract__polymorphic_ctype__model': ['exact'],
+            'performance__contract__customer': ['exact'],
+            'performance__contract__company': ['exact'],
             'user': ['exact'],
             'status': ['exact'],
             'year': ['exact'],
