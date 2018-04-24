@@ -49,6 +49,7 @@ django-phonenumber-field = "*"
 tablib = "*"
 "django-select2" = "*"
 django-import-export = "*"
+django-admin-sortable = "*"
 
 
 [dev-packages]

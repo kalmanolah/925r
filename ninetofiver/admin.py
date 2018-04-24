@@ -17,6 +17,7 @@ from rangefilter.filter import DateRangeFilter
 from rangefilter.filter import DateTimeRangeFilter
 from import_export.admin import ExportMixin
 from import_export.resources import ModelResource
+from adminsortable.admin import SortableAdmin
 from ninetofiver import models, redmine
 from ninetofiver.templatetags.markdown import markdown
 from datetime import date
@@ -183,11 +184,10 @@ class HolidayAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.LeaveType)
-class LeaveTypeAdmin(admin.ModelAdmin):
+class LeaveTypeAdmin(SortableAdmin):
     """Leave type admin."""
 
     list_display = ('__str__', 'name', 'description')
-    ordering = ('name',)
 
 
 class LeaveDateInline(admin.TabularInline):
@@ -299,7 +299,6 @@ class UserInfoAdmin(admin.ModelAdmin):
 @admin.register(models.PerformanceType)
 class PerformanceTypeAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'name', 'description', 'multiplier')
-    ordering = ('multiplier',)
 
 
 @admin.register(models.ContractGroup)

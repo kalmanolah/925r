@@ -96,6 +96,7 @@ class Base(Configuration):
         'phonenumber_field',
         'django_select2',
         'import_export',
+        'adminsortable',
     ]
 
     MIDDLEWARE = [

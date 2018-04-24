@@ -17,6 +17,7 @@ from polymorphic.models import PolymorphicModel
 from dirtyfields import DirtyFieldsMixin
 from dateutil.relativedelta import relativedelta
 from phonenumber_field.modelfields import PhoneNumberField
+from adminsortable.models import SortableMixin
 from ninetofiver.utils import days_in_month
 
 
@@ -482,12 +483,16 @@ class Holiday(BaseModel):
         unique_together = (('name', 'date', 'country'),)
 
 
-class LeaveType(BaseModel):
+class LeaveType(SortableMixin, BaseModel):
 
     """Leave type model."""
 
     name = models.CharField(unique=True, max_length=255)
     description = models.TextField(max_length=255, blank=True, null=True)
+    order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta(BaseModel.Meta):
+        ordering = ['order']
 
     def __str__(self):
         """Return a string representation."""
@@ -596,6 +601,9 @@ class PerformanceType(BaseModel):
             validators.MaxValueValidator(5),
         ]
     )
+
+    class Meta(BaseModel.Meta):
+        ordering = ['multiplier']
 
     def __str__(self):
         """Return a string representation."""
