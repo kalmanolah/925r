@@ -8,6 +8,7 @@ diff-match-patch==20121119
 Django==1.11.6
 django-admin-list-filter-dropdown==1.0.0
 django-admin-rangefilter==0.2.1
+django-admin-sortable==2.1.4
 django-appconf==1.0.2
 django-auth-ldap==1.2.8
 django-braces==1.12.0
