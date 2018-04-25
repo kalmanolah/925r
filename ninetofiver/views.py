@@ -764,7 +764,9 @@ class RangeAvailabilityServiceAPIView(APIView):
             'holiday': {},
             'home_work': {},
             'sickness': {},
-            'leave': {}
+            'sickness_pending': {},
+            'leave': {},
+            'leave_pending': {},
         }
 
         # Fetch all employment contracts for this period
@@ -784,8 +786,8 @@ class RangeAvailabilityServiceAPIView(APIView):
 
         # Fetch all leave dates for this period
         leave_dates = (models.LeaveDate.objects
-                       .filter(leave__user__in=users, leave__status=models.STATUS_APPROVED,
-                               starts_at__date__gte=from_date, starts_at__date__lte=until_date)
+                       .filter(Q(leave__status=models.STATUS_APPROVED) | Q(leave__status=models.STATUS_PENDING),
+                               leave__user__in=users, starts_at__date__gte=from_date, starts_at__date__lte=until_date)
                        .select_related('leave', 'leave__leave_type', 'leave__user'))
         # Index leave dates by day, then by user ID
         leave_date_data = {}
@@ -816,7 +818,9 @@ class RangeAvailabilityServiceAPIView(APIView):
             user_holiday = []
             user_home_work = []
             user_sickness = []
+            user_sickness_pending = []
             user_leave = []
+            user_leave_pending = []
 
             # Iterate over days
             for i in range(day_count):
@@ -851,10 +855,18 @@ class RangeAvailabilityServiceAPIView(APIView):
                 # Leave & Sickness
                 try:
                     for leave_date in leave_date_data[str(current_date)][user.id]:
+                        leave_status = leave_date.leave.status
+
                         if leave_date.leave.leave_type.id in sickness_type_ids:
-                            user_sickness.append(current_date)
+                            if leave_status == models.STATUS_APPROVED:
+                                user_sickness.append(current_date)
+                            else:
+                                user_sickness_pending.append(current_date)
                         else:
-                            user_leave.append(current_date)
+                            if leave_status == models.STATUS_APPROVED:
+                                user_leave.append(current_date)
+                            else:
+                                user_leave_pending.append(current_date)
                 except KeyError:
                     pass
 
@@ -866,7 +878,9 @@ class RangeAvailabilityServiceAPIView(APIView):
             data['holiday'][user.id] = user_holiday
             data['home_work'][user.id] = user_home_work
             data['sickness'][user.id] = user_sickness
+            data['sickness_pending'][user.id] = user_sickness_pending
             data['leave'][user.id] = user_leave
+            data['leave_pending'][user.id] = user_leave_pending
 
         return Response(data, status=status.HTTP_200_OK)
 
