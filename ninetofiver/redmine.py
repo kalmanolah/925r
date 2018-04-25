@@ -111,13 +111,15 @@ def get_user_redmine_performances(user, from_date=None, to_date=None):
         # * Looking for a custom field value which is part of the user's contract list
         # * Looking for a redmine project ID which maps to one of the user's contracts
         contract_id = None
-        issue = redmine.issue.get(entry.issue.id)
-        for custom_field in getattr(issue, 'custom_fields', []):
-            if (custom_field.name == contract_field):
-                if (custom_field.value):
-                    custom_field_value = custom_field.value.split('|')[0]
-                    contract_id = int(custom_field_value)
-                break
+        if getattr(entry, 'issue', None):
+            issue = redmine.issue.get(entry.issue.id)
+            for custom_field in getattr(issue, 'custom_fields', []):
+                if (custom_field.name == contract_field):
+                    if (custom_field.value):
+                        custom_field_value = custom_field.value.split('|')[0]
+                        contract_id = int(custom_field_value)
+                    break
+
         if not contract_id:
             contract_id = redmine_contracts.get(str(entry.project.id), None)
 
@@ -125,7 +127,10 @@ def get_user_redmine_performances(user, from_date=None, to_date=None):
             logger.debug('No contract found for Redmine time entry with ID %s' % entry.id)
             continue
 
-        description = '_See [#%s](%s/issues/%s)._' % (entry.issue.id, url, entry.issue.id)
+        if getattr(entry, 'issue', None):
+            description = '_See [#%s](%s/issues/%s)._' % (entry.issue.id, url, entry.issue.id)
+        else:
+            description = '_No issue linked._'
         if entry.comments:
             description = '%s\n%s' % (entry.comments, description)
 
