@@ -67,6 +67,14 @@ admin.site.unregister(auth_models.Group)
 admin.site.register(auth_models.Group, GroupAdmin)
 
 
+@admin.register(models.ApiKey)
+class ApiKeyAdmin(admin.ModelAdmin):
+    """Api key admin."""
+
+    list_display = ('__str__', 'key', 'read_only', 'user', 'created_at')
+    ordering = ('-created_at',)
+
+
 class EmploymentContractStatusFilter(admin.SimpleListFilter):
 
     """Employment contract status filter."""

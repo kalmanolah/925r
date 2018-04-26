@@ -110,6 +110,31 @@ class BaseModel(DirtyFieldsMixin, PolymorphicModel):
         base_manager_name = 'base_objects'
 
 
+class ApiKey(BaseModel):
+    """
+    API key model.
+
+    API keys provide simpler (read-only) access to the API.
+    This is useful when a user wants to add iCal feeds to other applications
+    without giving up their credentials, for example.
+    For complex operations or full-fledged clients, OAuth2 is still the recommended
+    authentication method.
+
+    """
+
+    def generate_key():
+        """Generate a key."""
+        return str(uuid.uuid4()).replace('-', '')
+
+    key = models.CharField(db_index=True, max_length=32, default=generate_key, editable=False)
+    user = models.ForeignKey(auth_models.User, on_delete=models.CASCADE)
+    read_only = models.BooleanField(default=True)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s... [%s]' % (self.key[:12] if self.key else 'New API key', 'RO' if self.read_only else 'RW')
+
+
 class Company(BaseModel):
     """
     Company model.

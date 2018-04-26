@@ -94,6 +94,9 @@ urlpatterns += [
     url(r'^accounts/password/change/$', auth_views.password_change, {'template_name': 'ninetofiver/account/password_change.pug'}, name='password_change'),
     url(r'^accounts/password/change/done/$', auth_views.password_change_done, {'template_name': 'ninetofiver/account/password_change_done.pug'}, name='password_change_done'),
 
+    url(r'^accounts/api_keys/$', views.ApiKeyListView.as_view(), name='api-key-list'),
+    url(r'^accounts/api_keys/create/$', views.ApiKeyCreateView.as_view(), name='api-key-create'),
+    url(r'^accounts/api_keys/(?P<pk>\d+)/delete/$', views.ApiKeyDeleteView.as_view(), name='api-key-delete'),
 
     # Auth
     url(r'^auth/login/$', auth_views.login, {'template_name': 'ninetofiver/authentication/login.pug'}, name='login'),

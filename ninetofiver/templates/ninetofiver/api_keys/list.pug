@@ -1,0 +1,42 @@
+extends ninetofiver/account/page.pug
+- load i18n
+
+block title
+  | {% trans "Your API keys" %}
+
+block content_main
+  if tokens
+    table(class='table table-hover table-bordered')
+      thead
+        tr
+          th Key
+          th Read only
+          th Created
+          th Actions
+      for x in tokens
+        tr
+          td {{ x.key | truncatechars:12 }}
+          td
+            if x.read_only
+              | Yes
+            else
+              | No
+          td {{ x.created_at | date:'r' }}
+          td
+            div(class='btn-group btn-group-sm')
+              a(
+                href='{% url "api-key-delete" pk=x.pk %}'
+                class='btn btn-danger'
+              )
+                i(class='fa fa-trash')
+                | Revoke
+
+  else
+    p {% trans "No API keys defined" %}
+
+  a(
+    class='btn btn-primary'
+    href='{% url "api-key-create" %}'
+  )
+    i(class='fa fa-plus-circle')
+    | New API key

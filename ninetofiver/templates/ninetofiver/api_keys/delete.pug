@@ -1,0 +1,30 @@
+extends ninetofiver/account/page.pug
+- load crispy_forms_tags
+- load i18n
+
+block title
+  | Deleting API key
+
+block content_main
+  p {% trans "Are you sure you want to delete this API key?" %}
+
+  form(
+    action=''
+    method='POST'
+    role='form'
+  )
+    {% csrf_token %}
+    {{ form | crispy }}
+    div(class='btn-group')
+      button(
+        type='submit'
+        class='btn btn-danger'
+      )
+        i(class='fa fa-trash')
+        | Delete
+      a(
+        href='{% url "api-key-list" %}'
+        class='btn btn-secondary'
+      )
+        i(class='fa fa-times')
+        | Cancel

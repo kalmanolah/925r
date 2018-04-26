@@ -1,11 +1,14 @@
-from django.contrib.auth import models as auth_models
+from django.contrib.auth import models as auth_models, mixins as auth_mixins
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
+from django.forms.models import modelform_factory
+from django.views import generic as generic_views
 from django.db import transaction
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
+from django.urls import reverse_lazy
 from decimal import Decimal
 from ninetofiver import filters
 from ninetofiver import models
@@ -28,6 +31,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
+from rest_framework.authtoken import models as authtoken_models
 from ninetofiver import settings, tables, calculation, pagination
 from ninetofiver.utils import month_date_range
 from django.db.models import Q
@@ -105,6 +109,42 @@ def account_view(request):
     """User-specific account page."""
     context = {}
     return render(request, 'ninetofiver/account/index.pug', context)
+
+
+class ApiKeyCreateView(auth_mixins.LoginRequiredMixin, generic_views.CreateView):
+    """View used to create an API key."""
+
+    template_name = 'ninetofiver/api_keys/create.pug'
+    success_url = reverse_lazy('api-key-list')
+
+    def get_form_class(self):
+        """Get the form class."""
+        return modelform_factory(models.ApiKey, fields=('read_only',))
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+
+class ApiKeyListView(auth_mixins.LoginRequiredMixin, generic_views.ListView):
+    """List view for all API keys owned by the user."""
+
+    context_object_name = 'tokens'
+    template_name = 'ninetofiver/api_keys/list.pug'
+
+    def get_queryset(self):
+        return models.ApiKey.objects.filter(user=self.request.user)
+
+
+class ApiKeyDeleteView(auth_mixins.LoginRequiredMixin, generic_views.DeleteView):
+    """View used to delete an API key owned by the user."""
+
+    context_object_name = "apikey"
+    success_url = reverse_lazy('api-key-list')
+    template_name = 'ninetofiver/api_keys/delete.pug'
+
+    def get_queryset(self):
+        return models.ApiKey.objects.filter(user=self.request.user)
 
 
 @api_view(exclude_from_schema=True)
