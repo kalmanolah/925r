@@ -15,7 +15,7 @@ block content_main
           th Actions
       for x in tokens
         tr
-          td {{ x.key | truncatechars:12 }}
+          td {{ x.key }}
           td
             if x.read_only
               | Yes
