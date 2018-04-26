@@ -66,6 +66,8 @@ urlpatterns += [
         url(r'^services/download_attachment/(?P<slug>[A-Za-z0-9_-]+)/$', ObjectDownloadView.as_view(model=models.Attachment, file_field='file'), name='download_attachment_service'),
         url(r'^services/download_company_logo/(?P<pk>[0-9]+)/$', ObjectDownloadView.as_view(model=models.Company, file_field='logo', attachment=False), name='download_company_logo_service'),
         url(r'^services/my_timesheet_contract_pdf_export/(?P<timesheet_pk>[0-9]+)/(?P<contract_pk>[0-9_-]+)/$', views.MyTimesheetContractPdfExportServiceAPIView.as_view(), name='my_timesheet_contract_pdf_export_service'),
+        url(r'^services/feeds/leave/user/(?P<user_username>[A-Za-z0-9_-]+)\.ics$', views.UserLeaveFeedServiceAPIView.as_view()),
+        url(r'^services/feeds/leave/me\.ics$', views.UserLeaveFeedServiceAPIView.as_view()),
         url(r'^services/feeds/leave\.ics$', views.LeaveFeedServiceAPIView.as_view()),
     ])),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),

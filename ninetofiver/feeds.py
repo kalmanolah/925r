@@ -16,7 +16,7 @@ feedgenerator.ITEM_EVENT_FIELD_MAP = ITEM_EVENT_FIELD_MAP
 
 
 class LeaveFeed(ICalFeed):
-    """A leave feed."""
+    """A leave feed for all users."""
 
     product_id = '-//ninetofiver//LeaveFeed//EN'
     timezone = 'UTC'
@@ -83,3 +83,15 @@ class LeaveFeed(ICalFeed):
             status = 'CANCELLED'
 
         return status
+
+
+class UserLeaveFeed(LeaveFeed):
+    """A leave feed for a specific user."""
+
+    def get_object(self, request, user, **kwargs):
+        """Get object."""
+        return user
+
+    def items(self, obj):
+        """Get items."""
+        return super().items().filter(leave__user=obj)
