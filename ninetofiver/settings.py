@@ -80,6 +80,7 @@ class Base(Configuration):
         'django.contrib.staticfiles',
         'rest_framework',
         'rest_framework_swagger',
+        'rest_framework.authtoken',
         'django_filters',
         'rest_framework_filters',
         'corsheaders',
@@ -206,6 +207,7 @@ class Base(Configuration):
             'oauth2_provider.ext.rest_framework.OAuth2Authentication',
             'rest_framework.authentication.SessionAuthentication',
             'rest_framework.authentication.BasicAuthentication',
+            'ninetofiver.authentication.ApiKeyAuthentication',
         ),
         'DEFAULT_RENDERER_CLASSES': (
             'rest_framework.renderers.JSONRenderer',
