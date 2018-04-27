@@ -127,12 +127,14 @@ class ApiKey(BaseModel):
         return str(uuid.uuid4()).replace('-', '')
 
     key = models.CharField(db_index=True, max_length=32, default=generate_key, editable=False)
+    name = models.CharField(max_length=255)
     user = models.ForeignKey(auth_models.User, on_delete=models.CASCADE)
     read_only = models.BooleanField(default=True)
 
     def __str__(self):
         """Return a string representation."""
-        return '%s... [%s]' % (self.key[:12] if self.key else 'New API key', 'RO' if self.read_only else 'RW')
+        return '%s - %s... [%s]' % (self.name,
+                                    self.key[:12] if self.key else 'New API key', 'RO' if self.read_only else 'RW')
 
 
 class Company(BaseModel):
@@ -804,6 +806,124 @@ class ContractUser(BaseModel):
     def __str__(self):
         """Return a string representation."""
         return '%s [%s]' % (self.user, self.contract_role)
+
+
+class ContractUserWorkSchedule(BaseModel):
+
+    """
+    Contract user work schedule model.
+
+    Defines the schedule a user works at for a given contract, for a given date range.
+
+    """
+
+    contract_user = models.ForeignKey(ContractUser, on_delete=models.CASCADE)
+    starts_at = models.DateField()
+    ends_at = models.DateField(blank=True, null=True)
+    monday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+    tuesday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+    wednesday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+    thursday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+    friday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+    saturday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+    sunday = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(24),
+        ]
+    )
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s - %s' % (self.contract_user, self.starts_at)
+
+    def perform_additional_validation(self):
+        """Perform additional validation on the object."""
+        super().perform_additional_validation()
+
+        if self.ends_at and self.starts_at:
+            # Verify whether the end date of the contract user work schedule comes after the start date
+            if self.ends_at < self.starts_at:
+                raise ValidationError({'ends_at': _('The end date should come before the start date.')})
+
+        # Contract user work schedules can't overlap for the same contract user/period
+        existing = None
+        if self.ends_at:
+            existing = self.__class__.objects.filter(
+                models.Q(contract_user=self.contract_user) &
+                (
+                    models.Q(ends_at__isnull=True, starts_at__lte=self.ends_at) |
+                    models.Q(ends_at__isnull=False, starts_at__lte=self.ends_at, ends_at__gte=self.starts_at)
+                )
+            )
+        else:
+            existing = self.__class__.objects.filter(
+                models.Q(contract_user=self.contract_user) &
+                (
+                    models.Q(ends_at__isnull=True) |
+                    models.Q(ends_at__isnull=False, starts_at__lte=self.starts_at, ends_at__gte=self.starts_at)
+                )
+            )
+
+        if self.pk:
+            existing = existing.exclude(id=self.pk)
+
+        existing = existing.count()
+
+        if existing:
+            raise ValidationError({'starts_at':
+                                   _('The given contract user already has a work schedule for this period.')})
 
 
 class ProjectEstimate(BaseModel):

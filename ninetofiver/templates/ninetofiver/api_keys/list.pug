@@ -9,12 +9,14 @@ block content_main
     table(class='table table-hover table-bordered')
       thead
         tr
+          th Name
           th Key
           th Read only
           th Created
           th Actions
       for x in tokens
         tr
+          td {{ x.name }}
           td {{ x.key }}
           td
             if x.read_only

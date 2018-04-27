@@ -71,7 +71,7 @@ admin.site.register(auth_models.Group, GroupAdmin)
 class ApiKeyAdmin(admin.ModelAdmin):
     """Api key admin."""
 
-    list_display = ('__str__', 'key', 'read_only', 'user', 'created_at')
+    list_display = ('__str__', 'name', 'key', 'read_only', 'user', 'created_at')
     ordering = ('-created_at',)
 
 
@@ -317,6 +317,7 @@ class ContractGroupAdmin(admin.ModelAdmin):
 class ContractUserInline(admin.TabularInline):
     model = models.ContractUser
     ordering = ("user__first_name", "user__last_name",)
+    show_change_link = True
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         """Form field for foreign key."""
@@ -470,10 +471,22 @@ class ContractRoleAdmin(admin.ModelAdmin):
     ordering = ('name',)
 
 
+class ContractUserWorkScheduleInline(admin.TabularInline):
+    model = models.ContractUserWorkSchedule
+
+
 @admin.register(models.ContractUser)
 class ContractUserAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'contract', 'contract_role')
     ordering = ('user__first_name', 'user__last_name')
+    inlines = [
+        ContractUserWorkScheduleInline,
+    ]
+    list_filter = (
+        ('contract_role', RelatedDropdownFilter),
+        ('contract__customer', RelatedDropdownFilter),
+        ('user', RelatedDropdownFilter),
+    )
 
 
 @admin.register(models.ProjectEstimate)

@@ -119,7 +119,7 @@ class ApiKeyCreateView(auth_mixins.LoginRequiredMixin, generic_views.CreateView)
 
     def get_form_class(self):
         """Get the form class."""
-        return modelform_factory(models.ApiKey, fields=('read_only',))
+        return modelform_factory(models.ApiKey, fields=('name', 'read_only',))
 
     def form_valid(self, form):
         form.instance.user = self.request.user
