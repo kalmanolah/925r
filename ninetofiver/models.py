@@ -946,35 +946,70 @@ class ProjectEstimate(BaseModel):
         return '%s [Est: %s]' % (self.role.name, self.hours_estimated)
 
 
+class Location(SortableMixin, BaseModel):
+
+    """Location model."""
+
+    name = models.CharField(unique=True, max_length=255)
+    order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta(BaseModel.Meta):
+        ordering = ['order']
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s' % self.name
+
+
 class Whereabout(BaseModel):
 
     """Whereabout model."""
 
     timesheet = models.ForeignKey(Timesheet, on_delete=models.PROTECT)
-    day = models.PositiveSmallIntegerField(
-        validators=[
-            validators.MinValueValidator(1),
-            validators.MaxValueValidator(31),
-        ]
-    )
-    location = models.CharField(max_length=255)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE)
+    description = models.TextField(max_length=255, blank=True, null=True)
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField()
 
     def __str__(self):
-        """Retrun a string representation"""
-        return '%s (%s - %s)' % (self.location, self.day, self.timesheet)
+        """Return a string representation."""
+        return '%s, %s - %s %s' % (self.starts_at.strftime('%a %d %B %Y'), self.starts_at.strftime('%H:%M'),
+                                   self.ends_at.strftime('%H:%M'), self.starts_at.strftime('%Z'))
 
     def perform_additional_validation(self):
-        """Perform additional validation on the object"""
+        """Perform additional validation on the object."""
         super().perform_additional_validation()
 
+        # Verify whether the start datetime of the whereabout comes before the end datetime
+        if self.starts_at >= self.ends_at:
+            raise ValidationError({'starts_at': _('The start date should be set before the end date')})
+
+        # Verify whether start and end datetime of the whereabout occur on the same date
+        if self.starts_at.date() != self.ends_at.date():
+            raise ValidationError({'starts_at': _('The start date should occur on the same day as the end date')})
+
+        # Check whether the user already has a whereabout during this time frame
+        existing = self.__class__.objects.filter(
+            models.Q(timesheet__user=self.timesheet.user) &
+            models.Q(starts_at__lt=self.ends_at, ends_at__gt=self.starts_at)
+        )
+
+        if self.pk:
+            existing = existing.exclude(id=self.pk)
+
+        existing = existing.count()
+
+        if existing:
+            raise ValidationError({'user': _('User already has a whereabout during this time')})
+
+        # Verify timesheet this whereabout is linked to is for the correct month/year
+        if (self.starts_at.year != self.timesheet.year) or (self.starts_at.month != self.timesheet.month):
+            raise ValidationError({'timesheet':
+                                  _('You cannot attach whereabouts to a timesheet for a different month')})
+
+        # Verify timesheet this whereabout is attached to isn't closed
         if self.timesheet.status != STATUS_ACTIVE:
-            raise ValidationError({'timesheet': _('Whereabouts can only be attached to active timesheets.')})
-
-        month_days = days_in_month(self.timesheet.year, self.timesheet.month)
-
-        if self.day > month_days:
-            raise ValidationError({'day': _('There are not that many days in the month this timesheet is attached to.'
-                                            % month_days)})
+            raise ValidationError({'timesheet': _('You can only add whereabouts to active timesheets.')})
 
 
 class Performance(BaseModel):

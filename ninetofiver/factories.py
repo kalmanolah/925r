@@ -124,6 +124,13 @@ class LeaveTypeFactory(factory.DjangoModelFactory):
     description = factory.LazyFunction(lambda: fake.text(max_nb_chars=200))
 
 
+class LocationFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.Location
+
+    name = factory.Sequence(lambda n: 'Location%d' % n)
+
+
 class LeaveFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.Leave

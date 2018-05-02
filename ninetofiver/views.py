@@ -765,6 +765,15 @@ class ContractGroupViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
 
 
+class LocationViewSet(viewsets.ReadOnlyModelViewSet):
+    """API endpoint that allows locations to be viewed."""
+
+    queryset = models.Location.objects.all()
+    serializer_class = serializers.LocationSerializer
+    filter_class = filters.LocationFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+
 class PerformanceImportServiceAPIView(APIView):
     """Gets performances from external sources and returns them to be imported."""
 
@@ -800,13 +809,7 @@ class RangeAvailabilityServiceAPIView(APIView):
         data = {
             'from': from_date,
             'until': until_date,
-            'no_work': {},
-            'holiday': {},
-            'home_work': {},
-            'sickness': {},
-            'sickness_pending': {},
-            'leave': {},
-            'leave_pending': {},
+            'users': {},
         }
 
         # Fetch all employment contracts for this period
@@ -848,24 +851,37 @@ class RangeAvailabilityServiceAPIView(APIView):
                 .setdefault(holiday.country, [])
                 .append(holiday))
 
+        # Fetch all whereabouts for this period
+        whereabouts = (models.Whereabout.objects
+                       .filter(timesheet__user__in=users, starts_at__date__gte=from_date,
+                               starts_at__date__lte=until_date)
+                       .select_related('timesheet', 'timesheet__user', 'location'))
+        # Index whereabouts by day, then by user ID
+        whereabout_data = {}
+        for whereabout in whereabouts:
+            (whereabout_data
+                .setdefault(str(whereabout.starts_at.date()), {})
+                .setdefault(whereabout.timesheet.user.id, [])
+                .append(whereabout))
+
         # Count days
         day_count = (until_date - from_date).days + 1
 
         # Iterate over users
         for user in users:
             # Initialize user data
-            user_no_work = []
-            user_holiday = []
-            user_home_work = []
-            user_sickness = []
-            user_sickness_pending = []
-            user_leave = []
-            user_leave_pending = []
+            data['users'][str(user.id)] = user_data = {
+                'days': {},
+            }
 
             # Iterate over days
             for i in range(day_count):
                 # Determine date for this day
                 current_date = copy.deepcopy(from_date) + timedelta(days=i)
+                user_data['days'][str(current_date)] = user_day_data = {
+                    'tags': [],
+                }
+                user_day_tags = user_day_data['tags']
 
                 # Get employment contract for this day
                 # This allows us to determine the work schedule and country of the user
@@ -883,12 +899,12 @@ class RangeAvailabilityServiceAPIView(APIView):
 
                 # No work occurs when there is no work_schedule, or no hours should be worked that day
                 if (not work_schedule) or (getattr(work_schedule, current_date.strftime('%A').lower(), 0.00) <= 0):
-                    user_no_work.append(current_date)
+                    user_day_tags.append('no_work')
 
                 # Holidays
                 try:
                     if country and holiday_data[str(current_date)][country]:
-                        user_holiday.append(current_date)
+                        user_day_tags.append('holiday')
                 except KeyError:
                     pass
 
@@ -899,28 +915,23 @@ class RangeAvailabilityServiceAPIView(APIView):
 
                         if leave_date.leave.leave_type.id in sickness_type_ids:
                             if leave_status == models.STATUS_APPROVED:
-                                user_sickness.append(current_date)
+                                user_day_tags.append('sickness')
                             else:
-                                user_sickness_pending.append(current_date)
+                                user_day_tags.append('sickness_pending')
                         else:
                             if leave_status == models.STATUS_APPROVED:
-                                user_leave.append(current_date)
+                                user_day_tags.append('leave')
                             else:
-                                user_leave_pending.append(current_date)
+                                user_day_tags.append('leave_pending')
                 except KeyError:
                     pass
 
-                # Home work
-                # @TODO Implement home working
-
-            # Store user data
-            data['no_work'][user.id] = user_no_work
-            data['holiday'][user.id] = user_holiday
-            data['home_work'][user.id] = user_home_work
-            data['sickness'][user.id] = user_sickness
-            data['sickness_pending'][user.id] = user_sickness_pending
-            data['leave'][user.id] = user_leave
-            data['leave_pending'][user.id] = user_leave_pending
+                # Whereabouts
+                try:
+                    for whereabout in whereabout_data[str(current_date)][user.id]:
+                        user_day_tags.append('whereabout_%s' % whereabout.location.name.lower().replace(' ', '_'))
+                except KeyError:
+                    pass
 
         return Response(data, status=status.HTTP_200_OK)
 
@@ -1180,6 +1191,18 @@ class MyStandbyPerformanceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return models.StandbyPerformance.objects.filter(timesheet__user=user)
+
+
+class MyWhereaboutViewSet(viewsets.ModelViewSet):
+    """API endpoint that allows whereabouts for the currently authenticated user to be viewed or edited."""
+
+    serializer_class = serializers.MyWhereaboutSerializer
+    filter_class = filters.WhereaboutFilter
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return models.Whereabout.objects.filter(timesheet__user=user)
 
 
 class MyAttachmentViewSet(viewsets.ModelViewSet):

@@ -555,10 +555,38 @@ class TimesheetAdmin(admin.ModelAdmin):
     ordering = ('-year', 'month', 'user__first_name', 'user__last_name')
 
 
+@admin.register(models.Location)
+class LocationAdmin(SortableAdmin):
+    """Location admin."""
+
+    list_display = (
+        '__str__',
+        'name',
+    )
+    search_fields = ('name',)
+
+
 @admin.register(models.Whereabout)
 class WhereaboutAdmin(admin.ModelAdmin):
-    list_display = ('__str__', )
-    ordering = ('-day', )
+    """Whereabout admin."""
+
+    list_display = (
+        '__str__',
+        'timesheet',
+        'location',
+        'starts_at',
+        'ends_at',
+        'description',
+    )
+    list_filter = (
+        ('location', RelatedDropdownFilter),
+        ('timesheet__user', RelatedDropdownFilter),
+        ('starts_at', DateTimeRangeFilter),
+        ('ends_at', DateTimeRangeFilter)
+    )
+    search_fields = ('timesheet__user__username', 'timesheet__user__first_name', 'timesheet__user__last_name',
+                     'location', 'starts_at', 'ends_at', 'description')
+    ordering = ('-starts_at',)
 
 
 class PerformanceResource(ModelResource):

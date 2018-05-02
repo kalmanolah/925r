@@ -474,22 +474,6 @@ class TimesheetFilter(filters.FilterSet):
         }
 
 
-class WhereaboutFilter(FilterSet):
-    order_fields = ('location', 'day', 'timesheet__month', 'timesheet__year', )
-    order_by = NullLastOrderingFilter(fields=order_fields)
-
-    class Meta:
-        model = models.Whereabout
-        fields = {
-            'location': ['exact', 'contains', 'icontains'],
-            'day': ['exact', 'gt', 'gte', 'lt', 'lte', ],
-            'timesheet': ['exact', ],
-            'timesheet__month': ['exact', 'gte', 'lte', ],
-            'timesheet__year': ['exact', 'gte', 'lte', ],
-            'timesheet__user_id': ['exact'],
-        }
-
-
 class PerformanceFilter(FilterSet):
     order_fields = ('day', 'timesheet__month', 'timesheet__year', 'contract', )
     order_by = NullLastOrderingFilter(fields=order_fields)
@@ -525,6 +509,34 @@ class StandbyPerformanceFilter(PerformanceFilter):
     class Meta(PerformanceFilter.Meta):
         model = models.StandbyPerformance
         fields = PerformanceFilter.Meta.fields
+
+
+class LocationFilter(FilterSet):
+    order_fields = ('name',)
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
+    class Meta:
+        model = models.Location
+        fields = {
+            'name': ['exact', 'contains', 'icontains'],
+        }
+
+
+class WhereaboutFilter(filters.FilterSet):
+    """Whereabout filter."""
+
+    order_fields = ('starts_at',)
+    order_by = NullLastOrderingFilter(fields=order_fields)
+
+    class Meta:
+        model = models.Whereabout
+        fields = {
+            'location': ['exact'],
+            'description': ['exact', 'contains', 'icontains'],
+            'timesheet__user': ['exact'],
+            'timesheet': ['exact'],
+            'starts_at': ['range'],
+        }
 
 
 # Filters for reports
@@ -570,7 +582,7 @@ class AdminReportTimesheetOverviewFilter(FilterSet):
     user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True),
                                             widget=Select2Widget)
     user__employmentcontract__company = django_filters.ModelChoiceFilter(
-        label='Company', queryset=models.Company.objects.filter(internal=True), widget=Select2Widget)
+        label='Company', queryset=models.Company.objects.filter(internal=True), widget=Select2Widget, distinct=True)
     year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
                                                                          .values_list('year', flat=True)
                                                                          .order_by('year').distinct())])

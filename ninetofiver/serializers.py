@@ -204,6 +204,14 @@ class MinimalPerformanceTypeSerializer(MinimalSerializer):
         model = models.PerformanceType
 
 
+class MinimalLocationSerializer(MinimalSerializer):
+
+    """Minimal location serializer."""
+
+    class Meta(MinimalSerializer.Meta):
+        model = models.Location
+
+
 class CompanySerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.Company
@@ -432,10 +440,18 @@ class TimesheetSerializer(BaseSerializer):
         fields = BaseSerializer.Meta.fields + ('user', 'year', 'month', 'status')
 
 
+class LocationSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = models.Location
+        fields = BaseSerializer.Meta.fields + ('name',)
+
+
 class WhereaboutSerializer(BaseSerializer):
+    location = MinimalLocationSerializer()
+
     class Meta(BaseSerializer.Meta):
         model = models.Whereabout
-        fields = BaseSerializer.Meta.fields + ('timesheet', 'day', 'location')
+        fields = BaseSerializer.Meta.fields + ('timesheet', 'location', 'description', 'starts_at', 'ends_at')
 
 
 class PerformanceSerializer(BaseSerializer):
@@ -489,6 +505,14 @@ class MyLeaveDateSerializer(LeaveDateSerializer):
 
         if value.user != self.context['request'].user:
             raise serializers.ValidationError('You can only manipulate leave dates attached to your own leaves')
+
+        return value
+
+
+class MyWhereaboutSerializer(WhereaboutSerializer):
+    def validate_timesheet(self, value):
+        if value.user != self.context['request'].user:
+            raise serializers.ValidationError('You can only manipulate whereabouts attached to your own timesheets')
 
         return value
 

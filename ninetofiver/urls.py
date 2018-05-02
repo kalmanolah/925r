@@ -42,6 +42,7 @@ router.register(r'contracts', views.ContractViewSet)
 router.register(r'contract_roles', views.ContractRoleViewSet)
 router.register(r'contract_users', views.ContractUserViewSet)
 router.register(r'contract_groups', views.ContractGroupViewSet)
+router.register(r'locations', views.LocationViewSet)
 router.register(r'my_leaves', views.MyLeaveViewSet, base_name='myleave')
 router.register(r'my_leave_dates', views.MyLeaveDateViewSet, base_name='myleavedate')
 router.register(r'my_timesheets', views.MyTimesheetViewSet, base_name='mytimesheet')
@@ -52,6 +53,7 @@ router.register(r'my_performances/standby', views.MyStandbyPerformanceViewSet, b
 router.register(r'my_performances', views.MyPerformanceViewSet, base_name='myperformance')
 router.register(r'my_attachments', views.MyAttachmentViewSet, base_name='myattachment')
 router.register(r'my_work_schedules', views.MyWorkScheduleViewSet, base_name='myworkschedule')
+router.register(r'my_whereabouts', views.MyWhereaboutViewSet, base_name='mywhereabout')
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browseable API.

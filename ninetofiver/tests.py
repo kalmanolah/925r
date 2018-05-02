@@ -343,6 +343,18 @@ class LeaveTypeAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRES
     }
 
 
+class LocationAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    base_name = 'location'
+    factory_class = factories.LocationFactory
+    user_factory = factories.AdminFactory
+    create_data = {
+        'name': 'Loc#1',
+    }
+    update_data = {
+        'name': 'Loc#2',
+    }
+
+
 class LeaveAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     base_name = 'leave'
     factory_class = factories.LeaveFactory
