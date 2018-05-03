@@ -6,6 +6,132 @@ import copy
 from ninetofiver import models, serializers
 
 
+def get_availability_info(users, from_date, until_date):
+    """Determine and return availability info."""
+    res = {}
+
+    # Fetch sickness leave type IDs
+    sickness_type_ids = list(models.LeaveType.objects.filter(name__icontains='sick').values_list('id', flat=True))
+
+    # Fetch all employment contracts for this period
+    employment_contracts = (models.EmploymentContract.objects
+                            .filter(
+                                (Q(ended_at__isnull=True) & Q(started_at__lte=until_date)) |
+                                (Q(started_at__lte=until_date) & Q(ended_at__gte=from_date)),
+                                user__in=users)
+                            .order_by('started_at')
+                            .select_related('user', 'company', 'work_schedule'))
+    # Index employment contracts by user ID
+    employment_contract_data = {}
+    for employment_contract in employment_contracts:
+        (employment_contract_data
+            .setdefault(employment_contract.user.id, [])
+            .append(employment_contract))
+
+    # Fetch all leave dates for this period
+    leave_dates = (models.LeaveDate.objects
+                   .filter(Q(leave__status=models.STATUS_APPROVED) | Q(leave__status=models.STATUS_PENDING),
+                           leave__user__in=users, starts_at__date__gte=from_date, starts_at__date__lte=until_date)
+                   .select_related('leave', 'leave__leave_type', 'leave__user'))
+    # Index leave dates by day, then by user ID
+    leave_date_data = {}
+    for leave_date in leave_dates:
+        (leave_date_data
+            .setdefault(str(leave_date.starts_at.date()), {})
+            .setdefault(leave_date.leave.user.id, [])
+            .append(leave_date))
+
+    # Fetch all holidays for this period
+    holidays = (models.Holiday.objects
+                .filter(date__gte=from_date, date__lte=until_date))
+    # Index holidays by day, then by country
+    holiday_data = {}
+    for holiday in holidays:
+        (holiday_data
+            .setdefault(str(holiday.date), {})
+            .setdefault(holiday.country, [])
+            .append(holiday))
+
+    # Fetch all whereabouts for this period
+    whereabouts = (models.Whereabout.objects
+                   .filter(timesheet__user__in=users, starts_at__date__gte=from_date,
+                           starts_at__date__lte=until_date)
+                   .select_related('timesheet', 'timesheet__user', 'location'))
+    # Index whereabouts by day, then by user ID
+    whereabout_data = {}
+    for whereabout in whereabouts:
+        (whereabout_data
+            .setdefault(str(whereabout.starts_at.date()), {})
+            .setdefault(whereabout.timesheet.user.id, [])
+            .append(whereabout))
+
+    # Count days
+    day_count = (until_date - from_date).days + 1
+
+    # Iterate over users
+    for user in users:
+        # Initialize user data
+        res[str(user.id)] = user_data = {}
+
+        # Iterate over days
+        for i in range(day_count):
+            # Determine date for this day
+            current_date = copy.deepcopy(from_date) + timedelta(days=i)
+            user_data[str(current_date)] = user_day_tags = []
+
+            # Get employment contract for this day
+            # This allows us to determine the work schedule and country of the user
+            employment_contract = None
+            try:
+                for ec in employment_contract_data[user.id]:
+                    if (ec.started_at <= current_date) and ((not ec.ended_at) or (ec.ended_at >= current_date)):
+                        employment_contract = ec
+                        break
+            except KeyError:
+                pass
+
+            work_schedule = employment_contract.work_schedule if employment_contract else None
+            country = employment_contract.company.country if employment_contract else None
+
+            # No work occurs when there is no work_schedule, or no hours should be worked that day
+            if (not work_schedule) or (getattr(work_schedule, current_date.strftime('%A').lower(), 0.00) <= 0):
+                user_day_tags.append('no_work')
+
+            # Holidays
+            try:
+                if country and holiday_data[str(current_date)][country]:
+                    user_day_tags.append('holiday')
+            except KeyError:
+                pass
+
+            # Leave & Sickness
+            try:
+                for leave_date in leave_date_data[str(current_date)][user.id]:
+                    leave_status = leave_date.leave.status
+
+                    if leave_date.leave.leave_type.id in sickness_type_ids:
+                        if leave_status == models.STATUS_APPROVED:
+                            user_day_tags.append('sickness')
+                        else:
+                            user_day_tags.append('sickness_pending')
+                    else:
+                        if leave_status == models.STATUS_APPROVED:
+                            user_day_tags.append('leave')
+                        else:
+                            user_day_tags.append('leave_pending')
+            except KeyError:
+                pass
+
+            # Whereabouts
+            try:
+                for whereabout in whereabout_data[str(current_date)][user.id]:
+                    user_day_tags.append('whereabout_%s' % whereabout.location.name.lower().replace(' ', '_'))
+            except KeyError:
+                pass
+
+    return res
+
+
 def get_range_info(users, from_date, until_date, daily=False, detailed=False, summary=False, serialize=False):
     """Determine and return range info."""
     res = {}

@@ -20,3 +20,12 @@ block content
         tr
           th
             a(href="{% url 'admin_report_user_work_ratio_overview' %}?year={% now 'Y' %}&user={{ user.id }}") User work ratio overview
+        tr
+          th
+            a(href="{% url 'admin_report_resource_availability_overview' %}") Resource availability overview
+        tr
+          th
+            a(href="{% url 'admin_report_expiring_consultancy_contract_overview' %}") WIP: Expiring consultancy contract overview
+        tr
+          th
+            a(href="{% url 'admin_report_project_contract_overview' %}") WIP: Project contract overview

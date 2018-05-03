@@ -6,7 +6,7 @@ import django_tables2 as tables
 from django_tables2.utils import A
 from django_tables2.export.export import TableExport
 from ninetofiver import models
-from ninetofiver.utils import month_date_range, hours_to_days
+from ninetofiver.utils import month_date_range, hours_to_days, dates_in_range
 
 
 class BaseTable(tables.Table):
@@ -22,7 +22,7 @@ class BaseTable(tables.Table):
 
     class Meta:
         template_name = 'django_tables2/bootstrap4.html'
-        attrs = {'class': 'table table-bordered table-striped table-hover'}
+        attrs = {'class': 'table table-bordered table-striped table-hover', 'container': 'table-responsive'}
 
 
 class SummedHoursColumn(tables.Column):
@@ -245,7 +245,6 @@ class UserLeaveOverviewTable(BaseTable):
     """User leave overview table."""
 
     class Meta(BaseTable.Meta):
-        sequence = ('...', 'actions')
         pass
 
     year = tables.Column()
@@ -260,6 +259,7 @@ class UserLeaveOverviewTable(BaseTable):
             column = SummedHoursColumn(accessor=A('leave_type_hours.%s' % leave_type.name))
             extra_columns.append([leave_type.name, column])
         kwargs['extra_columns'] = extra_columns
+        kwargs['sequence'] = ('year', 'month', '...', 'actions')
         super().__init__(*args, **kwargs)
 
     def render_actions(self, record):
@@ -350,3 +350,42 @@ class UserWorkRatioOverviewTable(BaseTable):
             })
 
         return format_html('%s' % ('&nbsp;'.join(buttons)))
+
+
+class ResourceAvailabilityDayColumn(tables.Column):
+    """Resource availability day column."""
+
+    def render(self, value):
+        """Render the value."""
+
+        res = ''
+
+        return res
+
+
+class ResourceAvailabilityOverviewTable(BaseTable):
+    """Resource availability overview table."""
+
+    class Meta(BaseTable.Meta):
+        pass
+
+    user = tables.LinkColumn(
+        viewname='admin:auth_user_change',
+        args=[A('user.id')],
+        accessor='user',
+        order_by=['user.first_name', 'user.last_name', 'user.username']
+    )
+
+    def __init__(self, from_date, until_date, *args, **kwargs):
+        """Constructor."""
+        # Create an additional column for every leave type
+        extra_columns = []
+        if from_date and until_date:
+            for day_date in dates_in_range(from_date, until_date):
+                date_str = str(day_date)
+                column = tables.TemplateColumn(accessor=A('days.%s' % date_str), orderable=False,
+                                               template_name='ninetofiver/admin/reports/resource_availability_overview_day.pug')
+                extra_columns.append([day_date.strftime('%a, %d %b'), column])
+        kwargs['extra_columns'] = extra_columns
+        kwargs['sequence'] = ('user', '...')
+        super().__init__(*args, **kwargs)

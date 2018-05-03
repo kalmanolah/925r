@@ -1,6 +1,7 @@
 from django.contrib.auth import models as auth_models, mixins as auth_mixins
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
 from django.forms.models import modelform_factory
@@ -33,7 +34,7 @@ from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.renderers import SwaggerUIRenderer
 from rest_framework.authtoken import models as authtoken_models
 from ninetofiver import settings, tables, calculation, pagination
-from ninetofiver.utils import month_date_range
+from ninetofiver.utils import month_date_range, dates_in_range
 from django.db.models import Q
 from django_tables2 import RequestConfig
 from django_tables2.export.export import TableExport
@@ -528,6 +529,170 @@ def admin_report_user_work_ratio_overview_view(request):
     return render(request, 'ninetofiver/admin/reports/user_work_ratio_overview.pug', context)
 
 
+@staff_member_required
+def admin_report_resource_availability_overview_view(request):
+    """Resource availability overview report."""
+    data = []
+    fltr = filters.AdminReportResourceAvailabilityOverviewFilter(request.GET, models.Timesheet.objects)
+    from_date = parser.parse(request.GET.get('from_date', None)).date() if request.GET.get('from_date') else None
+    until_date = parser.parse(request.GET.get('until_date', None)).date() if request.GET.get('until_date') else None
+
+    users = auth_models.User.objects.filter(is_active=True)
+    try:
+        user_ids = list(map(int, request.GET.getlist('user', [])))
+        users = users.filter(id__in=user_ids) if user_ids else users
+    except Exception:
+        pass
+
+    if users and from_date and until_date and (until_date >= from_date):
+        dates = dates_in_range(from_date, until_date)
+        availability = calculation.get_availability_info(users, from_date, until_date)
+        consultancy_contract_users = (models.ContractUser.objects
+                                      .filter(user__in=users,
+                                              contract__polymorphic_ctype=
+                                              ContentType.objects.get_for_model(models.ConsultancyContract))
+                                      .filter(Q(contract__ends_at__isnull=True, contract__starts_at__lte=until_date) |
+                                              Q(contract__ends_at__isnull=False, contract__starts_at__lte=until_date,
+                                                contract__ends_at__gte=from_date))
+                                      .select_related('contract')
+                                      .order_by('contract__starts_at'))
+        # Index consultancy contract users by user
+        consultancy_contract_data = {}
+        for consultancy_contract_user in consultancy_contract_users:
+            (consultancy_contract_data
+                .setdefault(consultancy_contract_user.user.id, [])
+                .append(consultancy_contract_user))
+
+        # Iterate over users, days to create daily user data
+        for user in users:
+            user_data = {
+                'user': user,
+                'days': {},
+            }
+            data.append(user_data)
+
+            for current_date in dates:
+                date_str = str(current_date)
+                user_day_data = user_data['days'][date_str] = {}
+
+                day_availability = availability[str(user.id)][date_str]
+                day_consultancy_contracts = []
+                for consultancy_contract_user in consultancy_contract_data.get(user.id, []):
+                    contract = consultancy_contract_user.contract
+                    if (contract.starts_at <= current_date) and \
+                            ((not contract.ends_at) or (contract.ends_at >= current_date)):
+                        day_consultancy_contracts.append(contract)
+
+                user_day_data['availability'] = day_availability
+                user_day_data['consultancy_contracts'] = day_consultancy_contracts
+
+    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
+    table = tables.ResourceAvailabilityOverviewTable(from_date, until_date, data)
+    config.configure(table)
+
+    export_format = request.GET.get('_export', None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table)
+        return exporter.response('table.{}'.format(export_format))
+
+    context = {
+        'title': _('Resource availability overview'),
+        'table': table,
+        'filter': fltr,
+    }
+
+    return render(request, 'ninetofiver/admin/reports/resource_availability_overview.pug', context)
+
+
+@staff_member_required
+def admin_report_expiring_consultancy_contract_overview_view(request):
+    """User work ratio overview report."""
+    fltr = filters.AdminReportUserWorkRatioOverviewFilter(request.GET, models.Timesheet.objects)
+    data = []
+
+    if fltr.data.get('user', None) and fltr.data.get('year', None):
+        year = int(fltr.data['year'])
+        user = get_object_or_404(auth_models.User.objects,
+                                 pk=request.GET.get('user', None), is_active=True) if request.GET.get('user') else None
+
+        timesheets = fltr.qs.select_related('user')
+
+        for timesheet in timesheets:
+            date_range = timesheet.get_date_range()
+            range_info = calculation.get_range_info([timesheet.user], date_range[0], date_range[1], summary=True)
+            range_info = range_info[timesheet.user.id]
+
+            total_hours = range_info['performed_hours'] + range_info['leave_hours']
+            leave_hours = range_info['leave_hours']
+            consultancy_hours = sum([x['duration'] for x in range_info['summary']['performances']
+                                    if x['contract'].get_real_instance_class() == models.ConsultancyContract])
+            project_hours = sum([x['duration'] for x in range_info['summary']['performances']
+                                if x['contract'].get_real_instance_class() == models.ProjectContract])
+            support_hours = sum([x['duration'] for x in range_info['summary']['performances']
+                                if x['contract'].get_real_instance_class() == models.SupportContract])
+
+            consultancy_pct = round((consultancy_hours / (total_hours if total_hours else 1.0)) * 100, 2)
+            project_pct = round((project_hours / (total_hours if total_hours else 1.0)) * 100, 2)
+            support_pct = round((support_hours / (total_hours if total_hours else 1.0)) * 100, 2)
+            leave_pct = round((leave_hours / (total_hours if total_hours else 1.0)) * 100, 2)
+
+            data.append({
+                'year': timesheet.year,
+                'month': timesheet.month,
+                'user': timesheet.user,
+                'total_hours': total_hours,
+                'leave_hours': leave_hours,
+                'consultancy_hours': consultancy_hours,
+                'project_hours': project_hours,
+                'support_hours': support_hours,
+                'leave_pct': leave_pct,
+                'consultancy_pct': consultancy_pct,
+                'project_pct': project_pct,
+                'support_pct': support_pct,
+            })
+
+    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
+    table = tables.UserWorkRatioOverviewTable(data)
+    config.configure(table)
+
+    export_format = request.GET.get('_export', None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table)
+        return exporter.response('table.{}'.format(export_format))
+
+    context = {
+        'title': _('Expiring consultancy contract overview'),
+        'table': table,
+        'filter': fltr,
+    }
+
+    return render(request, 'ninetofiver/admin/reports/expiring_consultancy_contract_overview.pug', context)
+
+
+@staff_member_required
+def admin_report_project_contract_overview_view(request):
+    """User work ratio overview report."""
+    fltr = filters.AdminReportUserWorkRatioOverviewFilter(request.GET, models.Timesheet.objects)
+    data = []
+
+    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
+    table = tables.UserWorkRatioOverviewTable(data)
+    config.configure(table)
+
+    export_format = request.GET.get('_export', None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table)
+        return exporter.response('table.{}'.format(export_format))
+
+    context = {
+        'title': _('Project contract overview'),
+        'table': table,
+        'filter': fltr,
+    }
+
+    return render(request, 'ninetofiver/admin/reports/project_contract_overview.pug', context)
+
+
 class AdminTimesheetContractPdfExportView(BaseTimesheetContractPdfExportServiceAPIView):
     """Export a timesheet contract to PDF."""
 
@@ -808,135 +973,7 @@ class RangeAvailabilityServiceAPIView(APIView):
         until_date = parser.parse(request.query_params.get('until', None)).date()
 
         users = auth_models.User.objects.filter(is_active=True)
-        sickness_type_ids = list(models.LeaveType.objects.filter(name__icontains='sick').values_list('id', flat=True))
-
-        # Initialize data
-        data = {
-            'from': from_date,
-            'until': until_date,
-            'users': {},
-        }
-
-        # Fetch all employment contracts for this period
-        employment_contracts = (models.EmploymentContract.objects
-                                .filter(
-                                    (Q(ended_at__isnull=True) & Q(started_at__lte=until_date)) |
-                                    (Q(started_at__lte=until_date) & Q(ended_at__gte=from_date)),
-                                    user__in=users)
-                                .order_by('started_at')
-                                .select_related('user', 'company', 'work_schedule'))
-        # Index employment contracts by user ID
-        employment_contract_data = {}
-        for employment_contract in employment_contracts:
-            (employment_contract_data
-                .setdefault(employment_contract.user.id, [])
-                .append(employment_contract))
-
-        # Fetch all leave dates for this period
-        leave_dates = (models.LeaveDate.objects
-                       .filter(Q(leave__status=models.STATUS_APPROVED) | Q(leave__status=models.STATUS_PENDING),
-                               leave__user__in=users, starts_at__date__gte=from_date, starts_at__date__lte=until_date)
-                       .select_related('leave', 'leave__leave_type', 'leave__user'))
-        # Index leave dates by day, then by user ID
-        leave_date_data = {}
-        for leave_date in leave_dates:
-            (leave_date_data
-                .setdefault(str(leave_date.starts_at.date()), {})
-                .setdefault(leave_date.leave.user.id, [])
-                .append(leave_date))
-
-        # Fetch all holidays for this period
-        holidays = (models.Holiday.objects
-                    .filter(date__gte=from_date, date__lte=until_date))
-        # Index holidays by day, then by country
-        holiday_data = {}
-        for holiday in holidays:
-            (holiday_data
-                .setdefault(str(holiday.date), {})
-                .setdefault(holiday.country, [])
-                .append(holiday))
-
-        # Fetch all whereabouts for this period
-        whereabouts = (models.Whereabout.objects
-                       .filter(timesheet__user__in=users, starts_at__date__gte=from_date,
-                               starts_at__date__lte=until_date)
-                       .select_related('timesheet', 'timesheet__user', 'location'))
-        # Index whereabouts by day, then by user ID
-        whereabout_data = {}
-        for whereabout in whereabouts:
-            (whereabout_data
-                .setdefault(str(whereabout.starts_at.date()), {})
-                .setdefault(whereabout.timesheet.user.id, [])
-                .append(whereabout))
-
-        # Count days
-        day_count = (until_date - from_date).days + 1
-
-        # Iterate over users
-        for user in users:
-            # Initialize user data
-            data['users'][str(user.id)] = user_data = {
-                'days': {},
-            }
-
-            # Iterate over days
-            for i in range(day_count):
-                # Determine date for this day
-                current_date = copy.deepcopy(from_date) + timedelta(days=i)
-                user_data['days'][str(current_date)] = user_day_data = {
-                    'tags': [],
-                }
-                user_day_tags = user_day_data['tags']
-
-                # Get employment contract for this day
-                # This allows us to determine the work schedule and country of the user
-                employment_contract = None
-                try:
-                    for ec in employment_contract_data[user.id]:
-                        if (ec.started_at <= current_date) and ((not ec.ended_at) or (ec.ended_at >= current_date)):
-                            employment_contract = ec
-                            break
-                except KeyError:
-                    pass
-
-                work_schedule = employment_contract.work_schedule if employment_contract else None
-                country = employment_contract.company.country if employment_contract else None
-
-                # No work occurs when there is no work_schedule, or no hours should be worked that day
-                if (not work_schedule) or (getattr(work_schedule, current_date.strftime('%A').lower(), 0.00) <= 0):
-                    user_day_tags.append('no_work')
-
-                # Holidays
-                try:
-                    if country and holiday_data[str(current_date)][country]:
-                        user_day_tags.append('holiday')
-                except KeyError:
-                    pass
-
-                # Leave & Sickness
-                try:
-                    for leave_date in leave_date_data[str(current_date)][user.id]:
-                        leave_status = leave_date.leave.status
-
-                        if leave_date.leave.leave_type.id in sickness_type_ids:
-                            if leave_status == models.STATUS_APPROVED:
-                                user_day_tags.append('sickness')
-                            else:
-                                user_day_tags.append('sickness_pending')
-                        else:
-                            if leave_status == models.STATUS_APPROVED:
-                                user_day_tags.append('leave')
-                            else:
-                                user_day_tags.append('leave_pending')
-                except KeyError:
-                    pass
-
-                # Whereabouts
-                try:
-                    for whereabout in whereabout_data[str(current_date)][user.id]:
-                        user_day_tags.append('whereabout_%s' % whereabout.location.name.lower().replace(' ', '_'))
-                except KeyError:
-                    pass
+        data = calculation.get_availability_info(users, from_date, until_date)
 
         return Response(data, status=status.HTTP_200_OK)
 

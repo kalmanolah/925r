@@ -4,6 +4,7 @@ from calendar import monthrange
 from dateutil.relativedelta import relativedelta
 import datetime
 import os
+import copy
 from django.core.mail import send_mail as base_send_mail
 from django.template.loader import render_to_string
 
@@ -56,6 +57,16 @@ def month_date_range(year, month):
     from_date = datetime.date.today().replace(year=year, month=month, day=1)
     until_date = from_date.replace() + relativedelta(months=1) - relativedelta(days=1)
     return [from_date, until_date]
+
+
+def dates_in_range(from_date, until_date):
+    """Get all dates for the given date range."""
+    dates = []
+    current_date = copy.deepcopy(from_date)
+    while current_date.strftime('%Y%m%d') <= until_date.strftime('%Y%m%d'):
+        dates.append(copy.deepcopy(current_date))
+        current_date += relativedelta(days=1)
+    return dates
 
 
 def hours_to_days(hours):

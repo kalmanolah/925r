@@ -1,0 +1,49 @@
+div
+    if 'sickness' in value.availability
+        h3
+            span(
+                style="background:#ff4444"
+                class="badge"
+                data-toggle="tooltip"
+                title="Sickness"
+            ) S
+    elif 'leave' in value.availability
+        h3
+            span(
+                style="background:#00c851"
+                class="badge"
+                data-toggle="tooltip"
+                title="Leave"
+            )  L
+    elif 'holiday' in value.availability
+        h3
+            span(
+                style="background:#59b8e6"
+                class="badge"
+                data-toggle="tooltip"
+                title="Holiday"
+            )  H
+    elif 'no_work' in value.availability
+        h3
+            span(
+                style="background:#9e9d9d"
+                class="badge"
+                data-toggle="tooltip"
+                title="No work"
+            )  N
+    else
+        if value.consultancy_contracts
+            h3
+                div(class='btn-group')
+                    button(
+                        style="background:#1693A5"
+                        class="badge dropdown-toggle btn-default btn btn-sm"
+                        data-toggle="dropdown"
+                        title="Consultancy"
+                    )  C
+                    div(class='dropdown-menu')
+                        for contract in value.consultancy_contracts
+                            a(
+                                class='dropdown-item'
+                                href='{% url "admin:ninetofiver_contract_change" contract.id %}'
+                            ) {{ contract }}
