@@ -16,7 +16,7 @@ block content
             a(href="{% url 'admin_report_user_range_info' %}?from_date={% now 'Y-m-d' %}&until_date={% now 'Y-m-d' %}&user={{ user.id }}") User range info
         tr
           th
-            a(href="{% url 'admin_report_user_leave_overview' %}?year={% now 'Y' %}&user={{ user.id }}") User leave overview
+            a(href="{% url 'admin_report_user_leave_overview' %}?from_date={% now 'Y-m-d' %}&until_date={% now 'Y-m-d' %}&user={{ user.id }}") User leave overview
         tr
           th
             a(href="{% url 'admin_report_user_work_ratio_overview' %}?year={% now 'Y' %}&user={{ user.id }}") User work ratio overview

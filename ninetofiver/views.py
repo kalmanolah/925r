@@ -40,6 +40,7 @@ from django_tables2.export.export import TableExport
 from datetime import datetime, date, timedelta
 from wkhtmltopdf.views import PDFTemplateView
 from dateutil import parser
+from dateutil.relativedelta import relativedelta
 from collections import OrderedDict
 import logging
 import copy
@@ -401,19 +402,20 @@ def admin_report_user_range_info_view(request):
 @staff_member_required
 def admin_report_user_leave_overview_view(request):
     """User leave overview report."""
-    fltr = filters.AdminReportUserLeaveOverviewFilter(request.GET, models.LeaveDate.objects.all())
+    fltr = filters.AdminReportUserLeaveOverviewFilter(request.GET, models.LeaveDate.objects
+                                                      .filter(leave__status=models.STATUS_APPROVED))
+    user = get_object_or_404(auth_models.User.objects,
+                             pk=request.GET.get('user', None), is_active=True) if request.GET.get('user') else None
+    from_date = parser.parse(request.GET.get('from_date', None)).date() if request.GET.get('from_date') else None
+    until_date = parser.parse(request.GET.get('until_date', None)).date() if request.GET.get('until_date') else None
     data = []
 
-    if fltr.data.get('user', None) and fltr.data.get('year', None):
-        year = int(fltr.data['year'])
-        user = get_object_or_404(auth_models.User.objects,
-                                 pk=request.GET.get('user', None), is_active=True) if request.GET.get('user') else None
-
+    if user and from_date and until_date and (until_date >= from_date):
         # Grab leave types, index them by ID
         leave_types = models.LeaveType.objects.all()
 
         # Grab leave dates, index them by year, then month, then leave type ID
-        leave_dates = fltr.qs.select_related('leave', 'leave__leave_type')
+        leave_dates = fltr.qs.filter().select_related('leave', 'leave__leave_type')
         leave_date_data = {}
         for leave_date in leave_dates:
             (leave_date_data
@@ -423,8 +425,9 @@ def admin_report_user_leave_overview_view(request):
                 .append(leave_date))
 
         # Iterate over years, months to create monthly data
-        for month in range(1, 1 + 12):
-            month_leave_dates = leave_date_data.get(year, {}).get(month, {})
+        current_date = copy.deepcopy(from_date)
+        while current_date.strftime('%Y%m') <= until_date.strftime('%Y%m'):
+            month_leave_dates = leave_date_data.get(current_date.year, {}).get(current_date.month, {})
             month_leave_type_hours = {}
 
             # Iterate over leave types to gather totals
@@ -434,11 +437,13 @@ def admin_report_user_leave_overview_view(request):
                 month_leave_type_hours[leave_type.name] = duration
 
             data.append({
-                'year': year,
-                'month': month,
+                'year': current_date.year,
+                'month': current_date.month,
                 'user': user,
                 'leave_type_hours': month_leave_type_hours,
             })
+
+            current_date += relativedelta(months=1)
 
     config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
     table = tables.UserLeaveOverviewTable(data)

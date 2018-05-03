@@ -620,9 +620,10 @@ class AdminReportUserLeaveOverviewFilter(FilterSet):
     user = django_filters.ModelChoiceFilter(name='leave__user',
                                             queryset=auth_models.User.objects.filter(is_active=True),
                                             widget=Select2Widget)
-    year = django_filters.ChoiceFilter(name='starts_at', lookup_expr='year',
-                                       choices=lambda: [[x.year, x.year] for x in
-                                                        (models.LeaveDate.objects .dates('starts_at', 'year'))])
+    from_date = django_filters.DateFilter(label='From', widget=admin_widgets.AdminDateWidget(), name='starts_at',
+                                          lookup_expr='date__gte')
+    until_date = django_filters.DateFilter(label='Until', widget=admin_widgets.AdminDateWidget(), name='starts_at',
+                                           lookup_expr='date__lte')
 
     class Meta:
         model = models.LeaveDate
