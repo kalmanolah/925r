@@ -648,6 +648,9 @@ class AdminReportResourceAvailabilityOverviewFilter(FilterSet):
     user = (django_filters.ModelMultipleChoiceFilter(label='User',
                                                      queryset=auth_models.User.objects.filter(is_active=True),
                                                      distinct=True, widget=Select2MultipleWidget))
+    group = (django_filters.ModelMultipleChoiceFilter(label='Group',
+                                                      queryset=auth_models.Group.objects.all(),
+                                                      distinct=True, widget=Select2MultipleWidget))
     from_date = django_filters.DateFilter(label='From', widget=admin_widgets.AdminDateWidget(), name='starts_at',
                                           lookup_expr='date__gte')
     until_date = django_filters.DateFilter(label='Until', widget=admin_widgets.AdminDateWidget(), name='starts_at',

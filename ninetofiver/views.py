@@ -537,10 +537,15 @@ def admin_report_resource_availability_overview_view(request):
     from_date = parser.parse(request.GET.get('from_date', None)).date() if request.GET.get('from_date') else None
     until_date = parser.parse(request.GET.get('until_date', None)).date() if request.GET.get('until_date') else None
 
-    users = auth_models.User.objects.filter(is_active=True)
+    users = auth_models.User.objects.filter(is_active=True).distinct()
     try:
         user_ids = list(map(int, request.GET.getlist('user', [])))
         users = users.filter(id__in=user_ids) if user_ids else users
+    except Exception:
+        pass
+    try:
+        group_ids = list(map(int, request.GET.getlist('group', [])))
+        users = users.filter(groups__in=group_ids) if group_ids else users
     except Exception:
         pass
 
