@@ -629,7 +629,7 @@ def admin_report_resource_availability_overview_view(request):
                 user_day_data['work_hours'] = day_work_hours
                 user_day_data['enough_hours'] = day_scheduled_hours >= day_work_hours
 
-    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
+    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size * 4})
     table = tables.ResourceAvailabilityOverviewTable(from_date, until_date, data)
     config.configure(table)
 
