@@ -546,22 +546,40 @@ def admin_report_resource_availability_overview_view(request):
 
     if users and from_date and until_date and (until_date >= from_date):
         dates = dates_in_range(from_date, until_date)
+
+        # Fetch availability
         availability = calculation.get_availability_info(users, from_date, until_date)
-        consultancy_contract_users = (models.ContractUser.objects
-                                      .filter(user__in=users,
-                                              contract__polymorphic_ctype=
-                                              ContentType.objects.get_for_model(models.ConsultancyContract))
-                                      .filter(Q(contract__ends_at__isnull=True, contract__starts_at__lte=until_date) |
-                                              Q(contract__ends_at__isnull=False, contract__starts_at__lte=until_date,
-                                                contract__ends_at__gte=from_date))
-                                      .select_related('contract')
-                                      .order_by('contract__starts_at'))
-        # Index consultancy contract users by user
-        consultancy_contract_data = {}
-        for consultancy_contract_user in consultancy_contract_users:
-            (consultancy_contract_data
-                .setdefault(consultancy_contract_user.user.id, [])
-                .append(consultancy_contract_user))
+
+        # Fetch contract user work schedules
+        contract_user_work_schedules = (models.ContractUserWorkSchedule.objects
+                                        .filter(contract_user__user__in=users)
+                                        .filter(Q(ends_at__isnull=True, starts_at__lte=until_date) |
+                                                Q(ends_at__isnull=False, starts_at__lte=until_date,
+                                                  ends_at__gte=from_date))
+                                        .select_related('contract_user', 'contract_user__user',
+                                                        'contract_user__contract_role', 'contract_user__contract',
+                                                        'contract_user__contract__customer'))
+        # Index contract user work schedules by user
+        contract_user_work_schedule_data = {}
+        for contract_user_work_schedule in contract_user_work_schedules:
+            (contract_user_work_schedule_data
+                .setdefault(contract_user_work_schedule.contract_user.user.id, [])
+                .append(contract_user_work_schedule))
+
+        # Fetch employment contracts
+        employment_contracts = (models.EmploymentContract.objects
+                                .filter(
+                                    (Q(ended_at__isnull=True) & Q(started_at__lte=until_date)) |
+                                    (Q(started_at__lte=until_date) & Q(ended_at__gte=from_date)),
+                                    user__in=users)
+                                .order_by('started_at')
+                                .select_related('user', 'company', 'work_schedule'))
+        # Index employment contracts by user ID
+        employment_contract_data = {}
+        for employment_contract in employment_contracts:
+            (employment_contract_data
+                .setdefault(employment_contract.user.id, [])
+                .append(employment_contract))
 
         # Iterate over users, days to create daily user data
         for user in users:
@@ -576,15 +594,40 @@ def admin_report_resource_availability_overview_view(request):
                 user_day_data = user_data['days'][date_str] = {}
 
                 day_availability = availability[str(user.id)][date_str]
-                day_consultancy_contracts = []
-                for consultancy_contract_user in consultancy_contract_data.get(user.id, []):
-                    contract = consultancy_contract_user.contract
-                    if (contract.starts_at <= current_date) and \
-                            ((not contract.ends_at) or (contract.ends_at >= current_date)):
-                        day_consultancy_contracts.append(contract)
+                day_contract_user_work_schedules = []
+                day_scheduled_hours = Decimal('0.00')
+                day_work_hours = Decimal('0.00')
+
+                # Get contract user work schedules for this day
+                # This allows us to determine the scheduled hours for this user
+                for contract_user_work_schedule in contract_user_work_schedule_data.get(user.id, []):
+                    if (contract_user_work_schedule.starts_at <= current_date) and \
+                            ((not contract_user_work_schedule.ends_at) or
+                                (contract_user_work_schedule.ends_at >= current_date)):
+                        day_contract_user_work_schedules.append(contract_user_work_schedule)
+                        day_scheduled_hours += getattr(contract_user_work_schedule,
+                                                       current_date.strftime('%A').lower(), Decimal('0.00'))
+
+                # Get employment contract for this day
+                # This allows us to determine the required hours for this user
+                employment_contract = None
+                try:
+                    for ec in employment_contract_data[user.id]:
+                        if (ec.started_at <= current_date) and ((not ec.ended_at) or (ec.ended_at >= current_date)):
+                            employment_contract = ec
+                            break
+                except KeyError:
+                    pass
+
+                work_schedule = employment_contract.work_schedule if employment_contract else None
+                if work_schedule:
+                    day_work_hours = getattr(work_schedule, current_date.strftime('%A').lower(), Decimal('0.00'))
 
                 user_day_data['availability'] = day_availability
-                user_day_data['consultancy_contracts'] = day_consultancy_contracts
+                user_day_data['contract_user_work_schedules'] = day_contract_user_work_schedules
+                user_day_data['scheduled_hours'] = day_scheduled_hours
+                user_day_data['work_hours'] = day_work_hours
+                user_day_data['enough_hours'] = day_scheduled_hours >= day_work_hours
 
     config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
     table = tables.ResourceAvailabilityOverviewTable(from_date, until_date, data)

@@ -2,7 +2,7 @@ div
     if 'sickness' in value.availability
         h3
             span(
-                style="background:#ff4444"
+                style="background:#ff4444;opacity:0.75;"
                 class="badge"
                 data-toggle="tooltip"
                 title="Sickness"
@@ -10,7 +10,7 @@ div
     elif 'leave' in value.availability
         h3
             span(
-                style="background:#00c851"
+                style="background:#00c851;opacity:0.75;"
                 class="badge"
                 data-toggle="tooltip"
                 title="Leave"
@@ -18,7 +18,7 @@ div
     elif 'holiday' in value.availability
         h3
             span(
-                style="background:#59b8e6"
+                style="background:#59b8e6;opacity:0.75;"
                 class="badge"
                 data-toggle="tooltip"
                 title="Holiday"
@@ -26,25 +26,29 @@ div
     elif 'no_work' in value.availability
         h3
             span(
-                style="background:#9e9d9d"
+                style="background:#9e9d9d;opacity:0.5;"
                 class="badge"
                 data-toggle="tooltip"
                 title="No work"
             )  N
     else
-        if value.consultancy_contracts
-            h3
-                div(class='btn-group')
-                    button(
-                        style="background:#1693A5"
-                        class="badge dropdown-toggle btn-default btn btn-sm"
-                        data-toggle="dropdown"
-                        data-placement="auto"
-                        title="Consultancy"
-                    )  C
-                    div(class='dropdown-menu')
-                        for contract in value.consultancy_contracts
+        h3
+            div(class='btn-group')
+                button(
+                    style="background:{{ value.enough_hours|yesno:'#1693A5,#ff4444' }} "
+                    class="badge dropdown-toggle dropdown-toggle-no-caret btn-default btn btn-sm"
+                    data-toggle="dropdown"
+                    data-placement="auto"
+                    title="Contract"
+                )  {{ value.scheduled_hours | floatformat:"-2" }}
+                div(class='dropdown-menu')
+                    h5(class="dropdown-header text-center") {{ value.scheduled_hours }} / {{ value.work_hours }} hours
+
+                    if value.contract_user_work_schedules
+                        div(class='dropdown-divider')
+
+                        for contract_user_work_schedule in value.contract_user_work_schedules
                             a(
                                 class='dropdown-item'
-                                href='{% url "admin:ninetofiver_contract_change" contract.id %}'
-                            ) {{ contract }}
+                                href='{% url "admin:ninetofiver_contract_change" contract_user_work_schedule.contract_user.contract.id %}'
+                            ) {{ contract_user_work_schedule.contract_user.contract }}

@@ -3,3 +3,8 @@
     width: 100%;
     overflow-x: auto;
 }
+
+.report-table .dropdown-toggle-no-caret::after {
+    border: none;
+    margin-left: 0;
+}
