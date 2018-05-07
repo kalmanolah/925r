@@ -660,8 +660,8 @@ def admin_report_expiring_consultancy_contract_overview_view(request):
     """Expiring consultancy User work ratio overview report."""
     fltr = filters.AdminReportExpiringConsultancyContractOverviewFilter(request.GET,
                                                                         models.ConsultancyContract.objects)
-    ends_at_lte = (parser.parse(request.GET.get('lte', None)).date()
-                   if request.GET.get('lte') else None)
+    ends_at_lte = (parser.parse(request.GET.get('ends_at_lte', None)).date()
+                   if request.GET.get('ends_at_lte') else None)
     remaining_hours_lte = (Decimal(request.GET.get('remaining_hours_lte'))
                            if request.GET.get('remaining_hours_lte') else None)
     only_final = request.GET.get('only_final', 'false') == 'true'
