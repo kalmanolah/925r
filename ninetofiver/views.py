@@ -35,7 +35,7 @@ from rest_framework_swagger.renderers import SwaggerUIRenderer
 from rest_framework.authtoken import models as authtoken_models
 from ninetofiver import settings, tables, calculation, pagination
 from ninetofiver.utils import month_date_range, dates_in_range
-from django.db.models import Q, Sum
+from django.db.models import Q, F, Sum
 from django_tables2 import RequestConfig
 from django_tables2.export.export import TableExport
 from datetime import datetime, date, timedelta
@@ -673,7 +673,10 @@ def admin_report_expiring_consultancy_contract_overview_view(request):
                      .prefetch_related('contractuser_set', 'contractuser_set__contract_role', 'contractuser_set__user')
                      .filter(active=True)
                      # Ensure contracts without end date/duration are never shown, since they will never expire
-                     .filter(Q(ends_at__isnull=False) | Q(duration__isnull=False)))
+                     .filter(Q(ends_at__isnull=False) | Q(duration__isnull=False))
+                     # Ensure contracts where the internal company and the customer are the same are filtered out
+                     # These are internal contracts to cover things such as meetings, talks, etc..
+                     .exclude(customer=F('company')))
 
         # If we're filtering by end date, skip all contracts which end after the given date
         if ends_at_lte:
