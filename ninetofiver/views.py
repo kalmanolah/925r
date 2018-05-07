@@ -35,7 +35,7 @@ from rest_framework_swagger.renderers import SwaggerUIRenderer
 from rest_framework.authtoken import models as authtoken_models
 from ninetofiver import settings, tables, calculation, pagination
 from ninetofiver.utils import month_date_range, dates_in_range
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django_tables2 import RequestConfig
 from django_tables2.export.export import TableExport
 from datetime import datetime, date, timedelta
@@ -252,6 +252,9 @@ def admin_report_index_view(request):
     """Report index."""
     context = {
         'title': _('Reports'),
+        'today': date.today(),
+        'last_week': date.today() - relativedelta(weeks=1),
+        'next_month': date.today() + relativedelta(months=1),
     }
 
     return render(request, 'ninetofiver/admin/reports/index.pug', context)
@@ -654,53 +657,66 @@ def admin_report_resource_availability_overview_view(request):
 
 @staff_member_required
 def admin_report_expiring_consultancy_contract_overview_view(request):
-    """User work ratio overview report."""
-    fltr = filters.AdminReportUserWorkRatioOverviewFilter(request.GET, models.Timesheet.objects)
+    """Expiring consultancy User work ratio overview report."""
+    fltr = filters.AdminReportExpiringConsultancyContractOverviewFilter(request.GET,
+                                                                        models.ConsultancyContract.objects)
+    ends_at_lte = (parser.parse(request.GET.get('lte', None)).date()
+                   if request.GET.get('lte') else None)
+    remaining_hours_lte = (Decimal(request.GET.get('remaining_hours_lte'))
+                           if request.GET.get('remaining_hours_lte') else None)
+    only_final = request.GET.get('only_final', 'false') == 'true'
     data = []
 
-    if fltr.data.get('user', None) and fltr.data.get('year', None):
-        year = int(fltr.data['year'])
-        user = get_object_or_404(auth_models.User.objects,
-                                 pk=request.GET.get('user', None), is_active=True) if request.GET.get('user') else None
+    if ends_at_lte or remaining_hours_lte:
+        contracts = (models.ConsultancyContract.objects.all()
+                     .select_related('customer')
+                     .prefetch_related('contractuser_set', 'contractuser_set__contract_role', 'contractuser_set__user')
+                     .filter(active=True)
+                     # Ensure contracts without end date/duration are never shown, since they will never expire
+                     .filter(Q(ends_at__isnull=False) | Q(duration__isnull=False)))
 
-        timesheets = fltr.qs.select_related('user')
+        # If we're filtering by end date, skip all contracts which end after the given date
+        if ends_at_lte:
+            contracts = contracts.filter(Q(ends_at__isnull=True) | Q(ends_at__lte=ends_at_lte))
 
-        for timesheet in timesheets:
-            date_range = timesheet.get_date_range()
-            range_info = calculation.get_range_info([timesheet.user], date_range[0], date_range[1], summary=True)
-            range_info = range_info[timesheet.user.id]
+        for contract in contracts:
+            alotted_hours = contract.duration
+            performed_hours = (models.ActivityPerformance.objects
+                               .filter(contract=contract)
+                               .aggregate(Sum('duration')))['duration__sum']
+            performed_hours = performed_hours if performed_hours else Decimal('0.00')
+            remaining_hours = (alotted_hours - performed_hours) if alotted_hours else None
 
-            total_hours = range_info['performed_hours'] + range_info['leave_hours']
-            leave_hours = range_info['leave_hours']
-            consultancy_hours = sum([x['duration'] for x in range_info['summary']['performances']
-                                    if x['contract'].get_real_instance_class() == models.ConsultancyContract])
-            project_hours = sum([x['duration'] for x in range_info['summary']['performances']
-                                if x['contract'].get_real_instance_class() == models.ProjectContract])
-            support_hours = sum([x['duration'] for x in range_info['summary']['performances']
-                                if x['contract'].get_real_instance_class() == models.SupportContract])
+            # If we're filtering by remaining hours, skip all contracts which actually have alotted hours, but
+            # where those alotted hours are insufficient
+            if ((remaining_hours_lte is not None)
+                    and (remaining_hours is not None) and (remaining_hours > remaining_hours_lte)):
+                continue
 
-            consultancy_pct = round((consultancy_hours / (total_hours if total_hours else 1.0)) * 100, 2)
-            project_pct = round((project_hours / (total_hours if total_hours else 1.0)) * 100, 2)
-            support_pct = round((support_hours / (total_hours if total_hours else 1.0)) * 100, 2)
-            leave_pct = round((leave_hours / (total_hours if total_hours else 1.0)) * 100, 2)
+            for contract_user in contract.contractuser_set.all():
+                # If we're only supposed to show final consultancy contracts for any given user
+                # AND if the current contract actually has an end date,
+                # ensure the user has no linked active consultancy contracts with a later end date
+                if only_final and contract.ends_at:
+                    final = (models.ConsultancyContract.objects
+                             .filter(contractuser__user=contract_user.user, ends_at__isnull=False,
+                                     ends_at__gte=contract.ends_at, active=True)
+                             .exclude(id=contract.id)
+                             .count()) == 0
+                    if not final:
+                        continue
 
-            data.append({
-                'year': timesheet.year,
-                'month': timesheet.month,
-                'user': timesheet.user,
-                'total_hours': total_hours,
-                'leave_hours': leave_hours,
-                'consultancy_hours': consultancy_hours,
-                'project_hours': project_hours,
-                'support_hours': support_hours,
-                'leave_pct': leave_pct,
-                'consultancy_pct': consultancy_pct,
-                'project_pct': project_pct,
-                'support_pct': support_pct,
-            })
+                data.append({
+                    'contract': contract,
+                    'contract_user': contract_user,
+                    'user': contract_user.user,
+                    'alotted_hours': alotted_hours,
+                    'performed_hours': performed_hours,
+                    'remaining_hours': remaining_hours,
+                })
 
     config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
-    table = tables.UserWorkRatioOverviewTable(data)
+    table = tables.ExpiringConsultancyContractOverviewTable(data, order_by='ends_at')
     config.configure(table)
 
     export_format = request.GET.get('_export', None)

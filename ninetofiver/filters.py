@@ -659,3 +659,16 @@ class AdminReportResourceAvailabilityOverviewFilter(FilterSet):
     class Meta:
         model = auth_models.User
         fields = {}
+
+
+class AdminReportExpiringConsultancyContractOverviewFilter(FilterSet):
+    """Expiring consultancy contract overview admin report filter."""
+    ends_at_lte = django_filters.DateFilter(label='Ends before', widget=admin_widgets.AdminDateWidget(),
+                                            name='ends_at', lookup_expr='lte')
+    remaining_hours_lte = django_filters.NumberFilter(label='Remaining hours (<=, less than or equal)')
+    only_final = django_filters.ChoiceFilter(label='Only display final consultancy contract for a user?',
+                                             choices=(('true', 'Yes'), ('false', 'No')))
+
+    class Meta:
+        model = models.ConsultancyContract
+        fields = {}

@@ -30,6 +30,8 @@ class SummedHoursColumn(tables.Column):
 
     def render(self, value):
         """Render the value."""
+        if value is None:
+            return value
         return '%(amount).2fh (%(days).2fd)' % {'amount': value, 'days': hours_to_days(value)}
 
     def value(self, value):
@@ -39,7 +41,8 @@ class SummedHoursColumn(tables.Column):
     def render_footer(self, table, column, bound_column):
         """Render the footer."""
         accessor = self.accessor if self.accessor else A(bound_column.name)
-        total = sum(accessor.resolve(x) for x in table.data)
+        total = [accessor.resolve(x) for x in table.data]
+        total = sum([x for x in total if x is not None])
         return _('Total: %s') % self.render(total)
 
 
@@ -352,15 +355,13 @@ class UserWorkRatioOverviewTable(BaseTable):
         return format_html('%s' % ('&nbsp;'.join(buttons)))
 
 
-class ResourceAvailabilityDayColumn(tables.Column):
+class ResourceAvailabilityDayColumn(tables.TemplateColumn):
     """Resource availability day column."""
 
-    def render(self, value):
-        """Render the value."""
-
-        res = ''
-
-        return res
+    def __init__(self, *args, **kwargs):
+        """Constructor."""
+        kwargs['template_name'] = 'ninetofiver/admin/reports/resource_availability_overview_day.pug'
+        super().__init__(*args, **kwargs)
 
 
 class ResourceAvailabilityOverviewTable(BaseTable):
@@ -383,9 +384,39 @@ class ResourceAvailabilityOverviewTable(BaseTable):
         if from_date and until_date:
             for day_date in dates_in_range(from_date, until_date):
                 date_str = str(day_date)
-                column = tables.TemplateColumn(accessor=A('days.%s' % date_str), orderable=False,
-                                               template_name='ninetofiver/admin/reports/resource_availability_overview_day.pug')
+                column = ResourceAvailabilityDayColumn(accessor=A('days.%s' % date_str), orderable=False)
                 extra_columns.append([day_date.strftime('%a, %d %b'), column])
         kwargs['extra_columns'] = extra_columns
         kwargs['sequence'] = ('user', '...')
         super().__init__(*args, **kwargs)
+
+
+class ExpiringConsultancyContractOverviewTable(BaseTable):
+    """Expiring consultancy contract overview table."""
+
+    class Meta(BaseTable.Meta):
+        pass
+
+    user = tables.LinkColumn(
+        viewname='admin:auth_user_change',
+        args=[A('user.id')],
+        accessor='contract_user',
+        order_by=['user.first_name', 'user.last_name', 'user.username']
+    )
+    contract = tables.LinkColumn(
+        viewname='admin:ninetofiver_contract_change',
+        args=[A('contract.id')],
+        accessor='contract',
+        order_by=['contract.name']
+    )
+    starts_at = tables.DateColumn('D d F', accessor='contract.starts_at')
+    ends_at = tables.DateColumn('D d F', accessor='contract.ends_at')
+    alotted_hours = SummedHoursColumn(accessor='alotted_hours')
+    performed_hours = SummedHoursColumn(accessor='performed_hours')
+    remaining_hours = SummedHoursColumn(accessor='remaining_hours')
+    # actions = tables.Column(accessor='user', orderable=False, exclude_from_export=True)
+
+    def render_actions(self, record):
+        buttons = []
+
+        return format_html('%s' % ('&nbsp;'.join(buttons)))
