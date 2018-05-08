@@ -1,6 +1,6 @@
 div
     if 'sickness' in value.availability
-        h3
+        h5(class='my-0')
             span(
                 style="background:#ff4444;opacity:0.75;"
                 class="badge"
@@ -8,7 +8,7 @@ div
                 title="Sickness"
             ) S
     elif 'leave' in value.availability
-        h3
+        h5(class='my-0')
             span(
                 style="background:#00c851;opacity:0.75;"
                 class="badge"
@@ -16,7 +16,7 @@ div
                 title="Leave"
             )  L
     elif 'holiday' in value.availability
-        h3
+        h5(class='my-0')
             span(
                 style="background:#59b8e6;opacity:0.75;"
                 class="badge"
@@ -24,7 +24,7 @@ div
                 title="Holiday"
             )  H
     elif 'no_work' in value.availability
-        h3
+        h5(class='my-0')
             span(
                 style="background:#9e9d9d;opacity:0.5;"
                 class="badge"
@@ -32,7 +32,7 @@ div
                 title="No work"
             )  N
     else
-        h3
+        h5(class='my-0')
             div(class='btn-group')
                 button(
                     style="background:{{ value.enough_hours|yesno:'#1693A5,#ff4444' }} "

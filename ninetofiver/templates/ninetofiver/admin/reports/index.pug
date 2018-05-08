@@ -22,7 +22,7 @@ block content
             a(href="{% url 'admin_report_user_work_ratio_overview' %}?year={{ today|date:'Y' }}&user={{ user.id }}") User work ratio overview
         tr
           th
-            a(href="{% url 'admin_report_resource_availability_overview' %}?user={{ user.id }}&from_date={{ last_week|date:'Y-m-d' }}&until_date={{ today|date:'Y-m-d' }}") Resource availability overview
+            a(href="{% url 'admin_report_resource_availability_overview' %}?from_date={{ today|date:'Y-m-d' }}&until_date={{ next_month|date:'Y-m-d' }}") Resource availability overview
         tr
           th
             a(href="{% url 'admin_report_expiring_consultancy_contract_overview' %}?ends_at_lte={{ next_month|date:'Y-m-d' }}&remaining_hours_lte={{ '160' }}") Expiring consultancy contract overview
