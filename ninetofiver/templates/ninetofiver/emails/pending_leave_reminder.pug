@@ -2,7 +2,7 @@ extends ninetofiver/emails/mail_generic.pug
 
 block content
     p Dear {{ user }},
-    p There {{ leave_count|pluralize:"is,are" }} {{ leave_count }} pending leave{{ leave_count|pluralize:"s" }} awaiting your approval.
+    p There {{ leave_count|pluralize:"is,are" }} {{ leave_count }} pending leave awaiting your approval.
     
     p
         a(href='{{ settings.BASE_URL }}{% url "admin_leave_approve" leave_pk=leave_ids %}' style="

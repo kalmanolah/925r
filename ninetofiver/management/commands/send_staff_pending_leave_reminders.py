@@ -11,13 +11,13 @@ log = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    """Send staff a reminder about pending leaves."""
+    """Send staff a reminder about pending leave."""
 
     args = ''
-    help = 'Send staff a reminder about pending leaves'
+    help = 'Send staff a reminder about pending leave'
 
     def handle(self, *args, **options):
-        """Send staff a reminder about pending leaves."""
+        """Send staff a reminder about pending leave."""
         pending_leaves = models.Leave.objects.filter(status=models.STATUS_PENDING)
         pending_leave_count = pending_leaves.count()
         log.info('%s pending leave(s) found' % pending_leave_count)
@@ -30,7 +30,7 @@ class Command(BaseCommand):
 
                 send_mail(
                     user.email,
-                    _('Pending leaves awaiting your approval'),
+                    _('Pending leave awaiting your approval'),
                     'ninetofiver/emails/pending_leave_reminder.pug',
                     context={
                         'user': user,
