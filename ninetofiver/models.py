@@ -926,13 +926,13 @@ class ContractUserWorkSchedule(BaseModel):
                                    _('The given contract user already has a work schedule for this period.')})
 
 
-class ProjectEstimate(BaseModel):
+class ContractEstimate(BaseModel):
 
-    """Project estimate model."""
+    """Contract estimate model."""
 
-    role = models.ForeignKey(ContractRole, on_delete=models.PROTECT)
-    project = models.ForeignKey(ProjectContract, on_delete=models.PROTECT)
-    hours_estimated = models.DecimalField(
+    contract_role = models.ForeignKey(ContractRole, on_delete=models.PROTECT)
+    contract = models.ForeignKey(Contract, on_delete=models.PROTECT)
+    duration = models.DecimalField(
         max_digits=9,
         decimal_places=2,
         validators=[
@@ -943,7 +943,10 @@ class ProjectEstimate(BaseModel):
 
     def __str__(self):
         """Return a string representation"""
-        return '%s [Est: %s]' % (self.role.name, self.hours_estimated)
+        return '%s [Est: %s]' % (str(self.contract_role), self.duration)
+
+    class Meta(BaseModel.Meta):
+        unique_together = (('contract', 'contract_role'),)
 
 
 class Location(SortableMixin, BaseModel):

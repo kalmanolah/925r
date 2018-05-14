@@ -182,13 +182,6 @@ class ProjectContractFactory(ContractFactory):
     fixed_fee = factory.LazyFunction(lambda: random.randint(0, 9999))
 
 
-class ProjectEstimateFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = models.ProjectEstimate
-
-    hours_estimated = factory.LazyFunction(lambda: random.randint(0, 9999))
-
-
 class ConsultancyContractFactory(ContractFactory):
     class Meta:
         model = models.ConsultancyContract

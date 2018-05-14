@@ -74,6 +74,13 @@ def hours_to_days(hours):
     return round(hours / 8, 2)
 
 
+def format_duration(hours):
+    """Format duration as a string."""
+    if hours is None:
+        return hours
+    return '%(amount).2fh (%(days).2fd)' % {'amount': hours, 'days': hours_to_days(hours)}
+
+
 def send_mail(recipients, subject, template, context={}):
     """Send a mail from a template to the given recipients."""
     from ninetofiver.settings import DEFAULT_FROM_EMAIL

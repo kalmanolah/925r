@@ -738,12 +738,65 @@ def admin_report_expiring_consultancy_contract_overview_view(request):
 
 @staff_member_required
 def admin_report_project_contract_overview_view(request):
-    """User work ratio overview report."""
-    fltr = filters.AdminReportUserWorkRatioOverviewFilter(request.GET, models.Timesheet.objects)
+    """Project contract overview report."""
+    fltr = filters.AdminReportProjectContractOverviewFilter(request.GET, models.ProjectContract.objects)
     data = []
 
+    contracts = (fltr.qs.all()
+                 .select_related('customer')
+                 .prefetch_related('contractestimate_set', 'contractestimate_set__contract_role')
+                 .filter(active=True)
+                 # Ensure contracts where the internal company and the customer are the same are filtered out
+                 # These are internal contracts to cover things such as meetings, talks, etc..
+                 .exclude(customer=F('company')))
+
+    for contract in contracts:
+        # Keep track of totals
+        performed_hours = Decimal('0.00')
+        estimated_hours = Decimal('0.00')
+
+        # List containing estimated and performed hours per role
+        contract_role_data = []
+
+        # Dict containing estimations per role
+        contract_role_estimates = {x.contract_role.id: x.duration for x in contract.contractestimate_set.all()}
+
+        # Fetch each contract role with hours performed for the contract,
+        # annotated with the sum of hours performed for that contract by that role
+        contract_roles = (models.ContractRole.objects
+                          .filter(Q(activityperformance__contract=contract) | Q(contractestimate__contract=contract))
+                          .distinct())
+
+        # Iterate over contract roles and fill in performed hours and ratio
+        for contract_role in contract_roles:
+            role_estimated_hours = contract_role_estimates.get(contract_role.id, Decimal('0.00'))
+            role_performed_hours = (models.ActivityPerformance.objects
+                                    .filter(contract=contract, contract_role=contract_role)
+                                    .aggregate(sum_duration=Sum('duration')))['sum_duration']
+            role_performed_hours = role_performed_hours if role_performed_hours is not None else Decimal('0.00')
+            role_performed_pct = (round((role_performed_hours / role_estimated_hours) * 100, 2)
+                                  if role_estimated_hours else None)
+
+            estimated_hours += role_estimated_hours
+            performed_hours += role_performed_hours
+
+            contract_role_data.append({
+                'contract_role': contract_role,
+                'performed_hours': role_performed_hours,
+                'estimated_hours': role_estimated_hours,
+                'performed_pct':  role_performed_pct,
+            })
+
+        data.append({
+            'contract': contract,
+            'contract_roles': contract_role_data,
+            'performed_hours': performed_hours,
+            'estimated_hours': estimated_hours,
+            'performed_pct': round((performed_hours / estimated_hours) * 100, 2) if estimated_hours else None,
+        })
+
     config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
-    table = tables.UserWorkRatioOverviewTable(data)
+    table = tables.ProjectContractOverviewTable(data)
     config.configure(table)
 
     export_format = request.GET.get('_export', None)

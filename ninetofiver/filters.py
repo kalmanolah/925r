@@ -446,20 +446,6 @@ class ContractUserFilter(FilterSet):
         }
 
 
-class ProjectEstimateFilter(FilterSet):
-    order_fields = ('hours_estimated', 'role__name', 'project__name', 'project__description',)
-    order_by = NullLastOrderingFilter(fields=order_fields)
-
-    class Meta:
-        model = models.ProjectEstimate
-        fields = {
-            'hours_estimated': ['exact', 'gt', 'gte', 'lt', 'lte', ],
-            'role__name': ['exact', 'contains', 'icontains', ],
-            'project__name': ['exact', 'contains', 'icontains', ],
-            'project__description': ['contains', 'icontains', ],
-        }
-
-
 class TimesheetFilter(filters.FilterSet):
     order_fields = ('year', 'month', 'status', 'user')
     order_by = NullLastOrderingFilter(fields=order_fields)
@@ -546,13 +532,17 @@ class AdminReportTimesheetContractOverviewFilter(FilterSet):
                              label='Contract', queryset=models.Contract.objects.filter(active=True),  distinct=True,
                              widget=Select2MultipleWidget))
     performance__contract__polymorphic_ctype__model = (django_filters.MultipleChoiceFilter(
-                                               label='Contract type', choices=[('projectcontract', _('Project')), ('consultancycontract', _('Consultancy')), ('supportcontract', _('Support'))], distinct=True,
+                                               label='Contract type',
+                                               choices=[('projectcontract', _('Project')),
+                                                        ('consultancycontract', _('Consultancy')),
+                                                        ('supportcontract', _('Support'))],
+                                               distinct=True,
                                                widget=Select2MultipleWidget))
     performance__contract__customer = (django_filters.ModelMultipleChoiceFilter(
                                        label='Contract customer', queryset=models.Company.objects.filter(),
                                        distinct=True, widget=Select2MultipleWidget))
     performance__contract__company = (django_filters.ModelMultipleChoiceFilter(
-                                      label='Contract internal company', queryset=models.Company.objects.filter(),
+                                      label='Contract company', queryset=models.Company.objects.filter(internal=True),
                                       distinct=True, widget=Select2MultipleWidget))
     user = django_filters.ModelMultipleChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True),
                                                     widget=Select2MultipleWidget)
@@ -672,3 +662,22 @@ class AdminReportExpiringConsultancyContractOverviewFilter(FilterSet):
     class Meta:
         model = models.ConsultancyContract
         fields = {}
+
+
+class AdminReportProjectContractOverviewFilter(FilterSet):
+    """Project contract overview admin report filter."""
+    customer = (django_filters.ModelMultipleChoiceFilter(queryset=models.Company.objects.filter(),
+                                                         distinct=True, widget=Select2MultipleWidget))
+    company = (django_filters.ModelMultipleChoiceFilter(queryset=models.Company.objects.filter(internal=True),
+                                                        distinct=True, widget=Select2MultipleWidget))
+    contract_groups = (django_filters.ModelMultipleChoiceFilter(queryset=models.ContractGroup.objects.all(),
+                                                                widget=Select2MultipleWidget, distinct=True))
+
+    class Meta:
+        model = models.ProjectContract
+        fields = {
+            'name': ['icontains'],
+            'contract_groups': ['exact'],
+            'company': ['exact'],
+            'customer': ['exact'],
+        }

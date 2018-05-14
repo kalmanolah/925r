@@ -330,6 +330,10 @@ class ContractUserGroupInline(admin.TabularInline):
     model = models.ContractUserGroup
 
 
+class ContractEstimateInline(admin.TabularInline):
+    model = models.ContractEstimate
+
+
 class ContractForm(forms.ModelForm):
     """Contract form."""
 
@@ -432,6 +436,7 @@ class ContractChildAdmin(PolymorphicChildModelAdmin):
                 .distinct())
 
     inlines = [
+        ContractEstimateInline,
         ContractUserGroupInline,
         ContractUserInline,
     ]
@@ -487,13 +492,6 @@ class ContractUserAdmin(admin.ModelAdmin):
         ('contract__customer', RelatedDropdownFilter),
         ('user', RelatedDropdownFilter),
     )
-
-
-@admin.register(models.ProjectEstimate)
-class ProjectEstimateAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'project', 'role', 'hours_estimated', )
-    search_fields = ('role__name', 'project__name', 'project__customer')
-    ordering = ('project', 'hours_estimated')
 
 
 @admin.register(models.Timesheet)

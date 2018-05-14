@@ -350,48 +350,16 @@ class ContractSerializer(BaseSerializer):
                                                'attachments', 'redmine_id', 'external_only', )
 
 
-class AdminProjectContractSerializer(ContractSerializer):
-    # Serializer that shows classified information.
-    hours_estimated = serializers.SerializerMethodField()
-
-    def get_hours_estimated(self, obj):
-        return obj.projectestimate_set.values_list('hours_estimated', 'role_id',)
-
-    class Meta(ContractSerializer.Meta):
-        model = models.ProjectContract
-        fields = ContractSerializer.Meta.fields + ('redmine_id', 'starts_at', 'ends_at', 'fixed_fee', 'hours_estimated',)
-
-
 class ProjectContractSerializer(ContractSerializer):
-    hours_estimated = serializers.SerializerMethodField()
-
-    def get_hours_estimated(self, obj):
-        return obj.projectestimate_set.values_list('hours_estimated', 'role_id',)
-
-
     class Meta(ContractSerializer.Meta):
         model = models.ProjectContract
-        fields = ContractSerializer.Meta.fields + ('redmine_id', 'starts_at', 'ends_at', 'hours_estimated',)
-
-
-class AdminConsultancyContractSerializer(ContractSerializer):
-    # Serializer that shows classified information.
-    class Meta(ContractSerializer.Meta):
-        model = models.ConsultancyContract
-        fields = ContractSerializer.Meta.fields + ('starts_at', 'ends_at', 'day_rate', 'duration')
+        fields = ContractSerializer.Meta.fields
 
 
 class ConsultancyContractSerializer(ContractSerializer):
     class Meta(ContractSerializer.Meta):
         model = models.ConsultancyContract
         fields = ContractSerializer.Meta.fields + ('duration',)
-
-
-class AdminSupportContractSerializer(ContractSerializer):
-    # Serializer that shows classified information.
-    class Meta(ContractSerializer.Meta):
-        model = models.SupportContract
-        fields = ContractSerializer.Meta.fields + ('day_rate', 'fixed_fee', 'fixed_fee_period')
 
 
 class SupportContractSerializer(ContractSerializer):
@@ -424,12 +392,6 @@ class ContractGroupSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.ContractGroup
         fields = BaseSerializer.Meta.fields + ('name', )
-
-
-class ProjectEstimateSerializer(BaseSerializer):
-    class Meta(BaseSerializer.Meta):
-        model = models.ProjectEstimate
-        fields = BaseSerializer.Meta.fields + ('role', 'project', 'hours_estimated')
 
 
 class TimesheetSerializer(BaseSerializer):

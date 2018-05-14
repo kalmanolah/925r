@@ -6,7 +6,7 @@ import django_tables2 as tables
 from django_tables2.utils import A
 from django_tables2.export.export import TableExport
 from ninetofiver import models
-from ninetofiver.utils import month_date_range, hours_to_days, dates_in_range
+from ninetofiver.utils import month_date_range, format_duration, dates_in_range
 
 
 class BaseTable(tables.Table):
@@ -30,9 +30,7 @@ class SummedHoursColumn(tables.Column):
 
     def render(self, value):
         """Render the value."""
-        if value is None:
-            return value
-        return '%(amount).2fh (%(days).2fd)' % {'amount': value, 'days': hours_to_days(value)}
+        return format_duration(value)
 
     def value(self, value):
         """Return the value."""
@@ -367,6 +365,8 @@ class ResourceAvailabilityDayColumn(tables.TemplateColumn):
 class ResourceAvailabilityOverviewTable(BaseTable):
     """Resource availability overview table."""
 
+    export_formats = []
+
     class Meta(BaseTable.Meta):
         pass
 
@@ -414,6 +414,39 @@ class ExpiringConsultancyContractOverviewTable(BaseTable):
     alotted_hours = SummedHoursColumn(accessor='alotted_hours')
     performed_hours = SummedHoursColumn(accessor='performed_hours')
     remaining_hours = SummedHoursColumn(accessor='remaining_hours')
+    # actions = tables.Column(accessor='user', orderable=False, exclude_from_export=True)
+
+    def render_actions(self, record):
+        buttons = []
+
+        return format_html('%s' % ('&nbsp;'.join(buttons)))
+
+
+class ProjectContractRoleColumn(tables.TemplateColumn):
+    """Project contract role column."""
+
+    def __init__(self, *args, **kwargs):
+        """Constructor."""
+        kwargs['template_name'] = 'ninetofiver/admin/reports/project_contract_role.pug'
+        super().__init__(*args, **kwargs)
+
+
+class ProjectContractOverviewTable(BaseTable):
+    """Project contract overview table."""
+
+    export_formats = []
+
+    class Meta(BaseTable.Meta):
+        pass
+
+    contract = tables.LinkColumn(
+        viewname='admin:ninetofiver_contract_change',
+        args=[A('contract.id')],
+        accessor='contract',
+        order_by=['contract.name']
+    )
+    contract_roles = ProjectContractRoleColumn(accessor='', orderable=False)
+
     # actions = tables.Column(accessor='user', orderable=False, exclude_from_export=True)
 
     def render_actions(self, record):
