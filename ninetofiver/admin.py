@@ -500,7 +500,11 @@ class TimesheetAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Get the queryset."""
-        return super().get_queryset(request).select_related('user')
+        return super().get_queryset(request).select_related('user').prefetch_related('attachments')
+
+    def attachments(obj):
+        return format_html('<br>'.join('<a href="%s">%s</a>'
+                           % (x.get_file_url(), str(x)) for x in list(obj.attachments.all())))
 
     def make_closed(self, request, queryset):
         for timesheet in queryset:
@@ -532,7 +536,7 @@ class TimesheetAdmin(admin.ModelAdmin):
 
         return format_html('&nbsp;'.join(actions))
 
-    list_display = ('__str__', 'user', 'month', 'year', 'status', 'item_actions')
+    list_display = ('__str__', 'user', 'month', 'year', 'status', attachments, 'item_actions')
     list_filter = (
         'status',
         ('user', RelatedDropdownFilter),

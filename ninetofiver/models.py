@@ -486,7 +486,7 @@ class Attachment(BaseModel):
     def __str__(self):
         """Return a string representation."""
         if self.file:
-            return '%s (%s - %s) [%s]' % (self.name, self.file.name.split('/')[-1],
+            return '%s (%s - %s) [%s]' % (self.name, self.file.name.split('.')[-1].upper(),
                                           humanize.naturalsize(self.file.size), self.user)
         return '- [%s]' % self.user
 
