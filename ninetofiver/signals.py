@@ -62,6 +62,29 @@ def on_leave_pre_save(sender, instance, created=False, **kwargs):
                 )
 
 
+@receiver(pre_save, sender=models.Timesheet)
+def on_timesheet_pre_save(sender, instance, created=False, **kwargs):
+    """Process pre-save event for a timesheet."""
+    if (not created) and instance.is_dirty():
+        dirty = instance.get_dirty_fields()
+
+        old_status = dirty.get('status', None)
+        new_status = instance.status
+        statuses = [models.STATUS_CLOSED, models.STATUS_ACTIVE]
+
+        if (old_status != new_status) and (new_status in statuses):
+            if instance.user.email:
+                send_mail(
+                    instance.user.email,
+                    _('Timesheet status updated: %(status)s') % {'status': instance.status},
+                    'ninetofiver/emails/timesheet_status_updated.pug',
+                    context={
+                        'user': instance.user,
+                        'timesheet': instance,
+                    }
+                )
+
+
 @receiver(pre_save, sender=models.ContractUserGroup)
 def on_contract_user_group_pre_save(sender, instance, created=False, **kwargs):
     """Process pre-save event for a contract user group."""

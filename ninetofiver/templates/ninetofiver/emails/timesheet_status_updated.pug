@@ -1,0 +1,50 @@
+extends ninetofiver/emails/mail_generic.pug
+
+block content
+    p Dear {{ user }},
+    p Your timesheet has been marked as '{{ timesheet.status }}'.
+        | <br>
+        | More details can be found below.
+
+    table(style="
+        border-collapse: collapse;
+    ")
+        thead
+            tr(style="
+                background: {% cycle '#ffffff' '#f9f9f9' %};
+            ")
+                th(style="
+                    color: #666;
+                    background: #f6f6f6;
+                    text-transform: uppercase;
+                    border-top: 1px solid #eee;
+                    border-bottom: 1px solid #eee;
+                    padding: 8px 10px;
+                    text-align: left;
+                    vertical-align: top;
+                ") Timesheet
+                td(style="
+                    border-top: 1px solid #eee;
+                    border-bottom: 1px solid #eee;
+                    padding: 8px;
+                    vertical-align: top;
+                ") {{ timesheet }}
+            tr(style="
+                background: {% cycle '#ffffff' '#f9f9f9' %};
+            ")
+                th(style="
+                    color: #666;
+                    background: #f6f6f6;
+                    text-transform: uppercase;
+                    border-top: 1px solid #eee;
+                    border-bottom: 1px solid #eee;
+                    padding: 8px 10px;
+                    text-align: left;
+                    vertical-align: top;
+                ") Status
+                td(style="
+                    border-top: 1px solid #eee;
+                    border-bottom: 1px solid #eee;
+                    padding: 8px;
+                    vertical-align: top;
+                ") {{ timesheet.status | title }}
