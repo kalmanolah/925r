@@ -35,10 +35,20 @@ block extrahead
         integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
         crossorigin="anonymous"
     )
+    script(
+        src="https://cdnjs.cloudflare.com/ajax/libs/floatthead/2.1.2/jquery.floatThead.min.js"
+        integrity="sha256-qbQ/aiFDInuTTrKMiR0mn+bXEwqi25xAZBsYaqhmzvo="
+        crossorigin="anonymous"
+    )
     script(type='text/javascript')
         | jQuery(function () {
         |   jQuery('[data-toggle="tooltip"]').tooltip()
         |   jQuery('[data-toggle="popover"]').popover()
+        |   jQuery('.report-table table:not(.floatThead-table)').floatThead({
+        |     responsiveContainer: function($table) {
+        |       return $table.closest('.table-container')
+        |     }
+        |   })
         | })
         | var django = django || {};
         | django.jQuery = jQuery.noConflict(false);
