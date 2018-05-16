@@ -399,7 +399,7 @@ class TimesheetSerializer(BaseSerializer):
 
     class Meta(BaseSerializer.Meta):
         model = models.Timesheet
-        fields = BaseSerializer.Meta.fields + ('user', 'year', 'month', 'status')
+        fields = BaseSerializer.Meta.fields + ('user', 'year', 'month', 'status', 'attachments')
 
 
 class LocationSerializer(BaseSerializer):

@@ -430,6 +430,7 @@ class Timesheet(BaseModel):
         ]
     )
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
+    attachments = models.ManyToManyField('Attachment', blank=True)
 
     class Meta(BaseModel.Meta):
         unique_together = (('user', 'year', 'month'),)
