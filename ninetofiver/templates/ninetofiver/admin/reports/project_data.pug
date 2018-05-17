@@ -73,7 +73,7 @@ div(class='mt-3')
         tbody
             for user_data in record.users
                 tr
-                    td {{ user }}
+                    td {{ user_data.user }}
                     td(class='text-nowrap') {{ user_data.performed_hours | format_duration }}
                     td
                         if user_data.performed_pct is not None
