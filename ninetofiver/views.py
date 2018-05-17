@@ -670,10 +670,16 @@ def admin_report_expiring_consultancy_contract_overview_view(request):
                    if request.GET.get('ends_at_lte') else None)
     remaining_hours_lte = (Decimal(request.GET.get('remaining_hours_lte'))
                            if request.GET.get('remaining_hours_lte') else None)
+    remaining_days_lte = (Decimal(request.GET.get('remaining_days_lte'))
+                          if request.GET.get('remaining_days_lte') else None)
     only_final = request.GET.get('only_final', 'false') == 'true'
     data = []
 
-    if ends_at_lte or remaining_hours_lte:
+    if ends_at_lte or remaining_hours_lte or remaining_days_lte:
+        # If remaining_days_lte * 8 is than remaining_hours_lte, use that instead
+        if remaining_days_lte and ((not remaining_hours_lte) or ((remaining_days_lte * 8) < remaining_hours_lte)):
+            remaining_hours_lte = remaining_days_lte * 8
+
         contracts = (models.ConsultancyContract.objects.all()
                      .select_related('customer')
                      .prefetch_related('contractuser_set', 'contractuser_set__contract_role', 'contractuser_set__user')
