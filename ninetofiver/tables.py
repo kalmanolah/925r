@@ -461,7 +461,12 @@ class ProjectContractOverviewTable(BaseTable):
         viewname='admin:ninetofiver_contract_change',
         args=[A('contract.id')],
         accessor='contract',
-        order_by=['contract.name']
+        order_by=['contract.name'],
+        attrs={
+            'th': {
+                'style': 'width: 15%; min-width: 150px;'
+            }
+        }
     )
     data = ProjectDataColumn(accessor='', orderable=False)
 

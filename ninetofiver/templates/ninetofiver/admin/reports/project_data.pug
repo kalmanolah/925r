@@ -15,10 +15,7 @@ div(class='row')
                             td {{ country_data.country }}
                             td(class='text-nowrap') {{ country_data.performed_hours | format_duration }}
                             td
-                                if country_data.performed_pct is not None
-                                    - include 'ninetofiver/admin/reports/progress_bar.html' with value=country_data.performed_pct
-                                else
-                                    | n/a
+                                - include 'ninetofiver/admin/reports/progress_bar.html' with value=country_data.performed_pct
 
                     tr
                         th Total
@@ -42,15 +39,9 @@ div(class='row')
                             td(class='text-nowrap') {{ contract_role_data.estimated_hours | format_duration }}
                             td(class='text-nowrap') {{ contract_role_data.performed_hours | format_duration }}
                             td
-                                if contract_role_data.performed_pct is not None
-                                    - include 'ninetofiver/admin/reports/progress_bar.html' with value=contract_role_data.performed_pct
-                                else
-                                    | n/a
+                                - include 'ninetofiver/admin/reports/progress_bar.html' with value=contract_role_data.performed_pct
                             td
-                                if contract_role_data.estimated_pct is not None
-                                    - include 'ninetofiver/admin/reports/progress_bar.html' with value=contract_role_data.estimated_pct
-                                else
-                                    | n/a
+                                - include 'ninetofiver/admin/reports/progress_bar.html' with value=contract_role_data.estimated_pct
 
                     tr
                         th Total
@@ -58,10 +49,7 @@ div(class='row')
                         td(class='text-nowrap') {{ record.performed_hours | format_duration }}
                         td
                         td
-                            if record.estimated_pct is not None
-                                - include 'ninetofiver/admin/reports/progress_bar.html' with value=record.estimated_pct
-                            else
-                                | n/a
+                            - include 'ninetofiver/admin/reports/progress_bar.html' with value=record.estimated_pct
 
 div(class='mt-3')
     table(class='table table-sm table-striped my-0')
@@ -76,10 +64,7 @@ div(class='mt-3')
                     td {{ user_data.user }}
                     td(class='text-nowrap') {{ user_data.performed_hours | format_duration }}
                     td
-                        if user_data.performed_pct is not None
-                            - include 'ninetofiver/admin/reports/progress_bar.html' with value=user_data.performed_pct
-                        else
-                            | n/a
+                        - include 'ninetofiver/admin/reports/progress_bar.html' with value=user_data.performed_pct
 
             tr
                 th Total
