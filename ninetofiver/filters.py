@@ -673,6 +673,10 @@ class AdminReportExpiringConsultancyContractOverviewFilter(FilterSet):
 
 class AdminReportProjectContractOverviewFilter(FilterSet):
     """Project contract overview admin report filter."""
+    contract = (django_filters.ModelMultipleChoiceFilter(label='Contract',
+                                                         name='contract_ptr', lookup_expr='in',
+                                                         queryset=models.ProjectContract.objects.filter(active=True),
+                                                         distinct=True, widget=Select2MultipleWidget))
     customer = (django_filters.ModelMultipleChoiceFilter(queryset=models.Company.objects.filter(),
                                                          distinct=True, widget=Select2MultipleWidget))
     company = (django_filters.ModelMultipleChoiceFilter(queryset=models.Company.objects.filter(internal=True),
@@ -683,6 +687,7 @@ class AdminReportProjectContractOverviewFilter(FilterSet):
     class Meta:
         model = models.ProjectContract
         fields = {
+            'contract': ['exact'],
             'name': ['icontains'],
             'contract_groups': ['exact'],
             'company': ['exact'],
