@@ -552,6 +552,12 @@ def admin_report_resource_availability_overview_view(request):
     except Exception:
         pass
 
+    try:
+        contract_ids = list(map(int, request.GET.getlist('contract', [])))
+        users = users.filter(contractuser__contract__in=contract_ids) if contract_ids else users
+    except Exception:
+        pass
+
     if users and from_date and until_date and (until_date >= from_date):
         dates = dates_in_range(from_date, until_date)
 
