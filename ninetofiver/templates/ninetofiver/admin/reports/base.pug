@@ -44,7 +44,7 @@ block extrahead
         | jQuery(function () {
         |   jQuery('[data-toggle="tooltip"]').tooltip()
         |   jQuery('[data-toggle="popover"]').popover()
-        |   jQuery('.report-table table:not(.floatThead-table)').floatThead({
+        |   jQuery('.report-table > > table:not(.floatThead-table)').floatThead({
         |     responsiveContainer: function($table) {
         |       return $table.closest('.table-container')
         |     }

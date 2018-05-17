@@ -768,43 +768,75 @@ def admin_report_project_contract_overview_view(request):
         estimated_hours = Decimal('0.00')
 
         # List containing estimated and performed hours per role
-        contract_role_data = []
+        contract_role_data = {}
+        # List containing performed hours per country
+        country_data = {}
+        # List containing performed hours per user
+        user_data = {}
 
-        # Dict containing estimations per role
-        contract_role_estimates = {x.contract_role.id: x.duration for x in contract.contractestimate_set.all()}
+        # Fetch each performance for the contract, annotated with country
+        performances = (models.ActivityPerformance.objects
+                        .select_related('contract_role', 'timesheet__user', 'timesheet__user__userinfo')
+                        .filter(contract=contract))
 
-        # Fetch each contract role with hours performed for the contract,
-        # annotated with the sum of hours performed for that contract by that role
-        contract_roles = (models.ContractRole.objects
-                          .filter(Q(activityperformance__contract=contract) | Q(contractestimate__contract=contract))
-                          .distinct())
+        # Iterate over estimates to populate contract role data
+        for contract_estimate in contract.contractestimate_set.all():
+            estimated_hours += contract_estimate.duration
+            contract_role_data[contract_estimate.contract_role.id] = {
+                'contract_role': contract_estimate.contract_role,
+                'performed_hours': Decimal('0.00'),
+                'estimated_hours': contract_estimate.duration,
+            }
 
-        # Iterate over contract roles and fill in performed hours and ratio
-        for contract_role in contract_roles:
-            role_estimated_hours = contract_role_estimates.get(contract_role.id, Decimal('0.00'))
-            role_performed_hours = (models.ActivityPerformance.objects
-                                    .filter(contract=contract, contract_role=contract_role)
-                                    .aggregate(sum_duration=Sum('duration')))['sum_duration']
-            role_performed_hours = role_performed_hours if role_performed_hours is not None else Decimal('0.00')
-            role_performed_pct = (round((role_performed_hours / role_estimated_hours) * 100, 2)
-                                  if role_estimated_hours else None)
+        # Iterate over performance and fill in performed data
+        for performance in performances:
+            country = (performance.timesheet.user.userinfo.country
+                       if (performance.timesheet.user.userinfo and performance.timesheet.user.userinfo.country)
+                       else 'Other')
+            if country not in country_data:
+                country_data[country] = {
+                    'country': country,
+                    'performed_hours': Decimal('0.00'),
+                }
 
-            estimated_hours += role_estimated_hours
-            performed_hours += role_performed_hours
+            user = performance.timesheet.user
+            if user.id not in user_data:
+                user_data[user.id] = {
+                    'user': user,
+                    'performed_hours': Decimal('0.00'),
+                }
 
-            contract_role_data.append({
-                'contract_role': contract_role,
-                'performed_hours': role_performed_hours,
-                'estimated_hours': role_estimated_hours,
-                'performed_pct':  role_performed_pct,
-            })
+            contract_role = performance.contract_role
+            if contract_role.id not in contract_role_data:
+                contract_role_data[contract_role.id] = {
+                    'contract_role': contract_role,
+                    'performed_hours': Decimal('0.00'),
+                    'estimated_hours': Decimal('0.00'),
+                }
+
+            duration = performance.duration
+            performed_hours += duration
+            contract_role_data[performance.contract_role.id]['performed_hours'] += duration
+            country_data[country]['performed_hours'] += duration
+            user_data[user.id]['performed_hours'] += duration
+
+        # Iterate over contract role, user, country data and calculate performed_pct
+        for contract_role_id, item in contract_role_data.items():
+            item['performed_pct'] = round((item['performed_hours'] / performed_hours) * 100, 2) if performed_hours else None
+            item['estimated_pct'] = round((item['performed_hours'] / item['estimated_hours']) * 100, 2) if item['estimated_hours'] else None
+        for user_id, item in user_data.items():
+            item['performed_pct'] = round((item['performed_hours'] / performed_hours) * 100, 2) if performed_hours else None
+        for country, item in country_data.items():
+            item['performed_pct'] = round((item['performed_hours'] / performed_hours) * 100, 2) if performed_hours else None
 
         data.append({
             'contract': contract,
-            'contract_roles': contract_role_data,
+            'contract_roles': contract_role_data.values(),
+            'countries': country_data.values(),
+            'users': user_data.values(),
             'performed_hours': performed_hours,
             'estimated_hours': estimated_hours,
-            'performed_pct': round((performed_hours / estimated_hours) * 100, 2) if estimated_hours else None,
+            'estimated_pct': round((performed_hours / estimated_hours) * 100, 2) if estimated_hours else None,
         })
 
     config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})

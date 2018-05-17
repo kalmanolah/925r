@@ -1,0 +1,87 @@
+- load format_duration
+
+div(class='row')
+    div(class='col-4')
+        div
+            table(class='table table-sm table-striped my-0')
+                thead
+                    tr
+                        th Country
+                        th Performed
+                        th Performed ratio
+                tbody
+                    for country_data in record.countries
+                        tr
+                            td {{ country_data.country }}
+                            td(class='text-nowrap') {{ country_data.performed_hours | format_duration }}
+                            td
+                                if country_data.performed_pct is not None
+                                    - include 'ninetofiver/admin/reports/progress_bar.html' with value=country_data.performed_pct
+                                else
+                                    | n/a
+
+                    tr
+                        th Total
+                        td(class='text-nowrap') {{ record.performed_hours | format_duration }}
+                        td
+    
+    div(class='col-8')
+        div
+            table(class='table table-sm table-striped my-0')
+                thead
+                    tr
+                        th Role
+                        th Estimated
+                        th Performed
+                        th Performed ratio
+                        th Performed vs. estimated ratio
+                tbody
+                    for contract_role_data in record.contract_roles
+                        tr
+                            td {{ contract_role_data.contract_role }}
+                            td(class='text-nowrap') {{ contract_role_data.estimated_hours | format_duration }}
+                            td(class='text-nowrap') {{ contract_role_data.performed_hours | format_duration }}
+                            td
+                                if contract_role_data.performed_pct is not None
+                                    - include 'ninetofiver/admin/reports/progress_bar.html' with value=contract_role_data.performed_pct
+                                else
+                                    | n/a
+                            td
+                                if contract_role_data.estimated_pct is not None
+                                    - include 'ninetofiver/admin/reports/progress_bar.html' with value=contract_role_data.estimated_pct
+                                else
+                                    | n/a
+
+                    tr
+                        th Total
+                        td(class='text-nowrap') {{ record.estimated_hours | format_duration }}
+                        td(class='text-nowrap') {{ record.performed_hours | format_duration }}
+                        td
+                        td
+                            if record.estimated_pct is not None
+                                - include 'ninetofiver/admin/reports/progress_bar.html' with value=record.estimated_pct
+                            else
+                                | n/a
+
+div(class='mt-3')
+    table(class='table table-sm table-striped my-0')
+        thead
+            tr
+                th User
+                th Performed
+                th Performed ratio
+        tbody
+            for user_data in record.users
+                tr
+                    td {{ user }}
+                    td(class='text-nowrap') {{ user_data.performed_hours | format_duration }}
+                    td
+                        if user_data.performed_pct is not None
+                            - include 'ninetofiver/admin/reports/progress_bar.html' with value=user_data.performed_pct
+                        else
+                            | n/a
+
+            tr
+                th Total
+                td(class='text-nowrap') {{ record.performed_hours | format_duration }}
+                td

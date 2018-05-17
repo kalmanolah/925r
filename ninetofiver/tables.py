@@ -422,12 +422,30 @@ class ExpiringConsultancyContractOverviewTable(BaseTable):
         return format_html('%s' % ('&nbsp;'.join(buttons)))
 
 
+class ProjectCountryColumn(tables.TemplateColumn):
+    """Project country column."""
+
+    def __init__(self, *args, **kwargs):
+        """Constructor."""
+        kwargs['template_name'] = 'ninetofiver/admin/reports/project_country.pug'
+        super().__init__(*args, **kwargs)
+
+
 class ProjectContractRoleColumn(tables.TemplateColumn):
     """Project contract role column."""
 
     def __init__(self, *args, **kwargs):
         """Constructor."""
         kwargs['template_name'] = 'ninetofiver/admin/reports/project_contract_role.pug'
+        super().__init__(*args, **kwargs)
+
+
+class ProjectDataColumn(tables.TemplateColumn):
+    """Project data column."""
+
+    def __init__(self, *args, **kwargs):
+        """Constructor."""
+        kwargs['template_name'] = 'ninetofiver/admin/reports/project_data.pug'
         super().__init__(*args, **kwargs)
 
 
@@ -445,7 +463,7 @@ class ProjectContractOverviewTable(BaseTable):
         accessor='contract',
         order_by=['contract.name']
     )
-    contract_roles = ProjectContractRoleColumn(accessor='', orderable=False)
+    data = ProjectDataColumn(accessor='', orderable=False)
 
     # actions = tables.Column(accessor='user', orderable=False, exclude_from_export=True)
 
