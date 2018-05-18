@@ -97,6 +97,7 @@ class Base(Configuration):
         'django_select2',
         'import_export',
         'adminsortable',
+        'logentry_admin',
     ]
 
     MIDDLEWARE = [

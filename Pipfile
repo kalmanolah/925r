@@ -50,6 +50,7 @@ tablib = "*"
 "django-select2" = "*"
 django-import-export = "*"
 django-admin-sortable = "*"
+django-logentry-admin = "*"
 
 
 [dev-packages]
