@@ -654,6 +654,8 @@ class PerformanceParentAdmin(ExportMixin, PolymorphicParentModelAdmin):
     list_filter = (
         PolymorphicChildModelFilter,
         ('contract', RelatedDropdownFilter),
+        ('contract__company', RelatedDropdownFilter),
+        ('contract__customer', RelatedDropdownFilter),
         ('timesheet__user', RelatedDropdownFilter),
         ('timesheet__year', DropdownFilter),
         ('timesheet__month', DropdownFilter),
