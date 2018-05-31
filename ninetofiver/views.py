@@ -255,6 +255,7 @@ def admin_report_index_view(request):
         'today': date.today(),
         'last_week': date.today() - relativedelta(weeks=1),
         'next_month': date.today() + relativedelta(months=1),
+        'two_months_from_now': date.today() + relativedelta(months=2),
     }
 
     return render(request, 'ninetofiver/admin/reports/index.pug', context)
