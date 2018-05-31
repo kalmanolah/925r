@@ -155,7 +155,16 @@ class TimesheetOverviewTable(BaseTable):
     leave_hours = SummedHoursColumn(accessor='range_info.leave_hours')
     holiday_hours = SummedHoursColumn(accessor='range_info.holiday_hours')
     remaining_hours = SummedHoursColumn(accessor='range_info.remaining_hours')
+    attachments = tables.Column(accessor='timesheet.attachments', orderable=False)
     actions = tables.Column(accessor='timesheet', orderable=False, exclude_from_export=True)
+
+    def render_attachments(self, record):
+        return format_html('<br>'.join('<a href="%s">%s</a>'
+                           % (x.get_file_url(), str(x)) for x in list(record['timesheet'].attachments.all())))
+
+    def value_attachments(self, record):
+        return format_html('\n'.join('%s|%s'
+                           % (x.get_file_url(), str(x)) for x in list(record['timesheet'].attachments.all())))
 
     def render_actions(self, record):
         buttons = []
