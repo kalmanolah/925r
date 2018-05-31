@@ -248,6 +248,7 @@ class LeaveAdmin(admin.ModelAdmin):
         'user',
         'leave_type',
         'date',
+        'created_at',
         'status',
         'description',
         'attachment',
