@@ -72,6 +72,7 @@ class Base(Configuration):
 
     # Application definition
     INSTALLED_APPS = NINETOFIVER_APPS + [
+        'django_admin_select2',
         'django.contrib.admin',
         'django.contrib.auth',
         'django.contrib.contenttypes',
@@ -94,7 +95,6 @@ class Base(Configuration):
         'wkhtmltopdf',
         'django_tables2',
         'phonenumber_field',
-        'django_select2',
         'import_export',
         'adminsortable',
         'logentry_admin',

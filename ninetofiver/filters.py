@@ -9,7 +9,6 @@ from django.db.models import Q, Func
 from django.contrib.admin import widgets as admin_widgets
 from django.contrib.auth import models as auth_models
 from django.utils.translation import ugettext_lazy as _
-from django_select2.forms import Select2Widget, Select2MultipleWidget
 from ninetofiver import models
 from ninetofiver.utils import merge_dicts
 
@@ -532,23 +531,20 @@ class WhereaboutFilter(filters.FilterSet):
 class AdminReportTimesheetContractOverviewFilter(FilterSet):
     """Timesheet contract overview admin report filter."""
     performance__contract = (django_filters.ModelMultipleChoiceFilter(
-                             label='Contract', queryset=models.Contract.objects.filter(active=True),  distinct=True,
-                             widget=Select2MultipleWidget))
+                             label='Contract', queryset=models.Contract.objects.filter(active=True),  distinct=True))
     performance__contract__polymorphic_ctype__model = (django_filters.MultipleChoiceFilter(
                                                label='Contract type',
                                                choices=[('projectcontract', _('Project')),
                                                         ('consultancycontract', _('Consultancy')),
                                                         ('supportcontract', _('Support'))],
-                                               distinct=True,
-                                               widget=Select2MultipleWidget))
+                                               distinct=True))
     performance__contract__customer = (django_filters.ModelMultipleChoiceFilter(
                                        label='Contract customer', queryset=models.Company.objects.filter(),
-                                       distinct=True, widget=Select2MultipleWidget))
+                                       distinct=True))
     performance__contract__company = (django_filters.ModelMultipleChoiceFilter(
                                       label='Contract company', queryset=models.Company.objects.filter(internal=True),
-                                      distinct=True, widget=Select2MultipleWidget))
-    user = django_filters.ModelMultipleChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True),
-                                                    widget=Select2MultipleWidget)
+                                      distinct=True))
+    user = django_filters.ModelMultipleChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True))
     year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
                                                                          .values_list('year', flat=True)
                                                                          .order_by('year').distinct())])
@@ -572,10 +568,9 @@ class AdminReportTimesheetContractOverviewFilter(FilterSet):
 
 class AdminReportTimesheetOverviewFilter(FilterSet):
     """Timesheet overview admin report filter."""
-    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True),
-                                            widget=Select2Widget)
+    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True))
     user__employmentcontract__company = django_filters.ModelChoiceFilter(
-        label='Company', queryset=models.Company.objects.filter(internal=True), widget=Select2Widget, distinct=True)
+        label='Company', queryset=models.Company.objects.filter(internal=True), distinct=True)
     year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
                                                                          .values_list('year', flat=True)
                                                                          .order_by('year').distinct())])
@@ -596,8 +591,7 @@ class AdminReportTimesheetOverviewFilter(FilterSet):
 
 class AdminReportUserRangeInfoFilter(FilterSet):
     """User range info admin report filter."""
-    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True),
-                                            widget=Select2Widget)
+    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True))
     from_date = django_filters.DateFilter(label='From', widget=admin_widgets.AdminDateWidget())
     until_date = django_filters.DateFilter(label='Until', widget=admin_widgets.AdminDateWidget())
 
@@ -611,8 +605,7 @@ class AdminReportUserRangeInfoFilter(FilterSet):
 class AdminReportUserLeaveOverviewFilter(FilterSet):
     """User leave overview admin report filter."""
     user = django_filters.ModelChoiceFilter(name='leave__user',
-                                            queryset=auth_models.User.objects.filter(is_active=True),
-                                            widget=Select2Widget)
+                                            queryset=auth_models.User.objects.filter(is_active=True))
     from_date = django_filters.DateFilter(label='From', widget=admin_widgets.AdminDateWidget(), name='starts_at',
                                           lookup_expr='date__gte')
     until_date = django_filters.DateFilter(label='Until', widget=admin_widgets.AdminDateWidget(), name='starts_at',
@@ -625,8 +618,7 @@ class AdminReportUserLeaveOverviewFilter(FilterSet):
 
 class AdminReportUserWorkRatioOverviewFilter(FilterSet):
     """User work ratio overview admin report filter."""
-    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True),
-                                            widget=Select2Widget)
+    user = django_filters.ModelChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True))
     year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
                                                                          .values_list('year', flat=True)
                                                                          .order_by('year').distinct())])
@@ -640,13 +632,13 @@ class AdminReportResourceAvailabilityOverviewFilter(FilterSet):
     """User leave overview admin report filter."""
     user = (django_filters.ModelMultipleChoiceFilter(label='User',
                                                      queryset=auth_models.User.objects.filter(is_active=True),
-                                                     distinct=True, widget=Select2MultipleWidget))
+                                                     distinct=True))
     group = (django_filters.ModelMultipleChoiceFilter(label='Group',
                                                       queryset=auth_models.Group.objects.all(),
-                                                      distinct=True, widget=Select2MultipleWidget))
+                                                      distinct=True))
     contract = (django_filters.ModelMultipleChoiceFilter(label='Contract',
                                                          queryset=models.Contract.objects.filter(active=True),
-                                                         distinct=True, widget=Select2MultipleWidget))
+                                                         distinct=True))
     from_date = django_filters.DateFilter(label='From', widget=admin_widgets.AdminDateWidget(), name='starts_at',
                                           lookup_expr='date__gte')
     until_date = django_filters.DateFilter(label='Until', widget=admin_widgets.AdminDateWidget(), name='starts_at',
@@ -676,13 +668,13 @@ class AdminReportProjectContractOverviewFilter(FilterSet):
     contract = (django_filters.ModelMultipleChoiceFilter(label='Contract',
                                                          name='contract_ptr', lookup_expr='in',
                                                          queryset=models.ProjectContract.objects.filter(active=True),
-                                                         distinct=True, widget=Select2MultipleWidget))
+                                                         distinct=True))
     customer = (django_filters.ModelMultipleChoiceFilter(queryset=models.Company.objects.filter(),
-                                                         distinct=True, widget=Select2MultipleWidget))
+                                                         distinct=True))
     company = (django_filters.ModelMultipleChoiceFilter(queryset=models.Company.objects.filter(internal=True),
-                                                        distinct=True, widget=Select2MultipleWidget))
+                                                        distinct=True))
     contract_groups = (django_filters.ModelMultipleChoiceFilter(queryset=models.ContractGroup.objects.all(),
-                                                                widget=Select2MultipleWidget, distinct=True))
+                                                                distinct=True))
 
     class Meta:
         model = models.ProjectContract
