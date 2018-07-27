@@ -1454,3 +1454,23 @@ class UserLeaveFeedServiceAPIView(APIView):
         username = request.parser_context['kwargs'].get('user_username', None)
         user = get_object_or_404(auth_models.User, username=username, is_active=True) if username else request.user
         return feeds.UserLeaveFeed().__call__(request, user=user)
+
+
+class WhereaboutFeedServiceAPIView(APIView):
+    """Get whereabouts as an ICS feed."""
+
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, format=None):
+        return feeds.WhereaboutFeed().__call__(request)
+
+
+class UserWhereaboutFeedServiceAPIView(APIView):
+    """Get whereabouts for a specific user as an ICS feed."""
+
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, user_username=None, format=None):
+        username = request.parser_context['kwargs'].get('user_username', None)
+        user = get_object_or_404(auth_models.User, username=username, is_active=True) if username else request.user
+        return feeds.UserWhereaboutFeed().__call__(request, user=user)

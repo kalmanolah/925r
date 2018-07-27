@@ -71,6 +71,9 @@ urlpatterns += [
         url(r'^services/feeds/leave/user/(?P<user_username>[A-Za-z0-9_-]+)\.ics$', views.UserLeaveFeedServiceAPIView.as_view()),
         url(r'^services/feeds/leave/me\.ics$', views.UserLeaveFeedServiceAPIView.as_view()),
         url(r'^services/feeds/leave\.ics$', views.LeaveFeedServiceAPIView.as_view()),
+        url(r'^services/feeds/whereabouts/user/(?P<user_username>[A-Za-z0-9_-]+)\.ics$', views.UserWhereaboutFeedServiceAPIView.as_view()),
+        url(r'^services/feeds/whereabouts/me\.ics$', views.UserWhereaboutFeedServiceAPIView.as_view()),
+        url(r'^services/feeds/whereabouts\.ics$', views.WhereaboutFeedServiceAPIView.as_view()),
     ])),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 

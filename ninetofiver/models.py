@@ -977,8 +977,7 @@ class Whereabout(BaseModel):
 
     def __str__(self):
         """Return a string representation."""
-        return '%s, %s - %s %s' % (self.starts_at.strftime('%a %d %B %Y'), self.starts_at.strftime('%H:%M'),
-                                   self.ends_at.strftime('%H:%M'), self.starts_at.strftime('%Z'))
+        return '%s - %s' % (self.location, self.timesheet.user)
 
     def perform_additional_validation(self):
         """Perform additional validation on the object."""
