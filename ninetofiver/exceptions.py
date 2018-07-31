@@ -55,10 +55,11 @@ def rest_validation_error_to_dict(exc):
 
     if detail_type in [dict, ReturnDict]:
         for field, err in exc.detail.items():
+            err_list = (err if type(err) in [tuple, list] else [err])
             err_data[field] = [{
                 'message': x,
                 'key': error_message_to_key(x),
-            } for x in err]
+            } for x in err_list]
     elif detail_type is list:
         err_data['error'] = [{'message': x, 'key': error_message_to_key(x)} for x in exc.detail]
 

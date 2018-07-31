@@ -492,7 +492,9 @@ class MyTimesheetSerializer(TimesheetSerializer):
 
     def update(self, instance, validated_data):
         if instance.status != models.STATUS_ACTIVE:
-            raise serializers.ValidationError({'status': _('Only active timesheets can be updated!')})
+            # If the timesheet is updated when it is not active, only allow updating of attachments
+            if (len(validated_data) > 1) or ('attachments' not in validated_data):
+                raise serializers.ValidationError({'status': _('Only active timesheets can be updated!')})
 
         return super().update(instance, validated_data)
 
