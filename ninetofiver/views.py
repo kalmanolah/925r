@@ -1185,6 +1185,9 @@ class LeaveRequestServiceAPIView(APIView):
     def post(self, request, format=None):
         user = request.user
         leave_type = get_object_or_404(models.LeaveType, pk=request.data['leave_type'])
+        leave = get_object_or_404(models.Leave, Q(status=models.STATUS_PENDING) | Q(status=models.STATUS_DRAFT),
+                                  pk=request.data['leave'],
+                                  user=user) if request.data.get('leave', None) else None
         description = request.data.get('description', None)
         full_day = request.data.get('full_day', False)
 
@@ -1199,9 +1202,15 @@ class LeaveRequestServiceAPIView(APIView):
 
         # Ensure we can roll back if something goes wrong
         with transaction.atomic():
-            # Create leave
-            leave = models.Leave.objects.create(user=user, description=description, leave_type=leave_type,
-                                                status=models.STATUS_DRAFT)
+            # Create/update leave
+            if leave:
+                [x.delete() for x in leave.leavedate_set.all()]
+            else:
+                leave = models.Leave.objects.create(user=user, leave_type=leave_type)
+            leave.user = user
+            leave.description = description
+            leave.leave_type = leave_type
+            leave.status = models.STATUS_DRAFT
 
             # Determine leave dates to create
             leave_dates = []
