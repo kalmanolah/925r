@@ -479,7 +479,7 @@ def admin_report_user_work_ratio_overview_view(request):
         user = get_object_or_404(auth_models.User.objects,
                                  pk=request.GET.get('user', None), is_active=True) if request.GET.get('user') else None
 
-        timesheets = fltr.qs.select_related('user')
+        timesheets = fltr.qs.select_related('user').order_by('year', 'month')
 
         for timesheet in timesheets:
             date_range = timesheet.get_date_range()
