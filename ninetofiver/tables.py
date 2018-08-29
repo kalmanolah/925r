@@ -91,14 +91,14 @@ class TimesheetContractOverviewTable(BaseTable):
                     users.append(record['timesheet'].user.id)
                 if record['contract'].id not in contracts:
                     contracts.append(record['contract'].id)
-            if len(years) == 1:
-                query.append('timesheet__year=%s' % years[0])
-            if len(months) == 1:
-                query.append('timesheet__month=%s' % months[0])
-            if len(users) == 1:
-                query.append('timesheet__user__id__exact=%s' % users[0])
-            if len(contracts) == 1:
-                query.append('contract__id__exact=%s' % contracts[0])
+            if years:
+                query.append('timesheet__year__in=%s' % (','.join(map(str, years))))
+            if months:
+                query.append('timesheet__month__in=%s' % (','.join(map(str, months))))
+            if users:
+                query.append('timesheet__user__id__in=%s' % (','.join(map(str, users))))
+            if contracts:
+                query.append('contract__id__in=%s' % (','.join(map(str, contracts))))
 
             buttons.append(('<a class="button" href="%(url)s?%(query)s">Details</a>') % {
                 'url': reverse('admin:ninetofiver_performance_changelist'),
