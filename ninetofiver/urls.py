@@ -161,6 +161,7 @@ urlpatterns += [
     url(r'^admin/ninetofiver/report/user_overtime_overview/$', views.admin_report_user_overtime_overview_view, name='admin_report_user_overtime_overview'),  # noqa
     url(r'^admin/ninetofiver/report/resource_availability_overview/$', views.admin_report_resource_availability_overview_view, name='admin_report_resource_availability_overview'),  # noqa
     url(r'^admin/ninetofiver/report/expiring_consultancy_contract_overview/$', views.admin_report_expiring_consultancy_contract_overview_view, name='admin_report_expiring_consultancy_contract_overview'),  # noqa
+    url(r'^admin/ninetofiver/report/expiring_support_contract_overview/$', views.admin_report_expiring_support_contract_overview_view, name='admin_report_expiring_support_contract_overview'),  # noqa
     url(r'^admin/ninetofiver/report/project_contract_overview/$', views.admin_report_project_contract_overview_view, name='admin_report_project_contract_overview'),  # noqa
     url(r'^admin/ninetofiver/timesheet_contract_pdf_export/(?P<user_pk>[0-9]+)/(?P<timesheet_pk>[0-9]+)/(?P<contract_pk>[0-9_-]+)/$', views.AdminTimesheetContractPdfExportView.as_view(), name='admin_timesheet_contract_pdf_export'),  # noqa
 

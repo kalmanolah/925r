@@ -699,3 +699,13 @@ class AdminReportUserOvertimeOverviewFilter(FilterSet):
     class Meta:
         model = models.LeaveDate
         fields = {}
+
+
+class AdminReportExpiringSupportContractOverviewFilter(FilterSet):
+    """Expiring support contract overview admin report filter."""
+    ends_at_lte = django_filters.DateFilter(label='Ends before', widget=admin_widgets.AdminDateWidget(),
+                                            name='ends_at', lookup_expr='lte')
+
+    class Meta:
+        model = models.SupportContract
+        fields = {}

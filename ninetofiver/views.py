@@ -930,6 +930,54 @@ def admin_report_user_overtime_overview_view(request):
     return render(request, 'ninetofiver/admin/reports/user_overtime_overview.pug', context)
 
 
+@staff_member_required
+def admin_report_expiring_support_contract_overview_view(request):
+    """Expiring support contract overview report."""
+    fltr = filters.AdminReportExpiringSupportContractOverviewFilter(request.GET,
+                                                                    models.SupportContract.objects)
+    ends_at_lte = (parser.parse(request.GET.get('ends_at_lte', None)).date()
+                   if request.GET.get('ends_at_lte') else None)
+    data = []
+
+    if ends_at_lte:
+        contracts = (models.SupportContract.objects.all()
+                     .select_related('customer')
+                     .filter(active=True)
+                     # Ensure contracts without end date/duration are never shown, since they will never expire
+                     .filter(Q(ends_at__isnull=False, ends_at__lte=ends_at_lte))
+                     # Ensure contracts where the internal company and the customer are the same are filtered out
+                     # These are internal contracts to cover things such as meetings, talks, etc..
+                     .exclude(customer=F('company')))
+
+        for contract in contracts:
+            performed_hours = (models.ActivityPerformance.objects
+                               .filter(contract=contract)
+                               .aggregate(Sum('duration')))['duration__sum']
+            performed_hours = performed_hours if performed_hours else Decimal('0.00')
+
+            data.append({
+                'contract': contract,
+                'performed_hours': performed_hours,
+            })
+
+    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
+    table = tables.ExpiringSupportContractOverviewTable(data, order_by='ends_at')
+    config.configure(table)
+
+    export_format = request.GET.get('_export', None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table)
+        return exporter.response('table.{}'.format(export_format))
+
+    context = {
+        'title': _('Expiring support contract overview'),
+        'table': table,
+        'filter': fltr,
+    }
+
+    return render(request, 'ninetofiver/admin/reports/expiring_support_contract_overview.pug', context)
+
+
 class AdminTimesheetContractPdfExportView(BaseTimesheetContractPdfExportServiceAPIView):
     """Export a timesheet contract to PDF."""
 

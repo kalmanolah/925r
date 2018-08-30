@@ -521,3 +521,29 @@ class UserOvertimeOverviewTable(BaseTable):
         })
 
         return format_html('%s' % ('&nbsp;'.join(buttons)))
+
+
+class ExpiringSupportContractOverviewTable(BaseTable):
+    """Expiring support contract overview table."""
+
+    class Meta(BaseTable.Meta):
+        pass
+
+    contract = tables.LinkColumn(
+        viewname='admin:ninetofiver_contract_change',
+        args=[A('contract.id')],
+        accessor='contract',
+        order_by=['contract.name']
+    )
+    starts_at = tables.DateColumn('D d F', accessor='contract.starts_at')
+    ends_at = tables.DateColumn('D d F', accessor='contract.ends_at')
+    performed_hours = SummedHoursColumn(accessor='performed_hours')
+    day_rate = tables.Column(accessor='contract.day_rate')
+    fixed_fee = tables.Column(accessor='contract.fixed_fee')
+    fixed_fee_period = tables.Column(accessor='contract.fixed_fee_period')
+    # actions = tables.Column(accessor='user', orderable=False, exclude_from_export=True)
+
+    def render_actions(self, record):
+        buttons = []
+
+        return format_html('%s' % ('&nbsp;'.join(buttons)))

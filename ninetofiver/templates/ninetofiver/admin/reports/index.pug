@@ -31,4 +31,7 @@ block content
             a(href="{% url 'admin_report_expiring_consultancy_contract_overview' %}?ends_at_lte={{ two_months_from_now|date:'Y-m-d' }}&remaining_hours_lte={{ '160' }}") Expiring consultancy contract overview
         tr
           th
+            a(href="{% url 'admin_report_expiring_support_contract_overview' %}?ends_at_lte={{ two_months_from_now|date:'Y-m-d' }}") Expiring support contract overview
+        tr
+          th
             a(href="{% url 'admin_report_project_contract_overview' %}") Project contract overview
