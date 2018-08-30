@@ -25,8 +25,8 @@ class BaseTable(tables.Table):
         attrs = {'class': 'table table-bordered table-striped table-hover', 'container': 'table-responsive'}
 
 
-class SummedHoursColumn(tables.Column):
-    """Summed hours column."""
+class HoursColumn(tables.Column):
+    """Hours column."""
 
     def render(self, value):
         """Render the value."""
@@ -35,6 +35,10 @@ class SummedHoursColumn(tables.Column):
     def value(self, value):
         """Return the value."""
         return value
+
+
+class SummedHoursColumn(HoursColumn):
+    """Summed hours column."""
 
     def render_footer(self, table, column, bound_column):
         """Render the footer."""
@@ -483,5 +487,37 @@ class ProjectContractOverviewTable(BaseTable):
 
     def render_actions(self, record):
         buttons = []
+
+        return format_html('%s' % ('&nbsp;'.join(buttons)))
+
+
+class UserOvertimeOverviewTable(BaseTable):
+    """User overtime overview table."""
+
+    class Meta(BaseTable.Meta):
+        pass
+
+    year = tables.Column()
+    month = tables.Column()
+    remaining_hours = HoursColumn()
+    overtime_hours = SummedHoursColumn()
+    used_overtime_hours = SummedHoursColumn()
+    remaining_overtime_hours = HoursColumn()
+    actions = tables.Column(accessor='user', orderable=False, exclude_from_export=True)
+
+    def render_actions(self, record):
+        buttons = []
+
+        date_range = month_date_range(record['year'], record['month'])
+
+        buttons.append(('<a class="button" href="%(url)s?' +
+                        'user=%(user)s&' +
+                        'from_date=%(from_date)s&' +
+                        'until_date=%(until_date)s">Details</a>') % {
+            'url': reverse('admin_report_user_range_info'),
+            'user': record['user'].id,
+            'from_date': date_range[0].strftime('%Y-%m-%d'),
+            'until_date': date_range[1].strftime('%Y-%m-%d'),
+        })
 
         return format_html('%s' % ('&nbsp;'.join(buttons)))

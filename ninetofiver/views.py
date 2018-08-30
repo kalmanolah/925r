@@ -858,6 +858,78 @@ def admin_report_project_contract_overview_view(request):
     return render(request, 'ninetofiver/admin/reports/project_contract_overview.pug', context)
 
 
+@staff_member_required
+def admin_report_user_overtime_overview_view(request):
+    """User overtime overview report."""
+    fltr = filters.AdminReportUserOvertimeOverviewFilter(request.GET, models.LeaveDate.objects
+                                                         .filter(leave__status=models.STATUS_APPROVED))
+    user = get_object_or_404(auth_models.User.objects,
+                             pk=request.GET.get('user', None), is_active=True) if request.GET.get('user') else None
+    from_date = parser.parse(request.GET.get('from_date', None)).date() if request.GET.get('from_date') else None
+    until_date = parser.parse(request.GET.get('until_date', None)).date() if request.GET.get('until_date') else None
+    data = []
+
+    overtime_leave_type_ids = list(models.LeaveType.objects.filter(overtime=True).values_list('id', flat=True))
+
+    if user and from_date and until_date and (until_date >= from_date) and overtime_leave_type_ids:
+        # Grab leave dates, index them by year, then month, then leave type ID
+        leave_dates = fltr.qs.filter(leave__leave_type__id__in=overtime_leave_type_ids).select_related('leave')
+        leave_date_data = {}
+        for leave_date in leave_dates:
+            (leave_date_data
+                .setdefault(leave_date.starts_at.year, {})
+                .setdefault(leave_date.starts_at.month, [])
+                .append(leave_date))
+
+        # Iterate over years, months to create monthly data
+        current_date = copy.deepcopy(from_date)
+        remaining_overtime_hours = Decimal('0.00')
+
+        while current_date.strftime('%Y%m') <= until_date.strftime('%Y%m'):
+            current_date_range = month_date_range(current_date.year, current_date.month)
+            month_range_info = calculation.get_range_info([user], from_date=current_date_range[0],
+                                                          until_date=current_date_range[1])
+
+            overtime_hours = month_range_info[user.id]['overtime_hours']
+            remaining_overtime_hours += overtime_hours
+
+            remaining_hours = month_range_info[user.id]['remaining_hours']
+            remaining_overtime_hours -= remaining_hours
+
+            used_overtime_hours = sum([Decimal(str(round((x.ends_at - x.starts_at).total_seconds() / 3600, 2)))
+                                      for x in leave_date_data.get(current_date.year, {}).get(current_date.month, {})])
+            remaining_overtime_hours -= used_overtime_hours
+
+            data.append({
+                'year': current_date.year,
+                'month': current_date.month,
+                'user': user,
+                'overtime_hours': overtime_hours,
+                'remaining_hours': remaining_hours,
+                'used_overtime_hours': used_overtime_hours,
+                'remaining_overtime_hours': remaining_overtime_hours,
+            })
+
+            current_date += relativedelta(months=1)
+
+    config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
+    table = tables.UserOvertimeOverviewTable(data)
+    config.configure(table)
+
+    export_format = request.GET.get('_export', None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table)
+        return exporter.response('table.{}'.format(export_format))
+
+    context = {
+        'title': _('User overtime overview'),
+        'table': table,
+        'filter': fltr,
+    }
+
+    return render(request, 'ninetofiver/admin/reports/user_overtime_overview.pug', context)
+
+
 class AdminTimesheetContractPdfExportView(BaseTimesheetContractPdfExportServiceAPIView):
     """Export a timesheet contract to PDF."""
 

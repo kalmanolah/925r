@@ -22,6 +22,9 @@ block content
             a(href="{% url 'admin_report_user_work_ratio_overview' %}?year={{ today|date:'Y' }}&user={{ user.id }}") User work ratio overview
         tr
           th
+            a(href="{% url 'admin_report_user_overtime_overview' %}?from_date={{ last_week|date:'Y-m-d' }}&until_date={{ today|date:'Y-m-d' }}&user={{ user.id }}") User overtime overview
+        tr
+          th
             a(href="{% url 'admin_report_resource_availability_overview' %}?from_date={{ today|date:'Y-m-d' }}&until_date={{ next_month|date:'Y-m-d' }}") Resource availability overview
         tr
           th

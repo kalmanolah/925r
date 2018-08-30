@@ -195,7 +195,7 @@ class HolidayAdmin(admin.ModelAdmin):
 class LeaveTypeAdmin(SortableAdmin):
     """Leave type admin."""
 
-    list_display = ('__str__', 'name', 'description')
+    list_display = ('__str__', 'name', 'description', 'overtime', 'sickness')
 
 
 class LeaveDateInline(admin.TabularInline):

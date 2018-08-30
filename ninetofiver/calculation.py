@@ -11,7 +11,7 @@ def get_availability_info(users, from_date, until_date):
     res = {}
 
     # Fetch sickness leave type IDs
-    sickness_type_ids = list(models.LeaveType.objects.filter(name__icontains='sick').values_list('id', flat=True))
+    sickness_type_ids = list(models.LeaveType.objects.filter(sickness=True).values_list('id', flat=True))
 
     # Fetch all employment contracts for this period
     employment_contracts = (models.EmploymentContract.objects

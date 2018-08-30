@@ -305,7 +305,7 @@ class HolidaySerializer(BaseSerializer):
 class LeaveTypeSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = models.LeaveType
-        fields = BaseSerializer.Meta.fields + ('name', 'description',)
+        fields = BaseSerializer.Meta.fields + ('name', 'description', 'overtime', 'sickness')
 
 
 class LeaveDateSerializer(BaseSerializer):

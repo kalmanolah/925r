@@ -518,6 +518,8 @@ class LeaveType(SortableMixin, BaseModel):
     name = models.CharField(unique=True, max_length=255)
     description = models.TextField(max_length=255, blank=True, null=True)
     order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+    overtime = models.BooleanField(default=False)
+    sickness = models.BooleanField(default=False)
 
     class Meta(BaseModel.Meta):
         ordering = ['order']
