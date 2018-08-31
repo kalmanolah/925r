@@ -334,6 +334,19 @@ def admin_report_timesheet_overview_view(request):
     """Timesheet overview report."""
     fltr = filters.AdminReportTimesheetOverviewFilter(request.GET, models.Timesheet.objects)
     timesheets = fltr.qs.select_related('user')
+    company = fltr.data.get('user__employmentcontract__company', None)
+    year = int(fltr.data['year']) if fltr.data.get('year', None) else None
+    month = int(fltr.data['month']) if fltr.data.get('month', None) else None
+
+    # If we're filtering on company and period (year or year + month), ensure we're only showing timesheets
+    # for users who worked at the company for the period we're filtering on
+    if company and year:
+        period_start, period_end = month_date_range(year, month) if month else (date(year, 1, 1), date(year, 12, 31))
+        timesheets = timesheets.filter(Q(user__employmentcontract__ended_at__isnull=True,
+                                         user__employmentcontract__started_at__lte=period_end) |
+                                       Q(user__employmentcontract__ended_at__isnull=False,
+                                         user__employmentcontract__ended_at__gte=period_start,
+                                         user__employmentcontract__started_at__lte=period_end))
 
     data = []
     for timesheet in timesheets:
