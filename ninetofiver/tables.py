@@ -109,6 +109,11 @@ class TimesheetContractOverviewTable(BaseTable):
                 'query': '&'.join(query),
             })
 
+            pks = ','.join(['%s:%s:%s' % (x['timesheet'].user.id, x['timesheet'].id, x['contract'].id)
+                            for x in table.data])
+            buttons.append('<a class="button" href="%s">PDF</a>' % reverse('admin_timesheet_contract_pdf_export',
+                           kwargs={'user_timesheet_contract_pks': pks}))
+
         return format_html('%s' % ('&nbsp;'.join(buttons)))
 
     actions = tables.Column(accessor='timesheet', orderable=False, exclude_from_export=True,
@@ -128,9 +133,8 @@ class TimesheetContractOverviewTable(BaseTable):
             'month': record['timesheet'].month,
         })
         buttons.append('<a class="button" href="%s">PDF</a>' % reverse('admin_timesheet_contract_pdf_export', kwargs={
-            'timesheet_pk': record['timesheet'].id,
-            'user_pk': record['timesheet'].user.id,
-            'contract_pk': record['contract'].id,
+            'user_timesheet_contract_pks': '%s:%s:%s' % (record['timesheet'].user.id, record['timesheet'].id,
+                                                         record['contract'].id),
         }))
 
         return format_html('%s' % ('&nbsp;'.join(buttons)))

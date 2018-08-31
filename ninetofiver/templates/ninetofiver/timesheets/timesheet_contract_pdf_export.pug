@@ -3,94 +3,96 @@ extends ninetofiver/pdf/base.pug
 - load markdown
 
 block body
-  div(class='container')
-    div(class='row justify-content-between')
-      div(class='col-5 align-self-center')
-        div(class='row justify-content-center')
-          div(class='col-6')
-            - if contract.company.logo
-              img(class='img-fluid' src='{{ settings.BASE_URL }}{{ contract.company.get_logo_url }}')
-      div(class='col-7')
-        div(class='card')
-          div(class='card-header text-center') Timesheet &mdash; Monthly time report
-          div(class='table-body')
-            table(class='table table-sm my-0')
-              tr
-                th Consultant
-                td {{ timesheet.user }}
-                th Year
-                td {{ timesheet.year }}
-              tr
-                th Customer
-                td {{ contract.customer }}
-                th Month
-                td {{ timesheet.month }}
-              tr
-                th Contract
-                td {{ contract.name }}
-                th
-                td
+  for item in items
+    div(class='container break')
+      div(class='row justify-content-between nobreak')
+        div(class='col-5 align-self-center')
+          div(class='row justify-content-center')
+            div(class='col-6')
+              - if item.contract.company.logo
+                img(class='img-fluid' src='{{ settings.BASE_URL }}{{ item.contract.company.get_logo_url }}')
+        div(class='col-7')
+          div(class='card')
+            div(class='card-header text-center') Timesheet &mdash; Monthly time report
+            div(class='table-body')
+              table(class='table table-sm my-0')
+                tr
+                  th Consultant
+                  td {{ item.timesheet.user }}
+                  th Year
+                  td {{ item.timesheet.year }}
+                tr
+                  th Customer
+                  td {{ item.contract.customer }}
+                  th Month
+                  td {{ item.timesheet.month }}
+                tr
+                  th Contract
+                  td {{ item.contract.name }}
+                  th
+                  td
 
-    hr(class='my-4')
+      hr(class='my-4')
 
-    table(class='table table-bordered table-sm')
-      thead
-        tr
-          th Day
-          th Description
-          th(class='text-right') Hours
-          th(class='text-right') Type
-      tbody
-        each day, day_performances in performances.items
-          if day_performances.activity
-            each performance, i in day_performances.activity
-              tr
-                td(class='text-nowrap') {{ performance.get_date | date:'D d F' }}
-                td
-                  - if performance.description
-                    span {{ performance.description | markdown }}
-                td(class='text-nowrap text-right') {{ performance.duration }}
-                td(class='text-nowrap text-right') {{ performance.performance_type }}
-
-          if day_performances.standby
-            each performance, i in day_performances.standby
-              tr
-                td(class='text-nowrap') {{ performance.get_date | date:'D d F' }}
-                td
-                td(class='text-nowrap text-right') -
-                td(class='text-nowrap text-right') Standby
-
-    table(class='table table-bordered table-sm nobreak')
-      tbody
-        if total_performed_hours
+      table(class='table table-bordered table-sm')
+        thead
           tr
-            th Total in hours
-            td(class='text-right') {{ total_performed_hours }}
+            th Day
+            th Description
+            th(class='text-right') Hours
+            th(class='text-right') Type
+        tbody
+          each day, day_performances in item.performances.items
+            if day_performances.activity
+              each performance, i in day_performances.activity
+                tr
+                  td(class='text-nowrap') {{ performance.get_date | date:'D d F' }}
+                  td
+                    - if performance.description
+                      span {{ performance.description | markdown }}
+                  td(class='text-nowrap text-right') {{ performance.duration }}
+                  td(class='text-nowrap text-right') {{ performance.performance_type }}
 
-        if total_performed_days
-          tr
-            th Total in 8 hour days
-            td(class='text-right') {{ total_performed_days }}
+            if day_performances.standby
+              each performance, i in day_performances.standby
+                tr
+                  td(class='text-nowrap') {{ performance.get_date | date:'D d F' }}
+                  td
+                  td(class='text-nowrap text-right') -
+                  td(class='text-nowrap text-right') Standby
 
-        if standby_performances
-          th Total standby days
-          td(class='text-right') {{ total_standby_days }}
+      div(class='nobreak')
+        table(class='table table-bordered table-sm nobreak')
+          tbody
+            if item.total_performed_hours
+              tr
+                th Total in hours
+                td(class='text-right') {{ item.total_performed_hours }}
 
-    hr(class='my-4')
-    
-    div(class='row nobreak')
-      div(class='col-4')
-        div(class='card')
-          div(class='card-body pb-5')
-            span(class='card-title') Signature consultant
-            div(class='my-5')
-      div(class='col-4')
-        div(class='card')
-          div(class='card-body pb-5')
-            span(class='card-title') Signature customer
-            div(class='my-5')
-      div(class='col-4')
-        div(class='card')
-          div(class='card-body pb-5')
-            span(class='card-title') Remarks
-            div(class='my-5')
+            if item.total_performed_days
+              tr
+                th Total in 8 hour days
+                td(class='text-right') {{ item.total_performed_days }}
+
+            if item.standby_performances
+              th Total standby days
+              td(class='text-right') {{ item.total_standby_days }}
+
+        hr(class='my-4')
+
+        div(class='row nobreak')
+          div(class='col-4')
+            div(class='card')
+              div(class='card-body pb-5')
+                span(class='card-title') Signature consultant
+                div(class='my-5')
+          div(class='col-4')
+            div(class='card')
+              div(class='card-body pb-5')
+                span(class='card-title') Signature customer
+                div(class='my-5')
+          div(class='col-4')
+            div(class='card')
+              div(class='card-body pb-5')
+                span(class='card-title') Remarks
+                div(class='my-5')

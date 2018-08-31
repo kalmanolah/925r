@@ -5,3 +5,7 @@ td * {
 .nobreak {
     page-break-inside: avoid;
 }
+
+.break {
+    page-break-before: always;
+}

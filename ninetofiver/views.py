@@ -58,45 +58,52 @@ class BaseTimesheetContractPdfExportServiceAPIView(PDFTemplateView, generics.Gen
     filename = 'timesheet_contract.pdf'
     template_name = 'ninetofiver/timesheets/timesheet_contract_pdf_export.pug'
 
-    def resolve_user(self, context):
-        """Resolve the user for this export."""
+    def resolve_user_timesheet_contracts(self, context):
+        """Resolve the users, timesheets and contracts for this export."""
         raise NotImplementedError()
 
     def render_to_response(self, context, **response_kwargs):
-        user = self.resolve_user(context)
-        timesheet = get_object_or_404(models.Timesheet, pk=context.get('timesheet_pk', None), user=user)
-        contract = get_object_or_404(models.Contract, pk=context.get('contract_pk', None), contractuser__user=user)
+        items = self.resolve_user_timesheet_contracts(context)
+        ctx = {
+            'items': [],
+        }
 
-        context['user'] = user
-        context['timesheet'] = timesheet
-        context['contract'] = contract
+        for item in items:
+            item_ctx = {
+                'user': item[0],
+                'timesheet': item[1],
+                'contract': item[2],
+            }
 
-        context['activity_performances'] = (models.ActivityPerformance.objects
-                                            .filter(timesheet=timesheet, contract=contract)
-                                            .order_by('day')
-                                            .select_related('performance_type')
-                                            .all())
-        context['total_performed_hours'] = sum([x.duration for x in context['activity_performances']])
-        context['total_performed_days'] = round(context['total_performed_hours'] / 8, 2)
+            item_ctx['activity_performances'] = (models.ActivityPerformance.objects
+                                                 .filter(timesheet=item_ctx['timesheet'],
+                                                         contract=item_ctx['contract'])
+                                                 .order_by('day')
+                                                 .select_related('performance_type')
+                                                 .all())
+            item_ctx['total_performed_hours'] = sum([x.duration for x in item_ctx['activity_performances']])
+            item_ctx['total_performed_days'] = round(item_ctx['total_performed_hours'] / 8, 2)
 
-        context['standby_performances'] = (models.StandbyPerformance.objects
-                                           .filter(timesheet=timesheet, contract=contract)
-                                           .order_by('day')
-                                           .all())
-        context['total_standby_days'] = round(len(context['standby_performances']), 2)
+            item_ctx['standby_performances'] = (models.StandbyPerformance.objects
+                                                .filter(timesheet=item_ctx['timesheet'], contract=item_ctx['contract'])
+                                                .order_by('day')
+                                                .all())
+            item_ctx['total_standby_days'] = round(len(item_ctx['standby_performances']), 2)
 
-        # Create a performances dict, indexed by date
-        performances = {}
-        [performances.setdefault(str(x.get_date()), {}).setdefault('activity', []).append(x)
-            for x in context['activity_performances']]
-        [performances.setdefault(str(x.get_date()), {}).setdefault('standby', []).append(x)
-            for x in context['standby_performances']]
-        # Sort performances dict by date
-        context['performances'] = OrderedDict()
-        for day in sorted(performances):
-            context['performances'][day] = performances[day]
+            # Create a performances dict, indexed by date
+            performances = {}
+            [performances.setdefault(str(x.get_date()), {}).setdefault('activity', []).append(x)
+                for x in item_ctx['activity_performances']]
+            [performances.setdefault(str(x.get_date()), {}).setdefault('standby', []).append(x)
+                for x in item_ctx['standby_performances']]
+            # Sort performances dict by date
+            item_ctx['performances'] = OrderedDict()
+            for day in sorted(performances):
+                item_ctx['performances'][day] = performances[day]
 
-        return super().render_to_response(context, **response_kwargs)
+            ctx['items'].append(item_ctx)
+
+        return super().render_to_response(ctx, **response_kwargs)
 
 
 # Homepage and others
@@ -996,8 +1003,18 @@ class AdminTimesheetContractPdfExportView(BaseTimesheetContractPdfExportServiceA
 
     permission_classes = (permissions.IsAdminUser,)
 
-    def resolve_user(self, context):
-        return get_object_or_404(auth_models.User, pk=context.get('user_pk', None))
+    def resolve_user_timesheet_contracts(self, context):
+        """Resolve users, timesheets and contracts for this report."""
+        data = context.get('user_timesheet_contract_pks', None)
+        data = [list(map(int, x.split(':'))) for x in data.split(',')]
+
+        for item in data:
+            item[0] = get_object_or_404(auth_models.User.objects.filter().distinct(), pk=item[0])
+            item[1] = get_object_or_404(models.Timesheet.objects.filter().distinct(), pk=item[1], user=item[0])
+            item[2] = get_object_or_404(models.Contract.objects.filter().distinct(), pk=item[2],
+                                        contractuser__user=item[0])
+
+        return data
 
 
 # API calls
@@ -1430,9 +1447,12 @@ class MyTimesheetContractPdfExportServiceAPIView(BaseTimesheetContractPdfExportS
 
     permission_classes = (permissions.IsAuthenticated,)
 
-    def resolve_user(self, context):
-        """Resolve the user for this export."""
-        return context['view'].request.user
+    def resolve_user_timesheet_contracts(self, context):
+        """Resolve the users, timesheets and contracts for this export."""
+        user = context['view'].request.user
+        timesheet = get_object_or_404(models.Timesheet, pk=context.get('timesheet_pk', None), user=user)
+        contract = get_object_or_404(models.Contract, pk=context.get('contract_pk', None), contractuser__user=user)
+        return [[user, timesheet, contract]]
 
 
 class MyLeaveViewSet(viewsets.ModelViewSet):
