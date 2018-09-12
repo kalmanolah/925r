@@ -41,10 +41,10 @@ block extrahead
         crossorigin="anonymous"
     )
     script(type='text/javascript')
-        | jQuery(function () {
-        |   jQuery('[data-toggle="tooltip"]').tooltip()
-        |   jQuery('[data-toggle="popover"]').popover()
-        |   jQuery('.report-table > > table:not(.floatThead-table)').floatThead({
+        | jQuery(function ($) {
+        |   $('[data-toggle="tooltip"]').tooltip()
+        |   $('[data-toggle="popover"]').popover()
+        |   $('.report-table > > table:not(.floatThead-table)').floatThead({
         |     responsiveContainer: function($table) {
         |       return $table.closest('.table-container')
         |     }
