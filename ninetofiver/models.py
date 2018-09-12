@@ -58,6 +58,9 @@ PERIOD_WEEKLY = 'weekly'
 PERIOD_MONTHLY = 'monthly'
 PERIOD_YEARLY = 'yearly'
 
+# Permissions
+PERMISSION_RECEIVE_PENDING_LEAVE_REMINDER = 'receive_pending_leave_reminder'
+
 
 class BaseManager(PolymorphicManager):
     """Base manager."""
@@ -97,6 +100,7 @@ class BaseModel(DirtyFieldsMixin, PolymorphicModel):
         return reverse(self.get_absolute_url_view_name(), args=[str(self.id)])
 
     def get_absolute_url_view_name(self):
+        """Get the view name used for generating an absolute URL."""
         return '%s-detail' % self.__class__.__name__.lower()
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -545,6 +549,11 @@ class Leave(BaseModel):
     description = models.TextField(max_length=255, blank=True, null=True)
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_DRAFT)
     attachments = models.ManyToManyField(Attachment, blank=True)
+
+    class Meta(BaseModel.Meta):
+        permissions = (
+            (PERMISSION_RECEIVE_PENDING_LEAVE_REMINDER, "Can receive pending leave reminders"),
+        )
 
     def __str__(self):
         """Return a string representation."""

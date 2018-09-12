@@ -1,5 +1,6 @@
 """Send staff a reminder about pending leaves."""
 import logging
+from django.db.models import Q
 from django.core.management.base import BaseCommand
 from django.contrib.auth import models as auth_models
 from django.utils.translation import ugettext_lazy as _
@@ -23,9 +24,16 @@ class Command(BaseCommand):
         log.info('%s pending leave(s) found' % pending_leave_count)
 
         if pending_leave_count:
-            staff = auth_models.User.objects.filter(is_staff=True).exclude(email__isnull=True).exclude(email__exact='')
+            permission = models.PERMISSION_RECEIVE_PENDING_LEAVE_REMINDER
+            users = (auth_models.User.objects
+                     .filter(Q(is_staff=True),
+                             Q(is_superuser=True) |
+                             Q(groups__permissions__codename=permission) |
+                             Q(user_permissions__codename=permission))
+                     .exclude(Q(email__isnull=True) | Q(email__exact=''))
+                     .distinct())
 
-            for user in staff:
+            for user in users:
                 log.info('Sending reminder to %s' % user.email)
 
                 send_mail(
