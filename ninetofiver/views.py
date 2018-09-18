@@ -1510,7 +1510,11 @@ class MyContractViewSet(GenericHierarchicalReadOnlyViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return models.Contract.objects.filter(contractuser__user=user).distinct()
+        return (models.Contract.objects
+                .filter(contractuser__user=user)
+                .select_related('company', 'customer')
+                .prefetch_related('contract_groups', 'attachments', 'performance_types')
+                .distinct())
 
 
 class MyContractUserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -1522,7 +1526,10 @@ class MyContractUserViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return models.ContractUser.objects.filter(user=user).distinct()
+        return (models.ContractUser.objects
+                .filter(user=user)
+                .select_related('contract', 'contract__customer', 'contract_role', 'user')
+                .distinct())
 
 
 class MyPerformanceViewSet(GenericHierarchicalReadOnlyViewSet):

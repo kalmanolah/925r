@@ -335,18 +335,11 @@ class ContractSerializer(BaseSerializer):
     performance_types = MinimalPerformanceTypeSerializer(many=True, required=False)
     customer = MinimalCompanySerializer()
     company = MinimalCompanySerializer()
-    hours_spent = serializers.SerializerMethodField()
-
-    def get_hours_spent(self, obj):
-        total = 0
-        for hours in models.ActivityPerformance.objects.filter(contract=obj.id):
-            total += hours.duration
-        return total
 
     class Meta(BaseSerializer.Meta):
         model = models.Contract
         fields = BaseSerializer.Meta.fields + ('name', 'description', 'company', 'customer', 'performance_types',
-                                               'active', 'contract_groups', 'hours_spent', 'starts_at', 'ends_at',
+                                               'active', 'contract_groups', 'starts_at', 'ends_at',
                                                'attachments', 'redmine_id', 'external_only', )
 
 
