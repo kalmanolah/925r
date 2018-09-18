@@ -355,7 +355,7 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
     def get_queryset(self, request):
         return (super().get_queryset(request)
                 .select_related('company', 'customer')
-                .prefetch_related('attachments', 'performance_types', 'contractusergroup_set',
+                .prefetch_related('contractusergroup_set',
                                   'contractusergroup_set__group', 'contractusergroup_set__contract_role',
                                   'contractuser_set', 'contractuser_set__user',
                                   'contractuser_set__contract_role',)
@@ -432,8 +432,9 @@ class ContractChildAdmin(PolymorphicChildModelAdmin):
     def get_queryset(self, request):
         return (super().get_queryset(request)
                 .select_related('company', 'customer')
-                .prefetch_related('contractusergroup_set', 'contractusergroup_set__group',
-                                  'contractusergroup_set__contract_role', 'contractuser_set', 'contractuser_set__user',
+                .prefetch_related('contractusergroup_set',
+                                  'contractusergroup_set__group', 'contractusergroup_set__contract_role',
+                                  'contractuser_set', 'contractuser_set__user',
                                   'contractuser_set__contract_role',)
                 .distinct())
 

@@ -1513,7 +1513,7 @@ class MyContractViewSet(GenericHierarchicalReadOnlyViewSet):
         return (models.Contract.objects
                 .filter(contractuser__user=user)
                 .select_related('company', 'customer')
-                .prefetch_related('contract_groups', 'attachments', 'performance_types')
+                # .prefetch_related('contract_groups', 'attachments', 'performance_types')
                 .distinct())
 
 
