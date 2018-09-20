@@ -624,6 +624,10 @@ class LeaveDate(BaseModel):
         # if self.leave.status not in [STATUS_DRAFT, STATUS_PENDING]:
         #     raise ValidationError({'leave': _('You can only add leave dates to draft leaves.')})
 
+    def is_in_future(self):
+        """Whether or not the leave date is in the future."""
+        return self.ends_at.date() > date.today()
+
 
 class PerformanceType(BaseModel):
 
