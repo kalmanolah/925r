@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib.auth import models as auth_models
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.core.cache import cache
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
 from django import forms
@@ -358,7 +358,11 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
                 .prefetch_related('contractusergroup_set',
                                   'contractusergroup_set__group', 'contractusergroup_set__contract_role',
                                   'contractuser_set', 'contractuser_set__user',
-                                  'contractuser_set__contract_role',)
+                                  'contractuser_set__contract_role',
+                                  Prefetch('performance_types', queryset=(models.PerformanceType.objects
+                                                                          .non_polymorphic())),
+                                  Prefetch('attachments', queryset=(models.Attachment.objects
+                                                                    .non_polymorphic())))
                 .distinct())
 
     def contract_users(obj):

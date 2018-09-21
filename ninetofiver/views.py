@@ -35,7 +35,7 @@ from rest_framework_swagger.renderers import SwaggerUIRenderer
 from rest_framework.authtoken import models as authtoken_models
 from ninetofiver import settings, tables, calculation, pagination
 from ninetofiver.utils import month_date_range, dates_in_range
-from django.db.models import Q, F, Sum
+from django.db.models import Q, F, Sum, Prefetch
 from django_tables2 import RequestConfig
 from django_tables2.export.export import TableExport
 from datetime import datetime, date, timedelta
@@ -1513,7 +1513,13 @@ class MyContractViewSet(GenericHierarchicalReadOnlyViewSet):
         return (models.Contract.objects
                 .filter(contractuser__user=user)
                 .select_related('company', 'customer')
-                # .prefetch_related('contract_groups', 'attachments', 'performance_types')
+                .prefetch_related(
+                    Prefetch('performance_types', queryset=(models.PerformanceType.objects
+                                                            .non_polymorphic())),
+                    Prefetch('attachments', queryset=(models.Attachment.objects
+                                                      .non_polymorphic())),
+                    Prefetch('contract_groups', queryset=(models.ContractGroup.objects
+                                                          .non_polymorphic())))
                 .distinct())
 
 
