@@ -531,7 +531,9 @@ class WhereaboutFilter(filters.FilterSet):
 class AdminReportTimesheetContractOverviewFilter(FilterSet):
     """Timesheet contract overview admin report filter."""
     performance__contract = (django_filters.ModelMultipleChoiceFilter(
-                             label='Contract', queryset=models.Contract.objects.filter(active=True),  distinct=True))
+                             label='Contract', queryset=(models.Contract.objects
+                                                         .filter(active=True)
+                                                         .select_related('customer'))))
     performance__contract__polymorphic_ctype__model = (django_filters.MultipleChoiceFilter(
                                                label='Contract type',
                                                choices=[('projectcontract', _('Project')),
