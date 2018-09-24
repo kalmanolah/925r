@@ -224,7 +224,7 @@ class LeaveAdmin(admin.ModelAdmin):
 
     def date(self, obj):
         """List leave dates."""
-        return format_html('<br>'.join(str(x) for x in list(obj.leavedate_set.all())))
+        return format_html('<br>'.join(x.html_label() for x in list(obj.leavedate_set.all())))
 
     def attachment(self, obj):
         """Attachment URLs."""

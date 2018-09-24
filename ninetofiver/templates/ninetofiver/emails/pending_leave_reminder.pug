@@ -94,12 +94,7 @@ block content
                         vertical-align: top;
                     ")
                         for leave_date in leave.leavedate_set.all
-                            if not leave_date.is_in_future
-                                span(style="
-                                  color: #f02311;
-                                  font-weight: bold;
-                                ") (!)&nbsp;
-                            | {{ leave_date }}<br>
+                            | {{ leave_date.html_label | safe }}<br>
                     td(style="
                         border-bottom: 1px solid #eee;
                         padding: 8px;

@@ -628,6 +628,15 @@ class LeaveDate(BaseModel):
         """Whether or not the leave date is in the future."""
         return self.ends_at.date() > date.today()
 
+    def html_label(self):
+        """Get the HTML label for this leave date."""
+        label = str(self)
+
+        if not self.is_in_future():
+            label = '<span style="color:#f02311;font-weight:bold;">(!)&nbsp;</span>' + label
+
+        return label
+
 
 class PerformanceType(BaseModel):
 
