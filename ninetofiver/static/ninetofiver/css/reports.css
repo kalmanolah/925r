@@ -8,3 +8,11 @@
     border: none;
     margin-left: 0;
 }
+
+#container #header {
+    height: auto;
+}
+
+#container #header #site-name {
+    line-height: inherit;
+}
