@@ -14,67 +14,15 @@ from ninetofiver import views, models
 
 urlpatterns = [
     url(r'^api/$', views.schema_view, name='api_docs'),
+    url(r'^api/v2/', include('ninetofiver.api_v2.urls', namespace='ninetofiver_api_v2')),
 ]
 
 router = routers.DefaultRouter()
-router.register(r'users', views.UserViewSet)
-router.register(r'groups', views.GroupViewSet)
-router.register(r'companies', views.CompanyViewSet)
-router.register(r'employment_contract_types', views.EmploymentContractTypeViewSet)
-router.register(r'user_relatives', views.UserRelativeViewSet)
-router.register(r'user_infos', views.UserInfoViewSet)
-router.register(r'holidays', views.HolidayViewSet)
-router.register(r'timesheets', views.TimesheetViewSet)
-router.register(r'attachments', views.AttachmentViewSet)
-router.register(r'performance/activity', views.ActivityPerformanceViewSet)
-router.register(r'performance/standby', views.StandbyPerformanceViewSet)
-router.register(r'performance', views.PerformanceViewSet)
-router.register(r'leave_types', views.LeaveTypeViewSet)
-router.register(r'work_schedules', views.WorkScheduleViewSet)
-router.register(r'employment_contracts', views.EmploymentContractViewSet)
-router.register(r'leaves', views.LeaveViewSet)
-router.register(r'leave_dates', views.LeaveDateViewSet)
-router.register(r'performance_types', views.PerformanceTypeViewSet)
-router.register(r'contracts/project', views.ProjectContractViewSet, base_name='projectcontract')
-router.register(r'contracts/consultancy', views.ConsultancyContractViewSet, base_name='consultancycontract')
-router.register(r'contracts/support', views.SupportContractViewSet, base_name='supportcontract')
-router.register(r'contracts', views.ContractViewSet)
-router.register(r'contract_roles', views.ContractRoleViewSet)
-router.register(r'contract_users', views.ContractUserViewSet)
-router.register(r'contract_groups', views.ContractGroupViewSet)
-router.register(r'locations', views.LocationViewSet)
-router.register(r'my_leaves', views.MyLeaveViewSet, base_name='myleave')
-router.register(r'my_leave_dates', views.MyLeaveDateViewSet, base_name='myleavedate')
-router.register(r'my_timesheets', views.MyTimesheetViewSet, base_name='mytimesheet')
-router.register(r'my_contracts', views.MyContractViewSet, base_name='mycontract')
-router.register(r'my_contract_users', views.MyContractUserViewSet, base_name='mycontractuser')
-router.register(r'my_performances/activity', views.MyActivityPerformanceViewSet, base_name='myactivityperformance')
-router.register(r'my_performances/standby', views.MyStandbyPerformanceViewSet, base_name='mystandbyperformance')
-router.register(r'my_performances', views.MyPerformanceViewSet, base_name='myperformance')
-router.register(r'my_attachments', views.MyAttachmentViewSet, base_name='myattachment')
-router.register(r'my_work_schedules', views.MyWorkScheduleViewSet, base_name='myworkschedule')
-router.register(r'my_whereabouts', views.MyWhereaboutViewSet, base_name='mywhereabout')
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browseable API.
 urlpatterns += [
     url(r'^$', views.home_view, name='home'),
-    url(r'^api/v1/', include(router.urls + [
-        url(r'^services/my_user/$', views.MyUserServiceAPIView.as_view(), name='my_user_service'),
-        url(r'^services/leave_request/$', views.LeaveRequestServiceAPIView.as_view(), name='leave_request_service'),
-        url(r'^services/performance_import/$', views.PerformanceImportServiceAPIView.as_view(), name='performance_import_service'),
-        url(r'^services/range_availability/$', views.RangeAvailabilityServiceAPIView.as_view(), name='range_availability_service'),
-        url(r'^services/range_info/$', views.RangeInfoServiceAPIView.as_view(), name='range_info_service'),
-        url(r'^services/download_attachment/(?P<slug>[A-Za-z0-9_-]+)/$', ObjectDownloadView.as_view(model=models.Attachment, file_field='file'), name='download_attachment_service'),
-        url(r'^services/download_company_logo/(?P<pk>[0-9]+)/$', ObjectDownloadView.as_view(model=models.Company, file_field='logo', attachment=False), name='download_company_logo_service'),
-        url(r'^services/my_timesheet_contract_pdf_export/(?P<timesheet_pk>[0-9]+)/(?P<contract_pk>[0-9_-]+)/$', views.MyTimesheetContractPdfExportServiceAPIView.as_view(), name='my_timesheet_contract_pdf_export_service'),
-        url(r'^services/feeds/leave/user/(?P<user_username>[A-Za-z0-9_-]+)\.ics$', views.UserLeaveFeedServiceAPIView.as_view()),
-        url(r'^services/feeds/leave/me\.ics$', views.UserLeaveFeedServiceAPIView.as_view()),
-        url(r'^services/feeds/leave\.ics$', views.LeaveFeedServiceAPIView.as_view()),
-        url(r'^services/feeds/whereabouts/user/(?P<user_username>[A-Za-z0-9_-]+)\.ics$', views.UserWhereaboutFeedServiceAPIView.as_view()),
-        url(r'^services/feeds/whereabouts/me\.ics$', views.UserWhereaboutFeedServiceAPIView.as_view()),
-        url(r'^services/feeds/whereabouts\.ics$', views.WhereaboutFeedServiceAPIView.as_view()),
-    ])),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
     # # OAuth2

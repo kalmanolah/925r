@@ -46,7 +46,7 @@ block body
             if day_performances.activity
               each performance, i in day_performances.activity
                 tr
-                  td(class='text-nowrap') {{ performance.get_date | date:'D d F' }}
+                  td(class='text-nowrap') {{ performance.date | date:'D d F' }}
                   td
                     - if performance.description
                       span {{ performance.description | markdown }}
@@ -56,7 +56,7 @@ block body
             if day_performances.standby
               each performance, i in day_performances.standby
                 tr
-                  td(class='text-nowrap') {{ performance.get_date | date:'D d F' }}
+                  td(class='text-nowrap') {{ performance.date | date:'D d F' }}
                   td
                   td(class='text-nowrap text-right') -
                   td(class='text-nowrap text-right') Standby

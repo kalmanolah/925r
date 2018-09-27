@@ -3,7 +3,8 @@ from django.db.models import Q
 from decimal import Decimal
 from datetime import timedelta
 import copy
-from ninetofiver import models, serializers
+from ninetofiver import models
+from ninetofiver.api_v2 import serializers
 
 
 def get_availability_info(users, from_date, until_date):
@@ -178,44 +179,26 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
 
     # Fetch all activity performances for this period
     activity_performances = (models.ActivityPerformance.objects
-                             .filter(
-                                 (Q(timesheet__year__gt=from_date.year) |
-                                  Q(timesheet__year__exact=from_date.year, timesheet__month__gt=from_date.month) |
-                                  Q(timesheet__year__exact=from_date.year, timesheet__month__exact=from_date.month,
-                                    day__gte=from_date.day)),
-                                 (Q(timesheet__year__lt=until_date.year) |
-                                  Q(timesheet__year__exact=until_date.year, timesheet__month__lt=until_date.month) |
-                                  Q(timesheet__year__exact=until_date.year, timesheet__month__exact=until_date.month,
-                                    day__lte=until_date.day)),
-                                 timesheet__user__in=users)
+                             .filter(date__gte=from_date, date__lte=until_date, timesheet__user__in=users)
                              .select_related('performance_type', 'contract_role', 'contract',
                                              'contract__customer', 'timesheet', 'timesheet__user'))
     # Index activity performances by day, then by user ID
     activity_performance_data = {}
     for performance in activity_performances:
         (activity_performance_data
-            .setdefault(str(performance.get_date()), {})
+            .setdefault(str(performance.date), {})
             .setdefault(performance.timesheet.user.id, [])
             .append(performance))
 
     # Fetch all standby performances for this period
     standby_performances = (models.StandbyPerformance.objects
-                            .filter(
-                                (Q(timesheet__year__gt=from_date.year) |
-                                 Q(timesheet__year__exact=from_date.year, timesheet__month__gt=from_date.month) |
-                                 Q(timesheet__year__exact=from_date.year, timesheet__month__exact=from_date.month,
-                                   day__gte=from_date.day)),
-                                (Q(timesheet__year__lt=until_date.year) |
-                                 Q(timesheet__year__exact=until_date.year, timesheet__month__lt=until_date.month) |
-                                 Q(timesheet__year__exact=until_date.year, timesheet__month__exact=until_date.month,
-                                   day__lte=until_date.day)),
-                                timesheet__user__in=users)
+                             .filter(date__gte=from_date, date__lte=until_date, timesheet__user__in=users)
                             .select_related('contract', 'contract__customer', 'timesheet', 'timesheet__user'))
     # Index standby performances by day, then by user ID
     standby_performance_data = {}
     for performance in standby_performances:
         (standby_performance_data
-            .setdefault(str(performance.get_date()), {})
+            .setdefault(str(performance.date), {})
             .setdefault(performance.timesheet.user.id, [])
             .append(performance))
 

@@ -667,14 +667,14 @@ class PerformanceParentAdmin(ExportMixin, PolymorphicParentModelAdmin):
         ('timesheet__user', RelatedDropdownFilter),
         ('timesheet__year', DropdownFilter),
         ('timesheet__month', DropdownFilter),
-        ('day', DropdownFilter),
+        ('date', DateRangeFilter),
         ('activityperformance__contract_role', RelatedDropdownFilter),
         ('activityperformance__performance_type', RelatedDropdownFilter),
     )
     list_display = (
         '__str__',
         'timesheet',
-        'day',
+        'date',
         'contract',
         'performance_type',
         'duration',

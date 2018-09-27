@@ -1,0 +1,1445 @@
+openapi: 3.0.0
+
+#####
+# Basic API info
+###
+info:
+  version: 2.0.0-alpha
+  title: 925r API
+  contact:
+    name: Kalman Olah
+    email: hello+925r@kalmanolah.net
+    url: https://kalmanolah.net
+  license:
+    name: GPLv3
+    url: https://www.gnu.org/licenses/gpl-3.0.html
+servers:
+  - url: http://localhost:8000/api/v2
+
+
+#####
+# Security
+###
+security:
+  - basicAuth: []
+
+
+#####
+# Entity schemas
+###
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    Gender:
+      type: string
+      enum:
+        - m
+        - f
+    TimesheetStatus:
+      type: string
+      enum:
+        - active
+        - pending
+        - closed
+    LeaveStatus:
+      type: string
+      enum:
+        - draft
+        - pending
+        - approved
+        - rejected
+    BaseModel:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        type:
+          type: string
+          readOnly: true
+        display_label:
+          type: string
+          readOnly: true
+    MinimalModel:
+      allOf:
+        - $ref: '#/components/schemas/BaseModel'
+    BasicModel:
+      allOf:
+        - $ref: '#/components/schemas/BaseModel'
+        - type: object
+          properties:
+            created_at:
+              type: string
+              format: date-time
+              readOnly: true
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+    MinimalGroup:
+      allOf:
+        - $ref: '#/components/schemas/MinimalModel'
+    MinimalLeaveType:
+      allOf:
+        - $ref: '#/components/schemas/MinimalModel'
+    MinimalPerformanceType:
+      allOf:
+        - $ref: '#/components/schemas/MinimalModel'
+    MinimalCompany:
+      allOf:
+        - $ref: '#/components/schemas/MinimalModel'
+    MinimalContract:
+      allOf:
+        - $ref: '#/components/schemas/MinimalModel'
+    MinimalContractRole:
+      allOf:
+        - $ref: '#/components/schemas/MinimalModel'
+    MinimalLocation:
+      allOf:
+        - $ref: '#/components/schemas/MinimalModel'
+    UserInfo:
+      allOf:
+        - $ref: '#/components/schemas/BaseModel'
+        - type: object
+          properties:
+            birth_date:
+              type: string
+              format: date-time
+            gender:
+              $ref: '#/components/schemas/Gender'
+            country:
+              type: string
+            join_date:
+              type: string
+              format: date-time
+            phone_number:
+              type: string
+    User:
+      allOf:
+        - $ref: '#/components/schemas/BaseModel'
+        - type: object
+          properties:
+            username:
+              type: string
+            email:
+              type: string
+              format: email
+            first_name:
+              type: string
+            last_name:
+              type: string
+            is_active:
+              type: boolean
+            userinfo:
+              $ref: '#/components/schemas/UserInfo'
+    Me:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            groups:
+              $ref: '#/components/schemas/MinimalGroup'
+            is_staff:
+              type: boolean
+            is_superuser:
+              type: boolean
+    LeaveType:
+      allOf:
+        - $ref: '#/components/schemas/BaseModel'
+        - type: object
+          properties:
+            name:
+              type: string
+    ContractRole:
+      allOf:
+        - $ref: '#/components/schemas/BaseModel'
+        - type: object
+          properties:
+            name:
+              type: string
+    PerformanceType:
+      allOf:
+        - $ref: '#/components/schemas/BaseModel'
+        - type: object
+          properties:
+            name:
+              type: string
+            multiplier:
+              type: number
+              format: double
+    Location:
+      allOf:
+        - $ref: '#/components/schemas/BaseModel'
+        - type: object
+          properties:
+            name:
+              type: string
+    Holiday:
+      allOf:
+        - $ref: '#/components/schemas/BaseModel'
+        - type: object
+          properties:
+            name:
+              type: string
+            date:
+              type: string
+              format: date
+            country:
+              type: string
+    LeaveDate:
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+        - type: object
+          properties:
+            starts_at:
+              type: string
+              format: date-time
+            ends_at:
+              type: string
+              format: date-time
+    Contract:
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+        - type: object
+          properties:
+            active:
+              type: boolean
+            name:
+              type: string
+            starts_at:
+              type: string
+              format: date-time
+            ends_at:
+              type: string
+              format: date-time
+            description:
+              type: string
+            performance_types:
+              type: array
+              items:
+                $ref: '#/components/schemas/MinimalPerformanceType'
+            company:
+              $ref: '#/components/schemas/MinimalCompany'
+            customer:
+              $ref: '#/components/schemas/MinimalCompany'
+    SupportContract:
+      allOf:
+        - $ref: '#/components/schemas/Contract'
+    ProjectContract:
+      allOf:
+        - $ref: '#/components/schemas/Contract'
+    ConsultancyContract:
+      allOf:
+        - $ref: '#/components/schemas/Contract'
+        - type: object
+          properties:
+            duration:
+              type: number
+              format: double
+    ContractUser:
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+        - type: object
+          properties:
+            contract:
+              $ref: '#/components/schemas/MinimalContract'
+            contract_role:
+              $ref: '#/components/schemas/MinimalContractRole'
+    Timesheet:
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+        - type: object
+          properties:
+            year:
+              type: number
+            month:
+              type: number
+            status:
+              $ref: '#/components/schemas/TimesheetStatus'
+            attachments:
+              type: array
+              items:
+                type: number
+    TimesheetBody:
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+        - type: object
+          properties:
+            year:
+              type: number
+            month:
+              type: number
+            status:
+              $ref: '#/components/schemas/TimesheetStatus'
+            attachments:
+              type: array
+              items:
+                type: number
+    Leave:
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+        - type: object
+          properties:
+            status:
+              $ref: '#/components/schemas/LeaveStatus'
+            description:
+              type: string
+            leave_type:
+              $ref: '#/components/schemas/MinimalLeaveType'
+            leavedate_set:
+              type: array
+              items:
+                $ref: '#/components/schemas/LeaveDate'
+            attachments:
+              type: array
+              items:
+                type: number
+    LeaveBody:
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+        - type: object
+          properties:
+            status:
+              $ref: '#/components/schemas/LeaveStatus'
+            description:
+              type: string
+            leave_type:
+              type: number
+            starts_at:
+              type: string
+              format: date-time
+            ends_at:
+              type: string
+              format: date-time
+            full_day:
+              type: boolean
+            attachments:
+              type: array
+              items:
+                type: number
+    Whereabout:
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+        - type: object
+          properties:
+            location:
+              $ref: '#/components/schemas/MinimalLocation'
+            description:
+              type: string
+            starts_at:
+              type: string
+              format: date-time
+            ends_at:
+              type: string
+              format: date-time
+    WhereaboutBody:
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+        - type: object
+          properties:
+            location:
+              type: number
+            description:
+              type: string
+            starts_at:
+              type: string
+              format: date-time
+            ends_at:
+              type: string
+              format: date-time
+    Performance:
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+        - type: object
+          properties:
+            contract:
+              $ref: '#/components/schemas/MinimalContract'
+            date:
+              type: string
+              format: date-time
+    ActivityPerformance:
+      allOf:
+        - $ref: '#/components/schemas/Performance'
+        - type: object
+          properties:
+            duration:
+              type: number
+              format: double
+            description:
+              type: string
+            contract_role:
+              $ref: '#/components/schemas/MinimalContractRole'
+            performance_type:
+              $ref: '#/components/schemas/MinimalPerformanceType'
+    StandbyPerformance:
+      allOf:
+        - $ref: '#/components/schemas/Performance'
+    PerformanceBody:
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+        - type: object
+          properties:
+            contract:
+              type: number
+            date:
+              type: string
+              format: date-time
+    ActivityPerformanceBody:
+      allOf:
+        - $ref: '#/components/schemas/PerformanceBody'
+        - type: object
+          properties:
+            duration:
+              type: number
+              format: double
+            description:
+              type: string
+            contract_role:
+              type: number
+            performance_type:
+              type: number
+            type:
+              type: string
+              value: ActivityPerformance
+    StandbyPerformanceBody:
+      allOf:
+        - $ref: '#/components/schemas/PerformanceBody'
+        - type: object
+          properties:
+            type:
+              type: string
+              value: StandbyPerformance
+    Attachment:
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+        - type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            slug:
+              type: string
+            file:
+              type: string
+              format: uri
+            file_url:
+              type: string
+              format: uri
+    AttachmentBody:
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+        - type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            file:
+              type: string
+              format: binary
+    PerformanceImportSuggestion:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: number
+              nullable: true
+            contract:
+              type: number
+            redmine_id:
+              type: number
+            duration:
+              type: number
+              format: double
+            description:
+              type: string
+            date:
+              type: string
+              format: date
+
+
+#####
+# API calls
+###
+paths:
+  /me/:
+    get:
+      operationId: getMe
+      responses: 
+        200:
+          description: The currently authenticated user
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Me'
+
+  /users/:
+    get:
+      operationId: getUsers
+      responses: 
+        200:
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+  /users/{userId}/:
+    parameters:
+      - name: userId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getUser
+      responses:
+        200:
+          description: A user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /leave_types/:
+    get:
+      operationId: getLeaveTypes
+      responses:
+        200:
+          description: List of leave types
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LeaveType'
+  /leave_type/{leaveTypeId}/:
+    parameters:
+      - name: leaveTypeId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getLeaveType
+      responses:
+        200:
+          description: A leave type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveType'
+
+  /contract_roles/:
+    get:
+      operationId: getContractRoles
+      responses:
+        200:
+          description: List of contract roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContractRole'
+  /contract_roles/{contractRoleId}/:
+    parameters:
+      - name: contractRoleId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getContractRole
+      responses:
+        200:
+          description: A contract role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractRole'
+
+  /performance_types/:
+    get:
+      operationId: getPerformanceTypes
+      responses:
+        200:
+          description: List of performance types
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PerformanceType'
+  /performance_types/{performanceTypeId}/:
+    parameters:
+      - name: performanceTypeId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getPerformanceType
+      responses:
+        200:
+          description: A performance type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceType'
+
+  /locations/:
+    get:
+      operationId: getLocations
+      responses:
+        200:
+          description: List of locations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Location'
+  /locations/{locationId}/:
+    parameters:
+      - name: locationId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getLocation
+      responses:
+        200:
+          description: A location
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+
+  /holidays/:
+    get:
+      operationId: getHolidays
+      responses:
+        200:
+          description: List of holidays
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Holiday'
+  /holidays/{holidayId}/:
+    parameters:
+      - name: holidayId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getHoliday
+      responses:
+        200:
+          description: A holiday
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holiday'
+
+  /contracts/:
+    get:
+      operationId: getContracts
+      responses:
+        200:
+          description: List of contracts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      oneOf:
+                        - $ref: '#/components/schemas/SupportContract'
+                        - $ref: '#/components/schemas/ConsultancyContract'
+                        - $ref: '#/components/schemas/ProjectContract'
+  /contracts/{contractId}/:
+    parameters:
+      - name: contractId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getContract
+      responses:
+        200:
+          description: A contract
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+
+  /contract_users/:
+    get:
+      operationId: getContractUsers
+      responses:
+        200:
+          description: List of contract users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContractUser'
+  /contract_users/{contractUserId}/:
+    parameters:
+      - name: contractUserId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getContractUser
+      responses:
+        200:
+          description: A contract user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractUser'
+
+  /timesheets/:
+    get:
+      operationId: getTimesheets
+      responses:
+        200:
+          description: List of timesheets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Timesheet'
+    post:
+      operationId: postTimesheet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimesheetBody'
+      responses:
+        201:
+          description: A created timesheet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timesheet'
+  /timesheets/{timesheetId}/:
+    parameters:
+      - name: timesheetId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getTimesheet
+      responses:
+        200:
+          description: A timesheet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timesheet'
+    put:
+      operationId: putTimesheet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimesheetBody'
+      responses:
+        200:
+          description: A timesheet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timesheet'
+    delete:
+      operationId: deleteTimesheet
+      responses:
+        204:
+          description: A timesheet
+
+  /leave/:
+    get:
+      operationId: getLeave
+      responses:
+        200:
+          description: List of leave
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Leave'
+    post:
+      operationId: postLeave
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveBody'
+      responses:
+        201:
+          description: A created leave
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Leave'
+  /leave/{leaveId}/:
+    parameters:
+      - name: leaveId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getLeave
+      responses:
+        200:
+          description: A leave
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Leave'
+    put:
+      operationId: putLeave
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveBody'
+      responses:
+        200:
+          description: A leave
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Leave'
+    delete:
+      operationId: deleteLeave
+      responses:
+        204:
+          description: A leave
+
+  /whereabouts/:
+    get:
+      operationId: getWhereabouts
+      responses:
+        200:
+          description: List of whereabouts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Whereabout'
+    post:
+      operationId: postWhereabout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhereaboutBody'
+      responses:
+        201:
+          description: A created whereabout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Whereabout'
+  /whereabouts/{whereaboutId}/:
+    parameters:
+      - name: whereaboutId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getWhereabout
+      responses:
+        200:
+          description: A whereabout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Whereabout'
+    put:
+      operationId: putWhereabout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhereaboutBody'
+      responses:
+        200:
+          description: A whereabout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Whereabout'
+    delete:
+      operationId: deleteWhereabout
+      responses:
+        204:
+          description: A whereabout
+
+  /performances/:
+    get:
+      operationId: getPerformances
+      responses:
+        200:
+          description: List of performances
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      oneOf:
+                        - $ref: '#/components/schemas/ActivityPerformance'
+                        - $ref: '#/components/schemas/StandbyPerformance'
+    post:
+      operationId: postPerformance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ActivityPerformanceBody'
+                - $ref: '#/components/schemas/StandbyPerformanceBody'
+      responses:
+        201:
+          description: A created performance
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ActivityPerformance'
+                  - $ref: '#/components/schemas/StandbyPerformance'
+  /performances/{performanceId}/:
+    parameters:
+      - name: performanceId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getPerformance
+      responses:
+        200:
+          description: A performance
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ActivityPerformance'
+                  - $ref: '#/components/schemas/StandbyPerformance'
+    put:
+      operationId: putPerformance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ActivityPerformanceBody'
+                - $ref: '#/components/schemas/StandbyPerformanceBody'
+      responses:
+        200:
+          description: A performance
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ActivityPerformance'
+                  - $ref: '#/components/schemas/StandbyPerformance'
+    delete:
+      operationId: deletePerformance
+      responses:
+        204:
+          description: A performance
+
+  /feeds/leave/all.ics:
+    get:
+      operationId: getLeaveFeed
+      responses:
+        200:
+          description: iCal feed
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+  /feeds/leave/me.ics:
+    get:
+      operationId: getMyLeaveFeed
+      responses:
+        200:
+          description: iCal feed
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+  /feeds/leave/{username}.ics:
+    parameters:
+      - name: username
+        in: path
+        schema:
+          type: string
+    get:
+      operationId: getUserLeaveFeed
+      responses:
+        200:
+          description: iCal feed
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+  /feeds/whereabouts/all.ics:
+    get:
+      operationId: getWhereaboutFeed
+      responses:
+        200:
+          description: iCal feed
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+  /feeds/whereabouts/me.ics:
+    get:
+      operationId: getMyWhereaboutFeed
+      responses:
+        200:
+          description: iCal feed
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+  /feeds/whereabouts/{username}.ics:
+    parameters:
+      - name: username
+        in: path
+        schema:
+          type: string
+    get:
+      operationId: getUserWhereaboutFeed
+      responses:
+        200:
+          description: iCal feed
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+
+  /attachments/:
+    get:
+      operationId: getAttachments
+      responses:
+        200:
+          description: List of attachments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Attachment'
+    post:
+      operationId: postAttachment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttachmentBody'
+      responses:
+        201:
+          description: A created attachment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+  /attachments/{attachmentId}/:
+    parameters:
+      - name: attachmentId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getAttachment
+      responses:
+        200:
+          description: An attachment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+    put:
+      operationId: putAttachment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttachmentBody'
+      responses:
+        200:
+          description: An attachment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+    delete:
+      operationId: deleteAttachment
+      responses:
+        204:
+          description: An attachment
+  
+  /downloads/attachments/{slug}/:
+    parameters:
+      - name: slug
+        in: path
+        schema:
+          type: string
+    get:
+      operationId: getAttachmentDownload
+      responses:
+        200:
+          description: File
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+  /downloads/company_logos/{companyId}/:
+    parameters:
+      - name: companyId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getCompanyLogoDownload
+      responses:
+        200:
+          description: File
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+  /downloads/timesheet_contract_pdf/{timesheetId}/{contractId}/:
+    parameters:
+      - name: timesheetId
+        in: path
+        schema:
+          type: number
+      - name: contractId
+        in: path
+        schema:
+          type: number
+    get:
+      operationId: getTimesheetContractPdfDownload
+      responses:
+        200:
+          description: File
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+
+  /imports/performances/:
+    get:
+      operationId: getPerformanceImports
+      parameters:
+        - name: from
+          schema:
+            type: string
+            format: date
+          in: query
+          required: true
+        - name: until
+          schema:
+            type: string
+            format: date
+          in: query
+          required: true
+      responses:
+        200:
+          description: List of performance import suggestions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PerformanceImportSuggestion'
+
+  /range_availability/:
+    get:
+      operationId: getRangeAvailability
+      parameters:
+        - name: from
+          schema:
+            type: string
+            format: date
+          in: query
+          required: true
+        - name: until
+          schema:
+            type: string
+            format: date
+          in: query
+          required: true
+        - name: user
+          schema:
+            type: number
+          in: query
+          required: false
+      responses:
+        200:
+          description: Availability information
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  additionalProperties:
+                    type: array
+                    items:
+                      type: string
+
+  /range_info/:
+    get:
+      operationId: getRangeInfo
+      parameters:
+        - name: from
+          schema:
+            type: string
+            format: date
+          in: query
+          required: true
+        - name: until
+          schema:
+            type: string
+            format: date
+          in: query
+          required: true
+        - name: daily
+          schema:
+            type: boolean
+          in: query
+          required: false
+        - name: detailed
+          schema:
+            type: boolean
+          in: query
+          required: false
+        - name: summary
+          schema:
+            type: boolean
+          in: query
+          required: false
+      responses:
+        200:
+          description: Range information
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true

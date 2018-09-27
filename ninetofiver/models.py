@@ -180,7 +180,7 @@ class Company(BaseModel):
 
     def get_logo_url(self):
         """Get a URL to the logo."""
-        return reverse('download_company_logo_service', kwargs={'pk': self.pk})
+        return reverse('ninetofiver_api_v2:download_company_logo', kwargs={'pk': self.pk})
 
 
 class WorkSchedule(BaseModel):
@@ -496,7 +496,7 @@ class Attachment(BaseModel):
 
     def get_file_url(self):
         """Get a URL to the file."""
-        return reverse('download_attachment_service', kwargs={'slug': self.slug})
+        return reverse('ninetofiver_api_v2:download_attachment', kwargs={'slug': self.slug})
 
 
 class Holiday(BaseModel):
@@ -1044,18 +1044,13 @@ class Performance(BaseModel):
     """Performance model."""
 
     timesheet = models.ForeignKey(Timesheet, on_delete=models.PROTECT)
-    day = models.PositiveSmallIntegerField(
-        validators=[
-            validators.MinValueValidator(1),
-            validators.MaxValueValidator(31),
-        ]
-    )
+    date = models.DateField()
     contract = models.ForeignKey(Contract, on_delete=models.PROTECT, null=True)
     redmine_id = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         """Return a string representation."""
-        return '%s-%s' % (self.day, self.timesheet)
+        return '%s' % (self.date,)
 
     def perform_additional_validation(self):
         """Perform additional validation on the object."""
@@ -1065,15 +1060,8 @@ class Performance(BaseModel):
             raise ValidationError({'timesheet': _('Performances can only be attached to active timesheets.')})
 
         # Verify whether the day is valid for the month/year of the timesheet
-        month_days = days_in_month(self.timesheet.year, self.timesheet.month)
-
-        if self.day > month_days:
-            raise ValidationError({'day': _('There are not that many days in the month this timesheet is attached to.'
-                                            % month_days)})
-
-    def get_date(self):
-        """Get the date for this performance."""
-        return date.today().replace(year=self.timesheet.year, month=self.timesheet.month, day=self.day)
+        if (self.date.month != self.timesheet.month) or (self.date.year != self.timesheet.year):
+            raise ValidationError({'date': _('This date is not part of the given timesheet.')})
 
 
 class ActivityPerformance(Performance):
@@ -1131,7 +1119,7 @@ class StandbyPerformance(Performance):
         super().perform_additional_validation()
 
         # Check whether the user already has a standby planned during this time frame
-        existing = self.__class__.objects.filter(contract=self.contract, timesheet=self.timesheet, day=self.day)
+        existing = self.__class__.objects.filter(contract=self.contract, timesheet=self.timesheet, date=self.date)
 
         if self.pk:
             existing = existing.exclude(id=self.pk)
@@ -1139,8 +1127,8 @@ class StandbyPerformance(Performance):
         existing = existing.count()
 
         if existing:
-            raise ValidationError({'day':
-                                  _('The standby performance is already linked to that contract for that day.')})
+            raise ValidationError({'date':
+                                  _('The standby performance is already linked to that contract for that date.')})
 
         if self.contract:
             # Ensure that contract is a support contract

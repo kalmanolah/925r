@@ -68,6 +68,7 @@ class Base(Configuration):
     # in the test suite
     NINETOFIVER_APPS = [
         'ninetofiver',
+        'ninetofiver.api_v2'
     ]
 
     # Application definition
