@@ -389,6 +389,9 @@ components:
               $ref: '#/components/schemas/MinimalContractRole'
             performance_type:
               $ref: '#/components/schemas/MinimalPerformanceType'
+            redmine_id:
+              type:
+                number
     StandbyPerformance:
       allOf:
         - $ref: '#/components/schemas/Performance'
@@ -419,6 +422,8 @@ components:
             type:
               type: string
               value: ActivityPerformance
+            redmine_id:
+              type: number
     StandbyPerformanceBody:
       allOf:
         - $ref: '#/components/schemas/PerformanceBody'
@@ -871,6 +876,10 @@ paths:
           in: query
           schema:
             type: string
+        - name: type
+          in: query
+          schema:
+            type: string
         - name: order_by
           in: query
           schema:
@@ -1312,12 +1321,20 @@ paths:
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/page_size'
+        - name: date
+          in: query
+          schema:
+            type: string
         - name: date__range
           in: query
           description: "Multiple values may be separated by commas."
           schema:
             type: string
         - name: contract
+          in: query
+          schema:
+            type: string
+        - name: type
           in: query
           schema:
             type: string

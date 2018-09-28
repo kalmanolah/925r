@@ -606,6 +606,7 @@ class ActivityPerformanceSerializer(BasicPerformanceSerializer):
             'description',
             'performance_type',
             'contract_role',
+            'redmine_id',
         )
 
 

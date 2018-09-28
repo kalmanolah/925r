@@ -104,6 +104,8 @@ class ContractFilter(FilterSet):
     order_fields = ('name', 'active',)
     order_by = NullLastOrderingFilter(fields=order_fields)
 
+    type = django_filters.CharFilter('polymorphic_ctype__model', lookup_expr='iexact')
+
     class Meta:
         model = models.Contract
         fields = {
@@ -188,10 +190,12 @@ class PerformanceFilter(FilterSet):
     order_fields = ('date',)
     order_by = NullLastOrderingFilter(fields=order_fields)
 
+    type = django_filters.CharFilter('polymorphic_ctype__model', lookup_expr='iexact')
+
     class Meta:
         model = models.Performance
         fields = {
-            'date': ['range',],
+            'date': ['exact', 'range',],
             'contract': ['exact'],
         }
 

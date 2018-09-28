@@ -1132,6 +1132,6 @@ class StandbyPerformance(Performance):
 
         if self.contract:
             # Ensure that contract is a support contract
-            if not isinstance(self.contract, SupportContract):
+            if self.contract.get_real_instance_class() != SupportContract:
                 raise ValidationError({'contract':
                                       _('Standy performances can only be created for support contracts.')})
