@@ -207,4 +207,6 @@ class AttachmentFilter(FilterSet):
         fields = {
             'name': ['exact', 'icontains'],
             'description': ['exact', 'icontains'],
+            'leave': ['exact',],
+            'timesheet': ['exact',],
         }

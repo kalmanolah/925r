@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from decimal import Decimal
+import dateutil
 import copy
 import datetime
 
@@ -339,8 +340,8 @@ class LeaveSerializer(BasicSerializer):
     status = serializers.ChoiceField(choices=(models.STATUS_DRAFT, models.STATUS_PENDING))
     leavedate_set = LeaveDateSerializer(many=True, read_only=True)
     leave_type = MinimalLeaveTypeSerializer()
-    starts_at = serializers.DateTimeField(write_only=True)
-    ends_at = serializers.DateTimeField(write_only=True)
+    starts_at = serializers.CharField(write_only=True)
+    ends_at = serializers.CharField(write_only=True)
     full_day = serializers.BooleanField(write_only=True)
 
     def populate_validated_data_from_context(self, validated_data):
@@ -359,20 +360,26 @@ class LeaveSerializer(BasicSerializer):
         return leave
 
     def update(self, instance, validated_data):
+        if instance.status not in [models.STATUS_DRAFT, models.STATUS_PENDING]:
+            # If the leave is updated when it is not draft/pending, only allow updating of attachments
+            if (len(validated_data) > 1) or ('attachments' not in validated_data):
+                raise serializers.ValidationError({'status': _('Only draft/pending leave can be updated!')})
+
         leave = None
         with transaction.atomic():
             starts_at = validated_data.pop('starts_at', None)
             ends_at = validated_data.pop('ends_at', None)
             full_day = validated_data.pop('full_day', None)
-
             leave = super().update(instance, validated_data)
-            self.apply_date_range_to_leave(leave, starts_at, ends_at, full_day)
+
+            if starts_at and ends_at:
+                self.apply_date_range_to_leave(leave, starts_at, ends_at, full_day)
         return leave
     
     def apply_date_range_to_leave(self, leave, starts_at, ends_at, full_day):
-        # starts_at = parser.parse(request.data['starts_at'])
+        starts_at = dateutil.parser.parse(starts_at)
         starts_at = timezone.make_aware(starts_at) if not timezone.is_aware(starts_at) else starts_at
-        # ends_at = parser.parse(request.data['ends_at'])
+        ends_at = dateutil.parser.parse(ends_at)
         ends_at = timezone.make_aware(ends_at) if not timezone.is_aware(ends_at) else ends_at
 
         # If the leave isn't pending/draft, NOPE

@@ -1511,6 +1511,14 @@ paths:
           in: query
           schema:
             type: string
+        - name: leave
+          in: query
+          schema:
+            type: string
+        - name: timesheet
+          in: query
+          schema:
+            type: string
         - name: order_by
           in: query
           schema:
