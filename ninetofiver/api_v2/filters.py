@@ -154,7 +154,7 @@ class LeaveFilter(filters.FilterSet):
 
         return queryset.filter(leavedate__starts_at__range=(start_date, end_date)).distinct()
 
-    order_fields = ('status', 'description')
+    order_fields = ('status',)
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     date__range = django_filters.CharFilter(method='date_range_distinct')
@@ -199,7 +199,7 @@ class PerformanceFilter(FilterSet):
 class AttachmentFilter(FilterSet):
     """Attachment filter."""
 
-    order_fields = ('name', 'description')
+    order_fields = ('name',)
     order_by = NullLastOrderingFilter(fields=order_fields)
 
     class Meta:

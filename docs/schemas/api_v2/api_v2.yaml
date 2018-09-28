@@ -32,6 +32,21 @@ components:
     basicAuth:
       type: http
       scheme: basic
+
+  parameters:
+    page:
+      name: page
+      in: query
+      description: A page number within the paginated result set.
+      schema:
+        type: number
+    page_size:
+      name: page_size
+      in: query
+      description: Number of results to return per page.
+      schema:
+        type: number
+
   schemas:
     Gender:
       type: string
@@ -480,6 +495,66 @@ paths:
   /users/:
     get:
       operationId: getUsers
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - username
+              - email
+              - first_name
+              - last_name
+        - name: username
+          in: query
+          schema:
+            type: string
+        - name: username__icontains
+          in: query
+          schema:
+            type: string
+        - name: email
+          in: query
+          schema:
+            type: string
+        - name: email__icontains
+          in: query
+          schema:
+            type: string
+        - name: first_name
+          in: query
+          schema:
+            type: string
+        - name: first_name__icontains
+          in: query
+          schema:
+            type: string
+        - name: last_name
+          in: query
+          schema:
+            type: string
+        - name: last_name__icontains
+          in: query
+          schema:
+            type: string
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: userinfo__birth_date
+          in: query
+          schema:
+            type: string
+        - name: userinfo__birth_date__month
+          in: query
+          schema:
+            type: number
+        - name: userinfo__birth_date__day
+          in: query
+          schema:
+            type: number
       responses: 
         200:
           description: List of users
@@ -521,6 +596,9 @@ paths:
   /leave_types/:
     get:
       operationId: getLeaveTypes
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
       responses:
         200:
           description: List of leave types
@@ -562,6 +640,9 @@ paths:
   /contract_roles/:
     get:
       operationId: getContractRoles
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
       responses:
         200:
           description: List of contract roles
@@ -603,6 +684,9 @@ paths:
   /performance_types/:
     get:
       operationId: getPerformanceTypes
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
       responses:
         200:
           description: List of performance types
@@ -644,6 +728,9 @@ paths:
   /locations/:
     get:
       operationId: getLocations
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
       responses:
         200:
           description: List of locations
@@ -685,6 +772,49 @@ paths:
   /holidays/:
     get:
       operationId: getHolidays
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: name__icontains
+          in: query
+          schema:
+            type: string
+        - name: date
+          in: query
+          schema:
+            type: string
+        - name: date__gt
+          in: query
+          schema:
+            type: string
+        - name: date__gte
+          in: query
+          schema:
+            type: string
+        - name: date__lt
+          in: query
+          schema:
+            type: string
+        - name: date__lte
+          in: query
+          schema:
+            type: string
+        - name: country
+          in: query
+          schema:
+            type: string
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - date
+              - country
       responses:
         200:
           description: List of holidays
@@ -726,6 +856,28 @@ paths:
   /contracts/:
     get:
       operationId: getContracts
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: name__icontains
+          in: query
+          schema:
+            type: string
+        - name: active
+          in: query
+          schema:
+            type: string
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - active
       responses:
         200:
           description: List of contracts
@@ -770,6 +922,19 @@ paths:
   /contract_users/:
     get:
       operationId: getContractUsers
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
+        - name: contract
+          in: query
+          schema:
+            type: string
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - contract
       responses:
         200:
           description: List of contract users
@@ -811,6 +976,61 @@ paths:
   /timesheets/:
     get:
       operationId: getTimesheets
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
+        - name: year
+          in: query
+          schema:
+            type: number
+        - name: year__gt
+          in: query
+          schema:
+            type: number
+        - name: year__gte
+          in: query
+          schema:
+            type: number
+        - name: year__lt
+          in: query
+          schema:
+            type: number
+        - name: year__lte
+          in: query
+          schema:
+            type: number
+        - name: month
+          in: query
+          schema:
+            type: number
+        - name: month__gt
+          in: query
+          schema:
+            type: number
+        - name: month__gte
+          in: query
+          schema:
+            type: number
+        - name: month__lt
+          in: query
+          schema:
+            type: number
+        - name: month__lte
+          in: query
+          schema:
+            type: number
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - year
+              - month
+              - status
       responses:
         200:
           description: List of timesheets
@@ -887,6 +1107,31 @@ paths:
   /leave/:
     get:
       operationId: getLeave
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: description
+          in: query
+          schema:
+            type: string
+        - name: description__icontains
+          in: query
+          schema:
+            type: string
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - status
+        - name: date__range
+          in: query
+          schema:
+            type: string
       responses:
         200:
           description: List of leave
@@ -963,6 +1208,31 @@ paths:
   /whereabouts/:
     get:
       operationId: getWhereabouts
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
+        - name: location
+          in: query
+          schema:
+            type: string
+        - name: description
+          in: query
+          schema:
+            type: string
+        - name: description__icontains
+          in: query
+          schema:
+            type: string
+        - name: starts_at__range
+          in: query
+          schema:
+            type: string
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - starts_at
       responses:
         200:
           description: List of whereabouts
@@ -1039,6 +1309,24 @@ paths:
   /performances/:
     get:
       operationId: getPerformances
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
+        - name: date__range
+          in: query
+          description: "Multiple values may be separated by commas."
+          schema:
+            type: string
+        - name: contract
+          in: query
+          schema:
+            type: string
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - date
       responses:
         200:
           description: List of performances
@@ -1204,6 +1492,31 @@ paths:
   /attachments/:
     get:
       operationId: getAttachments
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: name__icontains
+          in: query
+          schema:
+            type: string
+        - name: description
+          in: query
+          schema:
+            type: string
+        - name: description__icontains
+          in: query
+          schema:
+            type: string
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
       responses:
         200:
           description: List of attachments
