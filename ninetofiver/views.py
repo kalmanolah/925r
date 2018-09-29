@@ -119,6 +119,27 @@ def account_view(request):
     return render(request, 'ninetofiver/account/index.pug', context)
 
 
+@login_required
+def api_docs_view(request):
+    """API docs view page."""
+    context = {}
+    return render(request, 'ninetofiver/api_docs/index.pug', context)
+
+
+@login_required
+def api_docs_redoc_view(request):
+    """API docs redoc view page."""
+    context = {}
+    return render(request, 'ninetofiver/api_docs/redoc.pug', context)
+
+
+@login_required
+def api_docs_swagger_ui_view(request):
+    """API docs swagger ui view page."""
+    context = {}
+    return render(request, 'ninetofiver/api_docs/swagger_ui.pug', context)
+
+
 class ApiKeyCreateView(auth_mixins.LoginRequiredMixin, generic_views.CreateView):
     """View used to create an API key."""
 
@@ -153,15 +174,6 @@ class ApiKeyDeleteView(auth_mixins.LoginRequiredMixin, generic_views.DeleteView)
 
     def get_queryset(self):
         return models.ApiKey.objects.filter(user=self.request.user)
-
-
-@api_view(exclude_from_schema=True)
-@renderer_classes([OpenAPIRenderer, SwaggerUIRenderer, CoreJSONRenderer])
-@permission_classes((permissions.IsAuthenticated,))
-def schema_view(request):
-    """API documentation."""
-    generator = schemas.SchemaGenerator(title='Ninetofiver API')
-    return response.Response(generator.get_schema(request=request))
 
 
 # Admin-only

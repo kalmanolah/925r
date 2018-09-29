@@ -4,8 +4,9 @@ openapi: 3.0.0
 # Basic API info
 ###
 info:
-  version: 2.0.0-alpha
+  version: 2.0.0
   title: 925r API
+  description: The 925r API, rewritten to be a bit more user-friendly.
   contact:
     name: Kalman Olah
     email: hello+925r@kalmanolah.net
@@ -13,9 +14,16 @@ info:
   license:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.html
-servers:
-  - url: http://localhost:8000/api/v2
 
+#####
+# Servers
+###
+servers:
+  - url: /api/v2
+  - url: '{server}/api/v2'
+    variables:
+      server:
+        default: https://localhost:8000
 
 #####
 # Security

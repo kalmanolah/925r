@@ -1,0 +1,14 @@
+extends ninetofiver/base/page.pug
+- load static
+
+block title
+  | API documentation
+
+block styles
+
+block body
+  div
+    redoc(
+      spec-url='{% static "ninetofiver/docs/schemas/api_v2/api_v2.yaml" %}'
+    )
+    script(src="//cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js")

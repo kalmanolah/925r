@@ -13,7 +13,6 @@ from ninetofiver import views, models
 
 
 urlpatterns = [
-    url(r'^api/$', views.schema_view, name='api_docs'),
     url(r'^api/v2/', include('ninetofiver.api_v2.urls', namespace='ninetofiver_api_v2')),
 ]
 
@@ -23,9 +22,12 @@ router = routers.DefaultRouter()
 # Additionally, we include login URLs for the browseable API.
 urlpatterns += [
     url(r'^$', views.home_view, name='home'),
+    url(r'^api-docs/$', views.api_docs_view, name='api_docs'),
+    url(r'^api-docs/swagger_ui/$', views.api_docs_swagger_ui_view, name='api_docs_swagger_ui'),
+    url(r'^api-docs/redoc/$', views.api_docs_redoc_view, name='api_docs_redoc'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
-    # # OAuth2
+    # OAuth2
     url(r'^oauth/v2/', include(
         [
             url(r'^authorize/$', oauth2_views.AuthorizationView.as_view(template_name='ninetofiver/oauth2/authorize.pug'), name="authorize"),

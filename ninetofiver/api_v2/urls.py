@@ -9,7 +9,7 @@ urlpatterns = [
     # url(r'^api/$', views.schema_view, name='api_docs'),
 ]
 
-router = routers.DefaultRouter()
+router = routers.SimpleRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'leave_types', views.LeaveTypeViewSet)
 router.register(r'contract_roles', views.ContractRoleViewSet)
