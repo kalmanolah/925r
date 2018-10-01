@@ -626,7 +626,7 @@ class LeaveDate(BaseModel):
 
     def requested_up_front(self):
         """Whether or not the leave date was requested up front."""
-        return self.starts_at.date() > self.leave.created_at.date()
+        return self.starts_at.date() > self.created_at.date()
 
     def html_label(self):
         """Get the HTML label for this leave date."""
