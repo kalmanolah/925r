@@ -624,16 +624,16 @@ class LeaveDate(BaseModel):
         # if self.leave.status not in [STATUS_DRAFT, STATUS_PENDING]:
         #     raise ValidationError({'leave': _('You can only add leave dates to draft leaves.')})
 
-    def is_in_future(self):
-        """Whether or not the leave date is in the future."""
-        return self.ends_at.date() > date.today()
+    def requested_up_front(self):
+        """Whether or not the leave date was requested up front."""
+        return self.starts_at.date() > self.leave.created_at.date()
 
     def html_label(self):
         """Get the HTML label for this leave date."""
         label = str(self)
 
-        if not self.is_in_future():
-            label = '<span style="color:#f02311;font-weight:bold;">(!)&nbsp;</span>' + label
+        if not self.requested_up_front():
+            label = '<span style="color:#f02311;font-weight:bold;" title="%s">(!)&nbsp;</span>%s' % (_('Not requested up front'), label)
 
         return label
 
