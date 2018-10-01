@@ -15,6 +15,7 @@ info:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.html
 
+
 #####
 # Servers
 ###
@@ -24,6 +25,7 @@ servers:
     variables:
       server:
         default: https://localhost:8000
+
 
 #####
 # Security
