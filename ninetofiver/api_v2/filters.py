@@ -127,7 +127,7 @@ class ContractUserFilter(FilterSet):
         }
 
 
-class TimesheetFilter(filters.FilterSet):
+class TimesheetFilter(FilterSet):
     """Timesheet filter."""
 
     order_fields = ('year', 'month', 'status',)
@@ -142,7 +142,7 @@ class TimesheetFilter(filters.FilterSet):
         }
 
 
-class LeaveFilter(filters.FilterSet):
+class LeaveFilter(FilterSet):
     """Leave filter."""
 
     def date_range_distinct(self, queryset, name, value):
@@ -169,7 +169,7 @@ class LeaveFilter(filters.FilterSet):
         }
 
 
-class WhereaboutFilter(filters.FilterSet):
+class WhereaboutFilter(FilterSet):
     """Whereabout filter."""
 
     order_fields = ('starts_at',)

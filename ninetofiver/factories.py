@@ -209,6 +209,8 @@ class ContractUserFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.ContractUser
 
+    contract_role = factory.SubFactory(ContractRoleFactory)
+
 
 class ContractUserGroupFactory(factory.DjangoModelFactory):
     class Meta:
@@ -239,7 +241,7 @@ class PerformanceFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.Performance
 
-    day = factory.LazyFunction(lambda: random.randint(1, 27))
+    date = factory.LazyFunction(lambda: fake.date_time_this_decade().date())
     redmine_id = factory.LazyFunction(lambda: random.randint(0, 3000))
 
 

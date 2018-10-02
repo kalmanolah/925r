@@ -99,9 +99,10 @@ class BaseModel(DirtyFieldsMixin, PolymorphicModel):
         from django.urls import reverse
         return reverse(self.get_absolute_url_view_name(), args=[str(self.id)])
 
-    def get_absolute_url_view_name(self):
+    def get_absolute_url_view_name(self, cls=None):
         """Get the view name used for generating an absolute URL."""
-        return '%s-detail' % self.__class__.__name__.lower()
+        cls = cls if cls else self.__class__
+        return 'ninetofiver_api_v2:%s-detail' % cls.__name__.lower()
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -708,6 +709,10 @@ class Contract(BaseModel):
             if self.starts_at >= self.ends_at:
                 raise ValidationError({'ends_at': _('The start date should be set before the end date')})
 
+    def get_absolute_url_view_name(self):
+        """Get the view name used for generating an absolute URL."""
+        return super().get_absolute_url_view_name(Contract)
+
 
 class ProjectContract(Contract):
 
@@ -1064,6 +1069,10 @@ class Performance(BaseModel):
         # Verify whether the day is valid for the month/year of the timesheet
         if (self.date.month != self.timesheet.month) or (self.date.year != self.timesheet.year):
             raise ValidationError({'date': _('This date is not part of the given timesheet.')})
+
+    def get_absolute_url_view_name(self):
+        """Get the view name used for generating an absolute URL."""
+        return super().get_absolute_url_view_name(Performance)
 
 
 class ActivityPerformance(Performance):
