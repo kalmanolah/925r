@@ -591,10 +591,12 @@ class LeaveDate(BaseModel):
             raise ValidationError({'starts_at': _('The start date should occur on the same day as the end date')})
 
         # Check whether the user already has leave planned during this time frame
-        existing = self.__class__.objects.filter(
-            models.Q(leave__user=self.leave.user) &
-            models.Q(starts_at__lte=self.ends_at, ends_at__gte=self.starts_at)
-        )
+        existing = (self.__class__.objects
+                    .exclude(leave__status=STATUS_REJECTED)
+                    .filter(
+                        models.Q(leave__user=self.leave.user) &
+                        models.Q(starts_at__lte=self.ends_at, ends_at__gte=self.starts_at)
+                    ))
 
         if self.pk:
             existing = existing.exclude(id=self.pk)
