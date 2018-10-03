@@ -45,7 +45,7 @@ class AttachmentAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.B
         return super().get_update_response(data=data, results=results, use_patch=True, format='multipart', **kwargs)
 
 
-class TimesheetAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+class TimesheetAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     """Timesheet API test case."""
 
     base_name = 'ninetofiver_api_v2:timesheet'
@@ -222,7 +222,7 @@ class ContractRoleAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.Base
     }
 
 
-class PerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+class PerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     """Performance API test case."""
 
     base_name = 'ninetofiver_api_v2:performance'
@@ -266,6 +266,21 @@ class PerformanceAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseR
             'contract': self.contract.id,
             'performance_type': self.performance_type.id,
             'contract_role': self.contract_role.id,
+            'type': 'ActivityPerformance',
         })
 
         return self.create_data
+
+    def get_update_data(self):
+        self.update_data.update({
+            'contract': str(self.contract.id),
+            'performance_type': str(self.performance_type.id),
+            'contract_role': str(self.contract_role.id),
+            'type': 'ActivityPerformance',
+        })
+
+        return self.update_data
+
+    def _update_check_db(self, obj, data=None, results=None):
+        setattr(obj, 'type', 'ActivityPerformance')
+        super()._update_check_db(obj, data=data, results=results)

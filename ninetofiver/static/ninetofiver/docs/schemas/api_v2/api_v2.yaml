@@ -32,6 +32,8 @@ servers:
 ###
 security:
   - basicAuth: []
+  - apiKeyAuth: []
+  - oAuth2PasswordAuth: []
 
 
 #####
@@ -42,7 +44,16 @@ components:
     basicAuth:
       type: http
       scheme: basic
-
+    apiKeyAuth:
+      type: apiKey
+      in: query
+      name: api_key
+    oAuth2PasswordAuth:
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: /oauth/v2/token/
+  
   parameters:
     page:
       name: page
