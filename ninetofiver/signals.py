@@ -70,9 +70,10 @@ def on_timesheet_pre_save(sender, instance, created=False, **kwargs):
 
         old_status = dirty.get('status', None)
         new_status = instance.status
-        statuses = [models.STATUS_CLOSED, models.STATUS_ACTIVE]
+        old_statuses = [models.STATUS_PENDING]
+        new_statuses = [models.STATUS_ACTIVE]
 
-        if (old_status != new_status) and (new_status in statuses):
+        if (old_status != new_status) and (old_status in old_statuses) and (new_status in new_statuses):
             if instance.user.email:
                 send_mail(
                     instance.user.email,
