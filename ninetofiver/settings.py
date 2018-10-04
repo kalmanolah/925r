@@ -195,7 +195,7 @@ class Base(Configuration):
     STATIC_URL = '/static/'
 
     # User-uploaded files
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+    MEDIA_ROOT = values.Value(os.path.join(BASE_DIR, 'media/'))
 
     # Auth
     LOGIN_URL = 'login'
