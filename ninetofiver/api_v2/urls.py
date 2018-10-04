@@ -28,7 +28,7 @@ router.register(r'attachments', views.AttachmentViewSet)
 # Additionally, we include login URLs for the browseable API.
 urlpatterns += [
     url(r'^', include(router.urls + [
-        url(r'^me/$', views.MeAPIView.as_view()),
+        url(r'^me/$', views.MeAPIView.as_view(), name='me'),
         url(r'^feeds/leave/all.ics$', views.LeaveFeedAPIView.as_view()),
         url(r'^feeds/leave/me.ics$', views.UserLeaveFeedAPIView.as_view()),
         url(r'^feeds/leave/(?P<user_username>[A-Za-z0-9_-]+).ics$', views.UserLeaveFeedAPIView.as_view()),

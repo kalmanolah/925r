@@ -4,8 +4,22 @@ from rest_assured import testcases
 from ninetofiver import factories, models
 from ninetofiver.tests import ModelTestMixin, AuthenticatedAPITestCase
 from django.utils import timezone
+from django.shortcuts import reverse
 import tempfile
 import datetime
+
+
+class GenericViewTests(AuthenticatedAPITestCase):
+    """Generic view tests."""
+
+    def setUp(self):
+        super().setUp()
+
+    def test_me_view(self):
+        """Test me view."""
+        response = self.client.get(reverse('ninetofiver_api_v2:me'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], self.user.id)
 
 
 class AttachmentAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
