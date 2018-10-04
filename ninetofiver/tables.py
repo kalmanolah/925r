@@ -267,6 +267,7 @@ class UserLeaveOverviewTable(BaseTable):
 
     year = tables.Column()
     month = tables.Column()
+    timesheet_status = tables.Column(accessor='timesheet.status')
     actions = tables.Column(accessor='user', orderable=False, exclude_from_export=True)
 
     def __init__(self, *args, **kwargs):

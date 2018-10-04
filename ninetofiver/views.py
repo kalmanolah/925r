@@ -447,6 +447,17 @@ def admin_report_user_leave_overview_view(request):
     data = []
 
     if user and from_date and until_date and (until_date >= from_date):
+        # Grab timesheets, index them by year, month
+        timesheets = (models.Timesheet.objects
+                      .filter(user=user)
+                      .filter(
+                          Q(year=from_date.year, month__gte=from_date.year) |
+                          Q(year__gt=from_date.year, year__lt=until_date.year) |
+                          Q(year=until_date.year, month__lte=until_date.month)))
+        timesheet_data = {}
+        for timesheet in timesheets:
+            timesheet_data.setdefault(timesheet.year, {})[timesheet.month] = timesheet
+
         # Grab leave types, index them by ID
         leave_types = models.LeaveType.objects.all()
 
@@ -476,6 +487,7 @@ def admin_report_user_leave_overview_view(request):
                 'year': current_date.year,
                 'month': current_date.month,
                 'user': user,
+                'timesheet': timesheet_data.get(current_date.year, {}).get(current_date.month, None),
                 'leave_type_hours': month_leave_type_hours,
             })
 
