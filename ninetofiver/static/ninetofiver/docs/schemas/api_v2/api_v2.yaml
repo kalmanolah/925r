@@ -53,6 +53,8 @@ components:
       flows:
         password:
           tokenUrl: /oauth/v2/token/
+          refreshUrl: /oauth/v2/token/
+          scopes: []
   
   parameters:
     page:
