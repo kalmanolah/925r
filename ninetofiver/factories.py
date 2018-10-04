@@ -233,8 +233,10 @@ class WhereaboutFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.Whereabout
 
-    day = factory.LazyFunction(lambda: random.randint(1, 27))
-    location = factory.LazyFunction(fake.city)
+    starts_at = factory.LazyFunction(lambda: fake.date_time_between(start_date='-1h', end_date='now', tzinfo=utc))
+    ends_at = factory.LazyFunction(lambda: fake.date_time_between(start_date='now', end_date='+1h', tzinfo=utc))
+    location = factory.SubFactory(LocationFactory)
+    timesheet = factory.SubFactory(OpenTimesheetFactory)
 
 
 class PerformanceFactory(factory.DjangoModelFactory):

@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_assured import testcases
 from ninetofiver import factories, models
 from ninetofiver.tests import ModelTestMixin, AuthenticatedAPITestCase
+from django.utils import timezone
 import tempfile
 import datetime
 
@@ -220,6 +221,37 @@ class ContractRoleAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.Base
     update_data = {
         'name': 'Developer',
     }
+
+
+class WhereaboutAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    """Whereabout API test case."""
+
+    base_name = 'ninetofiver_api_v2:whereabout'
+    factory_class = factories.WhereaboutFactory
+    # user_factory = factories.AdminFactory
+    create_data = {
+        'starts_at': timezone.make_aware(datetime.datetime(2018, 3, 20, 13, 50)),
+        'ends_at': timezone.make_aware(datetime.datetime(2018, 3, 20, 14, 50)),
+    }
+    update_data = {
+        'starts_at': timezone.make_aware(datetime.datetime(2018, 3, 20, 12, 50)),
+        'ends_at': timezone.make_aware(datetime.datetime(2018, 3, 20, 13, 50)),
+    }
+
+    def setUp(self):
+        self.user = factories.AdminFactory()
+        self.client.force_authenticate(self.user)
+        self.timesheet = factories.OpenTimesheetFactory.create(user=self.user, year=2018, month=3)
+        self.location = factories.LocationFactory.create()
+
+        super().setUp()
+
+    def get_object(self, factory):
+        obj = factory.create(location=self.location, timesheet=self.timesheet,
+                             starts_at=timezone.make_aware(datetime.datetime(2018, 3, 20, 16, 50)),
+                             ends_at=timezone.make_aware(datetime.datetime(2018, 3, 20, 17, 50),))
+
+        return obj
 
 
 class PerformanceAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
