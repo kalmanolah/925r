@@ -30,7 +30,12 @@ class HoursColumn(tables.Column):
 
     def render(self, value):
         """Render the value."""
-        return format_duration(value)
+        res = format_duration(value)
+
+        if not value:
+            res = format_html('<span style="color:#999;">{}</span>', res)
+
+        return res
 
     def value(self, value):
         """Return the value."""
@@ -45,7 +50,7 @@ class SummedHoursColumn(HoursColumn):
         accessor = self.accessor if self.accessor else A(bound_column.name)
         total = [accessor.resolve(x) for x in table.data]
         total = sum([x for x in total if x is not None])
-        return _('Total: %s') % self.render(total)
+        return format_html(_('Total: {}'), self.render(total))
 
 
 class TimesheetContractOverviewTable(BaseTable):

@@ -478,6 +478,7 @@ class LeaveSerializer(BasicSerializer):
             'starts_at',
             'full_day',
             'attachments',
+            'description',
         )
 
 
