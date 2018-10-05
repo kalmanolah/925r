@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "efe0de010096117156515d326c7b30ae5a93de7e6cad8b975213a3f3623b631f"
+            "sha256": "f4be13887ff183d8d28e107d79388566b7caabcdb75ba88e5a2201f155633e9d"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -76,10 +76,10 @@
         },
         "django": {
             "hashes": [
-                "sha256:7ab6a9c798a5f9f359ee6da3677211f883fb02ef32cebe9b29751eb7a871febf",
-                "sha256:c3b42ca1efa1c0a129a9e863134cc3fe705c651dea3a04a7998019e522af0c60"
+                "sha256:8176ac7985fe6737ce3d6b2531b4a2453cb7c3377c9db00bacb2b3320f4a1311",
+                "sha256:b18235d82426f09733d2de9910cee975cf52ff05e5f836681eb957d105a05a40"
             ],
-            "version": "==1.11.6"
+            "version": "==1.11.15"
         },
         "django-admin-list-filter-dropdown": {
             "hashes": [
@@ -101,10 +101,9 @@
         },
         "django-admin-sortable": {
             "hashes": [
-                "sha256:81d831038622264b909b76b90de8bf5a78fa3013e3f0c340128775913b47307b",
-                "sha256:b6b8f517f0fbde544beccae0d796e115cd34392a037c5bb0602d608f79a8348b"
+                "sha256:0dd803a1801bf1e342458328e33128be14e2cf8d06a1f548d87d3fc6ffa365b1"
             ],
-            "version": "==2.1.7"
+            "version": "==2.1.8"
         },
         "django-auth-ldap": {
             "hashes": [
@@ -184,10 +183,10 @@
         },
         "django-import-export": {
             "hashes": [
-                "sha256:7e049a44d65747db1a4eea4053d1f4cc9a1f137b256f932b144ddf5e617c08bd",
-                "sha256:15d076086ec0af8ba4e70772b99cdf99b52ca1863328c6aaa91185010a1bb907"
+                "sha256:51823434e06721725e0e51b8da424b3c0e915c93cbb65b607464e3d9613f200e",
+                "sha256:54d0c9a0e0b0513c9db7ea47c41e6499ffe576e13f724d37003e18d974f5c3b5"
             ],
-            "version": "==1.0.1"
+            "version": "==1.1.0"
         },
         "django-logentry-admin": {
             "hashes": [
@@ -353,9 +352,9 @@
         },
         "markdown2": {
             "hashes": [
-                "sha256:8bb9a24eb2aa02f1427aabe46483f0f0215ab18c8a345315ae8e2ee3c3a09c03"
+                "sha256:08a124043aa0ad36ba2136239547d5011a2b770278abb11a5609611e0040ea05"
             ],
-            "version": "==2.3.5"
+            "version": "==2.3.6"
         },
         "markupsafe": {
             "hashes": [
@@ -717,10 +716,11 @@
         },
         "toml": {
             "hashes": [
-                "sha256:a7901919d3e4f92ffba7ff40a9d697e35bbbc8a8049fe8da742f34c83606d957",
-                "sha256:380178cde50a6a79f9d2cf6f42a62a5174febe5eea4126fe4038785f1d888d42"
+                "sha256:f1db651f9657708513243e61e6cc67d101a39bad662eaa9b5546f789338e07a3",
+                "sha256:235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e",
+                "sha256:229f81c57791a41d65e399fc06bf0848bab550a9dfd5ed66df18ce5f05e73d5c"
             ],
-            "version": "==0.9.6"
+            "version": "==0.10.0"
         },
         "tox": {
             "hashes": [
