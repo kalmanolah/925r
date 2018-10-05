@@ -60,6 +60,7 @@ PERIOD_YEARLY = 'yearly'
 
 # Permissions
 PERMISSION_RECEIVE_PENDING_LEAVE_REMINDER = 'receive_pending_leave_reminder'
+PERMISSION_RECEIVE_MODIFIED_ATTACHMENT_NOTIFICATION = 'receive_modified_attachment_notification'
 
 
 class BaseManager(PolymorphicManager):
@@ -487,6 +488,11 @@ class Attachment(BaseModel):
     description = models.TextField(max_length=255, blank=True, null=True)
     file = models.FileField(upload_to=generate_file_path)
     slug = models.SlugField(default=uuid.uuid4, editable=False)
+
+    class Meta(BaseModel.Meta):
+        permissions = (
+            (PERMISSION_RECEIVE_MODIFIED_ATTACHMENT_NOTIFICATION, "Can receive modified attachment notifications"),
+        )
 
     def __str__(self):
         """Return a string representation."""

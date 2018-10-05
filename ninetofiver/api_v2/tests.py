@@ -237,6 +237,27 @@ class ContractRoleAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.Base
     }
 
 
+class ContractUserAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
+    """Contract user API test case."""
+
+    base_name = 'ninetofiver_api_v2:contractuser'
+    factory_class = factories.ContractUserFactory
+    user_factory = factories.AdminFactory
+    create_data = {}
+    update_data = {}
+
+    def setUp(self):
+        self.contract = factories.ContractFactory.create(
+            company=factories.InternalCompanyFactory.create(),
+            customer=factories.CompanyFactory.create()
+        )
+        self.contract_role = factories.ContractRoleFactory.create()
+        super().setUp()
+
+    def get_object(self, factory):
+        return factory.create(contract=self.contract, contract_role=self.contract_role, user=self.user)
+
+
 class WhereaboutAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     """Whereabout API test case."""
 

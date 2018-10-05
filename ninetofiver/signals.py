@@ -4,8 +4,8 @@ from django.contrib.auth import models as auth_models
 from django.dispatch import receiver
 from django.db.models.signals import post_save, pre_save, m2m_changed, pre_delete
 from django.utils.translation import ugettext_lazy as _
-from ninetofiver import models
-from ninetofiver.utils import send_mail
+from ninetofiver import models, notifications
+from ninetofiver.utils import send_mail, get_users_with_permission
 
 
 @receiver(populate_user)
@@ -117,7 +117,7 @@ def on_contract_user_group_pre_save(sender, instance, created=False, **kwargs):
 
 @receiver(pre_delete, sender=models.ContractUserGroup)
 def on_contract_user_group_pre_delete(sender, instance, **kwargs):
-    """Process pre-save event for a contract user group."""
+    """Process pre-delete event for a contract user group."""
     # If we deleted contract users we may need to add other ones from other contract user groups again,
     # so trigger a save event for all other contract user groups
     other_contract_user_groups = instance.contract.contractusergroup_set.all().exclude(pk=instance.pk)
@@ -163,3 +163,42 @@ def on_user_groups_m2m_changed(sender, instance, action, **kwargs):
                                                          user=user))
                 contract_user.contract_user_group = contract_user_group
                 contract_user.save()
+
+
+@receiver(m2m_changed, sender=models.Timesheet.attachments.through)
+def on_timesheet_attachments_m2m_changed(sender, instance, action, **kwargs):
+    timesheets = ([instance] if instance.__class__ == models.Timesheet
+                  else models.Timesheet.objects.filter(id__in=kwargs['pk_set']))
+    attachments = ([instance] if instance.__class__ == models.Attachment
+                   else models.Attachment.objects.filter(id__in=kwargs['pk_set']))
+
+    if len(attachments):
+        if action in ['pre_remove', 'pre_add']:
+            action = ('added' if (action == 'pre_add') else 'removed')
+            notifications.send_attachments_modified_notification(attachments=attachments, action=action,
+                                                                 timesheets=timesheets)
+
+
+@receiver(m2m_changed, sender=models.Leave.attachments.through)
+def on_leave_attachments_m2m_changed(sender, instance, action, **kwargs):
+    leaves = ([instance] if instance.__class__ == models.Leave
+              else models.Leave.objects.filter(id__in=kwargs['pk_set']))
+    attachments = ([instance] if instance.__class__ == models.Attachment
+                   else models.Attachment.objects.filter(id__in=kwargs['pk_set']))
+
+    if len(attachments):
+        if action in ['pre_remove', 'pre_add']:
+            action = ('added' if (action == 'pre_add') else 'removed')
+            notifications.send_attachments_modified_notification(attachments=attachments, action=action,
+                                                                 leaves=leaves)
+
+
+@receiver(pre_delete, sender=models.Attachment)
+def on_attachment_pre_delete(sender, instance, **kwargs):
+    """Process pre-delete event for an attachment."""
+    timesheets = list(instance.timesheet_set.all())
+    leaves = list(instance.leave_set.all())
+
+    if timesheets or leaves:
+        notifications.send_attachments_modified_notification(attachments=[instance], action='removed',
+                                                             timesheets=timesheets, leaves=leaves)

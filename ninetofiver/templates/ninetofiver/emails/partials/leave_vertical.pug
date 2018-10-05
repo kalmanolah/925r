@@ -1,0 +1,82 @@
+table(style="
+    border-collapse: collapse;
+")
+    thead
+        tr(style="
+            background: {% cycle '#ffffff' '#f9f9f9' %};
+        ")
+            th(style="
+                color: #666;
+                background: #f6f6f6;
+                text-transform: uppercase;
+                border-top: 1px solid #eee;
+                border-bottom: 1px solid #eee;
+                padding: 8px 10px;
+                text-align: left;
+                vertical-align: top;
+            ") Status
+            td(style="
+                border-top: 1px solid #eee;
+                border-bottom: 1px solid #eee;
+                padding: 8px;
+                vertical-align: top;
+            ") {{ leave.status | title }}
+        tr(style="
+            background: {% cycle '#ffffff' '#f9f9f9' %};
+        ")
+            th(style="
+                color: #666;
+                background: #f6f6f6;
+                text-transform: uppercase;
+                border-top: 1px solid #eee;
+                border-bottom: 1px solid #eee;
+                padding: 8px 10px;
+                text-align: left;
+                vertical-align: top;
+            ") Type
+            td(style="
+                border-top: 1px solid #eee;
+                border-bottom: 1px solid #eee;
+                padding: 8px;
+                vertical-align: top;
+            ") {{ leave.leave_type }}
+        tr(style="
+            background: {% cycle '#ffffff' '#f9f9f9' %};
+        ")
+            th(style="
+                color: #666;
+                background: #f6f6f6;
+                text-transform: uppercase;
+                border-top: 1px solid #eee;
+                border-bottom: 1px solid #eee;
+                padding: 8px 10px;
+                text-align: left;
+                vertical-align: top;
+            ") Date
+            td(style="
+                border-top: 1px solid #eee;
+                border-bottom: 1px solid #eee;
+                padding: 8px;
+                vertical-align: top;
+            ")
+                for leave_date in leave.leavedate_set.all
+                    | {{ leave_date }}<br>
+        tr(style="
+            background: {% cycle '#ffffff' '#f9f9f9' %};
+        ")
+            th(style="
+                color: #666;
+                background: #f6f6f6;
+                text-transform: uppercase;
+                border-top: 1px solid #eee;
+                border-bottom: 1px solid #eee;
+                padding: 8px 10px;
+                text-align: left;
+                vertical-align: top;
+            ") Description
+            td(style="
+                border-top: 1px solid #eee;
+                border-bottom: 1px solid #eee;
+                padding: 8px;
+                vertical-align: top;
+            ") {{ leave.description | default:'None' }}

@@ -1,0 +1,47 @@
+table(style="
+    border-collapse: collapse;
+")
+    thead
+        tr
+            th(style="
+                color: #666;
+                background: #f6f6f6;
+                text-transform: uppercase;
+                border-top: 1px solid #eee;
+                border-bottom: 1px solid #eee;
+                padding: 5px 10px;
+                text-align: left;
+            ") Attachment
+            th(style="
+                color: #666;
+                background: #f6f6f6;
+                text-transform: uppercase;
+                border-top: 1px solid #eee;
+                border-bottom: 1px solid #eee;
+                padding: 5px 10px;
+                text-align: left;
+            ") Actions       
+
+    tbody
+        for attachment in attachments
+            tr(style="
+                background: {% cycle '#ffffff' '#f9f9f9' %};
+            ")
+                td(style="
+                    border-bottom: 1px solid #eee;
+                    padding: 8px;
+                    vertical-align: top;
+                ") {{ attachment }}
+                td(style="
+                    border-bottom: 1px solid #eee;
+                    padding: 8px;
+                    vertical-align: top;
+                ")
+                    a(href='{{ settings.BASE_URL }}{{ attachment.get_file_url }}' style="
+                        background: #79aec8;
+                        border-radius: 4px;
+                        color: #fff;
+                        padding: 4px 5px;
+                        text-decoration: none;
+                    ") Download
+                    | &nbsp;

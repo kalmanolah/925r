@@ -7,6 +7,7 @@ import os
 import copy
 from django.core.mail import send_mail as base_send_mail
 from django.template.loader import render_to_string
+from django.db.models import Q
 
 
 DEFAULT_DJANGO_ENVIRONMENT = 'dev'
@@ -100,3 +101,16 @@ def send_mail(recipients, subject, template, context={}):
         fail_silently=False,
         html_message=message
     )
+
+
+def get_users_with_permission(permission):
+    """Get a list of all users with a given permission."""
+    from django.contrib.auth import models as auth_models
+
+    users = (auth_models.User.objects
+             .filter(Q(is_staff=True),
+                     Q(is_superuser=True) |
+                     Q(groups__permissions__codename=permission) |
+                     Q(user_permissions__codename=permission))
+             .distinct())
+    return users

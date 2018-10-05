@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth import models as auth_models
 from django.utils.translation import ugettext_lazy as _
 from ninetofiver import models
-from ninetofiver.utils import send_mail
+from ninetofiver.utils import send_mail, get_users_with_permission
 
 
 log = logging.getLogger(__name__)
@@ -24,26 +24,20 @@ class Command(BaseCommand):
         log.info('%s pending leave(s) found' % pending_leave_count)
 
         if pending_leave_count:
-            permission = models.PERMISSION_RECEIVE_PENDING_LEAVE_REMINDER
-            users = (auth_models.User.objects
-                     .filter(Q(is_staff=True),
-                             Q(is_superuser=True) |
-                             Q(groups__permissions__codename=permission) |
-                             Q(user_permissions__codename=permission))
-                     .exclude(Q(email__isnull=True) | Q(email__exact=''))
-                     .distinct())
+            users = get_users_with_permission(models.PERMISSION_RECEIVE_PENDING_LEAVE_REMINDER)
 
             for user in users:
-                log.info('Sending reminder to %s' % user.email)
+                if user.email:
+                    log.info('Sending reminder to %s' % user.email)
 
-                send_mail(
-                    user.email,
-                    _('Pending leave awaiting your approval'),
-                    'ninetofiver/emails/pending_leave_reminder.pug',
-                    context={
-                        'user': user,
-                        'leaves': pending_leaves,
-                        'leave_ids': ','.join([str(x.id) for x in pending_leaves]),
-                        'leave_count': pending_leave_count,
-                    }
-                )
+                    send_mail(
+                        user.email,
+                        _('Pending leave awaiting your approval'),
+                        'ninetofiver/emails/pending_leave_reminder.pug',
+                        context={
+                            'user': user,
+                            'leaves': pending_leaves,
+                            'leave_ids': ','.join([str(x.id) for x in pending_leaves]),
+                            'leave_count': pending_leave_count,
+                        }
+                    )

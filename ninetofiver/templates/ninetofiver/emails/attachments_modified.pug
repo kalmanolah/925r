@@ -1,0 +1,21 @@
+extends ninetofiver/emails/mail_generic.pug
+
+block content
+    p Dear {{ user }},
+    p
+        if timesheets
+            | Attachments were <strong>{{ action }}</strong> to/from <strong>timesheets</strong>.
+            br
+        if leaves
+            | Attachments were <strong>{{ action }}</strong> to/from <strong>leave</strong>.
+            br
+        | More details can be found below.
+
+    if timesheets
+        include ninetofiver/emails/partials/timesheets_horizontal.pug
+        br
+    if leaves
+        include ninetofiver/emails/partials/leaves_horizontal.pug
+        br
+
+    include ninetofiver/emails/partials/attachments_horizontal.pug

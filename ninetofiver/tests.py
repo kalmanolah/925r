@@ -197,31 +197,3 @@ class ContractUserGroupTests(AuthenticatedAPITestCase):
 #         })
 
 #         return self.create_data
-
-
-# class ContractUserAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
-#     base_name = 'contractuser'
-#     factory_class = factories.ContractUserFactory
-#     user_factory = factories.AdminFactory
-#     create_data = {}
-#     update_data = {}
-
-#     def setUp(self):
-#         self.contract = factories.ContractFactory.create(
-#             company=factories.InternalCompanyFactory.create(),
-#             customer=factories.CompanyFactory.create()
-#         )
-#         self.contract_role = factories.ContractRoleFactory.create()
-#         super().setUp()
-
-#     def get_object(self, factory):
-#         return factory.create(contract=self.contract, contract_role=self.contract_role, user=self.user)
-
-#     def get_create_data(self):
-#         self.create_data.update({
-#             'contract': self.contract.id,
-#             'contract_role': factories.ContractRoleFactory.create().id,
-#             'user': self.user.id,
-#         })
-
-#         return self.create_data

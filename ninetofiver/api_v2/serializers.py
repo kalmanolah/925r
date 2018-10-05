@@ -307,9 +307,10 @@ class TimesheetSerializer(BasicSerializer):
 
     def update(self, instance, validated_data):
         if instance.status != models.STATUS_ACTIVE:
-            # If the timesheet is updated when it is not active, only allow updating of attachments
-            if (len(validated_data) > 1) or ('attachments' not in validated_data):
-                raise serializers.ValidationError({'status': _('Only active timesheets can be updated!')})
+            # If the timesheet is updated when it is finalized, only allow adding of attachments
+            if ((len(validated_data) > 1) or ('attachments' not in validated_data) or
+                (list(set(instance.attachments.values_list('id', flat=True)) - set(validated_data['attachments'])))):
+                raise serializers.ValidationError({'status': _('You can only add attachments to finalized timesheets.')})
 
         return super().update(instance, validated_data)
 
@@ -361,9 +362,10 @@ class LeaveSerializer(BasicSerializer):
 
     def update(self, instance, validated_data):
         if instance.status not in [models.STATUS_DRAFT, models.STATUS_PENDING]:
-            # If the leave is updated when it is not draft/pending, only allow updating of attachments
-            if (len(validated_data) > 1) or ('attachments' not in validated_data):
-                raise serializers.ValidationError({'status': _('Only draft/pending leave can be updated!')})
+            # If the leave is updated when it is finalized, only allow adding of attachments
+            if ((len(validated_data) > 1) or ('attachments' not in validated_data) or
+                (list(set(instance.attachments.values_list('id', flat=True)) - set(validated_data['attachments'])))):
+                raise serializers.ValidationError({'status': _('You can only add attachments to finalized leave.')})
 
         leave = None
         with transaction.atomic():
@@ -458,8 +460,8 @@ class LeaveSerializer(BasicSerializer):
         for pair in leave_dates:
             # Determine timesheet to use
             if (not timesheet) or ((timesheet.year != pair[0].year) or (timesheet.month != pair[0].month)):
-                timesheet, created = models.Timesheet.objects.get_or_create(user=leave.user, year=pair[0].year,
-                                                                            month=pair[0].month)
+                timesheet = models.Timesheet.objects.get_or_create(user=leave.user, year=pair[0].year,
+                                                                   month=pair[0].month)[0]
 
             models.LeaveDate.objects.create(leave=leave, timesheet=timesheet, starts_at=pair[0],
                                             ends_at=pair[1])
@@ -639,6 +641,14 @@ class AttachmentSerializer(BasicSerializer):
 
     def get_file_url(self, obj):
         return obj.get_file_url()
+
+    def update(self, instance, validated_data):
+        # Don't allow updating of attachment if the attached leave/timesheet is already closed/approved/rejected
+        if (models.Timesheet.objects.filter(~Q(status=models.STATUS_ACTIVE), attachments=instance).count() or
+            models.Leave.objects.filter(Q(status=models.STATUS_APPROVED) | Q(status=models.STATUS_REJECTED), attachments=instance)):
+            raise serializers.ValidationError(_('Attachments linked to finalized timesheets or leaves cannot be updated.'))
+
+        return super().update(instance, validated_data)
 
     class Meta(BasicSerializer.Meta):
         model = models.Attachment

@@ -186,6 +186,13 @@ class AttachmentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
 
+    def perform_destroy(self, instance):
+        # Don't allow deleting of attachment if the attached leave/timesheet is already closed/approved/rejected
+        if (models.Timesheet.objects.filter(~Q(status=models.STATUS_ACTIVE), attachments=instance).count() or
+            models.Leave.objects.filter(Q(status=models.STATUS_APPROVED) | Q(status=models.STATUS_REJECTED), attachments=instance)):
+            raise ValidationError(_('Attachments linked to finalized timesheets or leaves cannot be deleted.'))
+        return super().perform_destroy(instance)
+
 
 class TimesheetContractPdfDownloadAPIView(BaseTimesheetContractPdfExportServiceAPIView):
     """Export a timesheet contract to PDF."""
