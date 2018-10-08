@@ -968,7 +968,7 @@ class ContractEstimate(BaseModel):
 
     """Contract estimate model."""
 
-    contract_role = models.ForeignKey(ContractRole, on_delete=models.PROTECT)
+    contract_role = models.ForeignKey(ContractRole, on_delete=models.PROTECT, blank=True, null=True)
     contract = models.ForeignKey(Contract, on_delete=models.PROTECT)
     duration = models.DecimalField(
         max_digits=9,
@@ -981,7 +981,7 @@ class ContractEstimate(BaseModel):
 
     def __str__(self):
         """Return a string representation"""
-        return '%s [Est: %s]' % (str(self.contract_role), self.duration)
+        return '%s [Est: %s]' % (str(self.contract_role) if self.contract_role else '-', self.duration)
 
     class Meta(BaseModel.Meta):
         unique_together = (('contract', 'contract_role'),)

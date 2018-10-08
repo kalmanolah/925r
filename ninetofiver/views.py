@@ -826,11 +826,13 @@ def admin_report_project_contract_overview_view(request):
         # Iterate over estimates to populate contract role data
         for contract_estimate in contract.contractestimate_set.all():
             estimated_hours += contract_estimate.duration
-            contract_role_data[contract_estimate.contract_role.id] = {
-                'contract_role': contract_estimate.contract_role,
-                'performed_hours': Decimal('0.00'),
-                'estimated_hours': contract_estimate.duration,
-            }
+
+            if contract_estimate.contract_role:
+                contract_role_data[contract_estimate.contract_role.id] = {
+                    'contract_role': contract_estimate.contract_role,
+                    'performed_hours': Decimal('0.00'),
+                    'estimated_hours': contract_estimate.duration,
+                }
 
         # Iterate over performance and fill in performed data
         for performance in performances:
