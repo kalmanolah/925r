@@ -228,12 +228,13 @@ class UserRangeInfoTable(BaseTable):
                             'timesheet__user__id__exact=%(user)s&' +
                             'timesheet__year=%(year)s&' +
                             'timesheet__month=%(month)s&' +
-                            'day=%(day)s">Performance</a>') % {
+                            'date__lte=%(date)s&' +
+                            'date__gte=%(date)s">Performance</a>') % {
                 'url': reverse('admin:ninetofiver_performance_changelist'),
                 'user': record['user'].id,
                 'year': record['date'].year,
                 'month': record['date'].month,
-                'day': record['date'].day,
+                'date': record['date'].strftime('%Y-%m-%d'),
             })
 
         if record['day_detail']['holiday_hours']:
