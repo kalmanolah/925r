@@ -746,7 +746,8 @@ class ConsultancyContract(Contract):
         validators=[
             validators.MinValueValidator(0),
             validators.MaxValueValidator(9999),
-        ]
+        ],
+        verbose_name='Duration (hours)'
     )
     day_rate = models.DecimalField(
         max_digits=6,
@@ -976,7 +977,8 @@ class ContractEstimate(BaseModel):
         validators=[
             validators.MinValueValidator(0),
             validators.MaxValueValidator(9999999),
-        ]
+        ],
+        verbose_name='Duration (hours)'
     )
 
     def __str__(self):
@@ -1095,7 +1097,8 @@ class ActivityPerformance(Performance):
         validators=[
             validators.MinValueValidator(Decimal('0.01')),
             validators.MaxValueValidator(24),
-        ]
+        ],
+        verbose_name='Duration (hours)'
     )
 
     def __str__(self):
