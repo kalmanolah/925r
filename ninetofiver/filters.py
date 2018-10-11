@@ -164,6 +164,9 @@ class AdminReportProjectContractOverviewFilter(FilterSet):
                                                          distinct=True))
     company = (django_filters.ModelMultipleChoiceFilter(queryset=models.Company.objects.filter(internal=True),
                                                         distinct=True))
+    contractuser__user = (django_filters.ModelMultipleChoiceFilter(label='User',
+                                                                   queryset=auth_models.User.objects.filter(is_active=True),
+                                                                   distinct=True))
     contract_groups = (django_filters.ModelMultipleChoiceFilter(queryset=models.ContractGroup.objects.all(),
                                                                 distinct=True))
 
@@ -175,6 +178,7 @@ class AdminReportProjectContractOverviewFilter(FilterSet):
             'contract_groups': ['exact'],
             'company': ['exact'],
             'customer': ['exact'],
+            'contractuser__user': ['exact'],
         }
 
 
