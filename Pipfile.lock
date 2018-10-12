@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f4be13887ff183d8d28e107d79388566b7caabcdb75ba88e5a2201f155633e9d"
+            "sha256": "00db2bf8587a2ab886a0b41c13ae55ebfc9bc0db441ccd4d207f8a90217d22ce"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -101,9 +101,9 @@
         },
         "django-admin-sortable": {
             "hashes": [
-                "sha256:0dd803a1801bf1e342458328e33128be14e2cf8d06a1f548d87d3fc6ffa365b1"
+                "sha256:8dbec01f4b5971e5a51352e2e6147656581811799ac4774142dfdf53a7806853"
             ],
-            "version": "==2.1.8"
+            "version": "==2.1.9"
         },
         "django-auth-ldap": {
             "hashes": [
@@ -318,10 +318,10 @@
         },
         "icalendar": {
             "hashes": [
-                "sha256:2f7166b36ed52e7ab3f2c6aacabb4300095e10c3a6244a53e2f77410633989ae",
-                "sha256:80362a9f3c2686b88791fdb78c063f33bd96451f7b1b12140c5aad2df81c008c"
+                "sha256:83f7248b7485ddd29c7d69b706b21c441e34855d9c1d888939fd24aefdd9d19b",
+                "sha256:07c2447a1d44cbb27c90b8c6a5c98e890cc1853c6223e2a52195cddec26c6356"
             ],
-            "version": "==4.0.2"
+            "version": "==4.0.3"
         },
         "idna": {
             "hashes": [
@@ -364,13 +364,9 @@
         },
         "mysqlclient": {
             "hashes": [
-                "sha256:34003bb52c82e415ba10da1ce2925745ad2220335e1e14921bb56f68dd5e37f6",
-                "sha256:b435116061913b75a27519bee3f71d82a11b409f878f8797061ecf24117854c6",
-                "sha256:9cafa74a58b7f280cd2392f1b656aa3660ca6ddfd641f0779cd0a76831bb81b0",
-                "sha256:26e19db4929313104e287916afa4cdd03974c51838414d508023bb324468daf0",
-                "sha256:452aaf9d2ba1a4fb85c134c88f9b1857852deed63b3b13255d7a65d2c1297262"
+                "sha256:ff8ee1be84215e6c30a746b728c41eb0701a46ca76e343af445b35ce6250644f"
             ],
-            "version": "==1.3.10"
+            "version": "==1.3.13"
         },
         "oauthlib": {
             "hashes": [
@@ -399,17 +395,17 @@
         },
         "phonenumbers": {
             "hashes": [
-                "sha256:e2804ae067cd123211e4edb141f3e4942d9a1e374fee7c6c8827babefaecb042",
-                "sha256:df8625fe51b3b3f188e846a83669d8ffc154c13e9a31005dc2d7ec5da907848c"
+                "sha256:670ccaa36eb2c4c05902e461f78e480403257507351b3c98660f2c7f15eb9474",
+                "sha256:8e9664ce0a838c81f4fb3e4d271c76859d26bde57242d64fe1632ab636f5319f"
             ],
-            "version": "==8.9.14"
+            "version": "==8.9.15"
         },
         "phonenumberslite": {
             "hashes": [
-                "sha256:703fc0334724d4abd459348b235963506039f00ab72117d444932f3347d9abe9",
-                "sha256:f7eab337b2aa083768d0cc5361a9f6f81a7bdff29cb333c31d81feae28cfe0cc"
+                "sha256:570ec0853a2b501bc5e383c935311932d3a3f39bfb7c544dfcc0d0070032ff42",
+                "sha256:c78b269aff4dd731cd8c99960bc67dcd2ac830e23354c5f6d27b0512b8a129be"
             ],
-            "version": "==8.9.14"
+            "version": "==8.9.15"
         },
         "pyasn1": {
             "hashes": [
@@ -624,6 +620,13 @@
             ],
             "version": "==2.0.4"
         },
+        "filelock": {
+            "hashes": [
+                "sha256:86fe6af56ae08ebc9c66d54ba3398c35b98916d0862d782b276a65816ff39392",
+                "sha256:97694f181bdf58f213cca0a7cb556dc7bf90e2f8eb9aa3151260adac56701afb"
+            ],
+            "version": "==3.0.9"
+        },
         "isort": {
             "hashes": [
                 "sha256:ec9ef8f4a9bc6f71eec99e1806bfa2de401650d996c59330782b89a5555c1497",
@@ -724,10 +727,10 @@
         },
         "tox": {
             "hashes": [
-                "sha256:cc97859bd7f38aa5b3b8ba55ffe7ee9952e7050faad1aedc0829cd3db2fb61d6",
-                "sha256:7f802b37fffd3b5ef2aab104943fa5dad24bf9564bb7e732e54b8d0cfec2fca0"
+                "sha256:217fb84aecf9792a98f93f07cfcaf014205a76c64e52bd7c2b4135458e6ad2a1",
+                "sha256:4baeb3d8ebdcd9f43afce38aa67d06f1165a87d221d5bb21e8b39a0d4880c134"
             ],
-            "version": "==3.4.0"
+            "version": "==3.5.2"
         },
         "typed-ast": {
             "hashes": [
