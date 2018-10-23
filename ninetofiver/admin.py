@@ -612,7 +612,7 @@ class PerformanceResource(ModelResource):
             'timesheet__year',
             'timesheet__month',
             'timesheet__status',
-            'day',
+            'date',
             'contract__id',
             'contract__name',
             'activityperformance__duration',
