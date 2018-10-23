@@ -1125,6 +1125,11 @@ class ActivityPerformance(Performance):
                 raise ValidationError({'performance_type':
                                       _('The selected performance type is not valid for the selected contract')})
 
+    @property
+    def normalized_duration(self):
+        """Get the normalized duration, taking into account the performance type multiplier."""
+        return round(self.duration * self.performance_type.multiplier, 2)
+
 
 class StandbyPerformance(Performance):
 

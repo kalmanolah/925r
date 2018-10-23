@@ -69,14 +69,30 @@ block body
                 th Total in hours
                 td(class='text-right') {{ item.total_performed_hours }}
 
-            if item.total_performed_days
               tr
                 th Total in 8 hour days
                 td(class='text-right') {{ item.total_performed_days }}
 
+              if item.total_performed_hours != item.total_normalized_performed_hours
+                tr
+                  td(colspan='2')
+
+                tr
+                  th Total in calculated hours
+                  td(class='text-right') {{ item.total_normalized_performed_hours }}
+
+                tr
+                  th Total in calculated 8 hour days
+                  td(class='text-right') {{ item.total_normalized_performed_days }}
+
             if item.standby_performances
-              th Total standby days
-              td(class='text-right') {{ item.total_standby_days }}
+              if item.total_performed_hours
+                tr
+                  td(colspan='2')
+
+              tr
+                th Total standby days
+                td(class='text-right') {{ item.total_standby_days }}
 
         hr(class='my-4')
 

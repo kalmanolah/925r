@@ -282,7 +282,7 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
             # Activity performance
             try:
                 for performance in activity_performance_data[str(current_date)][user.id]:
-                    duration = Decimal(performance.duration)
+                    duration = performance.normalized_duration
                     user_res['performed_hours'] += duration
                     day_res['performed_hours'] += duration
                     day_res['activity_performances'].append(performance)
@@ -290,7 +290,7 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
                         'contract': performance.contract,
                         'duration': 0,
                         'standby_days': 0,
-                    })['duration'] += performance.duration
+                    })['duration'] += duration
             except KeyError:
                 pass
 

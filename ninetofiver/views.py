@@ -83,6 +83,9 @@ class BaseTimesheetContractPdfExportServiceAPIView(PDFTemplateView, generics.Gen
             item_ctx['total_performed_hours'] = sum([x.duration for x in item_ctx['activity_performances']])
             item_ctx['total_performed_days'] = round(item_ctx['total_performed_hours'] / 8, 2)
 
+            item_ctx['total_normalized_performed_hours'] = sum([x.normalized_duration for x in item_ctx['activity_performances']])
+            item_ctx['total_normalized_performed_days'] = round(item_ctx['total_normalized_performed_hours'] / 8, 2)
+
             item_ctx['standby_performances'] = (models.StandbyPerformance.objects
                                                 .filter(timesheet=item_ctx['timesheet'], contract=item_ctx['contract'])
                                                 .order_by('date')
@@ -742,7 +745,7 @@ def admin_report_expiring_consultancy_contract_overview_view(request):
             alotted_hours = contract.duration
             performed_hours = (models.ActivityPerformance.objects
                                .filter(contract=contract)
-                               .aggregate(Sum('duration')))['duration__sum']
+                               .aggregate(performed_hours=Sum(F('duration') * F('performance_type__multiplier'))))['performed_hours']
             performed_hours = performed_hours if performed_hours else Decimal('0.00')
             remaining_hours = (alotted_hours - performed_hours) if alotted_hours else None
 
@@ -821,7 +824,7 @@ def admin_report_project_contract_overview_view(request):
 
             # Fetch each performance for the contract, annotated with country
             performances = (models.ActivityPerformance.objects
-                            .select_related('contract_role', 'timesheet__user', 'timesheet__user__userinfo')
+                            .select_related('performance_type', 'contract_role', 'timesheet__user', 'timesheet__user__userinfo')
                             .filter(contract=contract))
 
             # Iterate over estimates to populate contract role data
@@ -861,7 +864,7 @@ def admin_report_project_contract_overview_view(request):
                         'estimated_hours': Decimal('0.00'),
                     }
 
-                duration = performance.duration
+                duration = performance.normalized_duration
                 performed_hours += duration
                 contract_role_data[performance.contract_role.id]['performed_hours'] += duration
                 country_data[country]['performed_hours'] += duration
@@ -998,7 +1001,7 @@ def admin_report_expiring_support_contract_overview_view(request):
         for contract in contracts:
             performed_hours = (models.ActivityPerformance.objects
                                .filter(contract=contract)
-                               .aggregate(Sum('duration')))['duration__sum']
+                               .aggregate(performed_hours=Sum(F('duration') * F('performance_type__multiplier'))))['performed_hours']
             performed_hours = performed_hours if performed_hours else Decimal('0.00')
 
             data.append({
