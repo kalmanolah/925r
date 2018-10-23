@@ -737,10 +737,6 @@ def admin_report_expiring_consultancy_contract_overview_view(request):
                      # These are internal contracts to cover things such as meetings, talks, etc..
                      .exclude(customer=F('company')))
 
-        # If we're filtering by end date, skip all contracts which end after the given date
-        if ends_at_lte:
-            contracts = contracts.filter(Q(ends_at__isnull=True) | Q(ends_at__lte=ends_at_lte))
-
         for contract in contracts:
             alotted_hours = contract.duration
             performed_hours = (models.ActivityPerformance.objects
@@ -749,10 +745,8 @@ def admin_report_expiring_consultancy_contract_overview_view(request):
             performed_hours = performed_hours if performed_hours else Decimal('0.00')
             remaining_hours = (alotted_hours - performed_hours) if alotted_hours else None
 
-            # If we're filtering by remaining hours, skip all contracts which actually have alotted hours, but
-            # where those alotted hours are insufficient
-            if ((remaining_hours_lte is not None)
-                    and (remaining_hours is not None) and (remaining_hours > remaining_hours_lte)):
+            if (((not ends_at_lte) or (not contract.ends_at) or (contract.ends_at > ends_at_lte)) and
+                ((remaining_hours_lte is None) or (remaining_hours is None) or (remaining_hours > remaining_hours_lte))):
                 continue
 
             for contract_user in contract.contractuser_set.all():
