@@ -28,11 +28,11 @@ class ApiKeyAuthenticationTests(APITestCase):
     """API key authentication tests."""
 
     def test_missing_api_key(self):
-        """Test with missing API key."""
+        """Test with missing query API key."""
         res = self.client.get(reverse('ninetofiver_api_v2:me'))
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_read_only_api_key(self):
+    def test_read_only_query_api_key(self):
         """Test with read-only API key."""
         user = factories.UserFactory()
         api_key = models.ApiKey.objects.create(user=user, read_only=True)
@@ -48,8 +48,8 @@ class ApiKeyAuthenticationTests(APITestCase):
         })
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_read_write__api_key(self):
-        """Test with read-write API key."""
+    def test_read_write_query_api_key(self):
+        """Test with read-write query API key."""
         user = factories.UserFactory()
         api_key = models.ApiKey.objects.create(user=user, read_only=False)
 
@@ -58,6 +58,38 @@ class ApiKeyAuthenticationTests(APITestCase):
         self.assertEqual(res.data['id'], user.id)
 
         res = self.client.post('/api/v2/timesheets/?api_key=%s' % api_key.key, data={
+            'year': datetime.date.today().year,
+            'month': datetime.date.today().month,
+            'status': models.STATUS_ACTIVE,
+        })
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+    def test_read_only_header_api_key(self):
+        """Test with read-only header API key."""
+        user = factories.UserFactory()
+        api_key = models.ApiKey.objects.create(user=user, read_only=True)
+
+        res = self.client.get('/api/v2/me/', HTTP_AUTHORIZATION='Token %s' % api_key.key)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['id'], user.id)
+
+        res = self.client.post('/api/v2/timesheets/', HTTP_AUTHORIZATION='Token %s' % api_key.key, data={
+            'year': datetime.date.today().year,
+            'month': datetime.date.today().month,
+            'status': models.STATUS_ACTIVE,
+        })
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_read_write_header_api_key(self):
+        """Test with read-write header API key."""
+        user = factories.UserFactory()
+        api_key = models.ApiKey.objects.create(user=user, read_only=False)
+
+        res = self.client.get('/api/v2/me/', HTTP_AUTHORIZATION='Token %s' % api_key.key)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['id'], user.id)
+
+        res = self.client.post('/api/v2/timesheets/', HTTP_AUTHORIZATION='Token %s' % api_key.key, data={
             'year': datetime.date.today().year,
             'month': datetime.date.today().month,
             'status': models.STATUS_ACTIVE,
