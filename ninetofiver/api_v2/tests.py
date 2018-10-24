@@ -101,7 +101,7 @@ class ApiKeyAuthenticationTests(APITestCase):
         user = factories.UserFactory()
         api_key = models.ApiKey.objects.create(user=user, read_only=False)
 
-        res = self.client.get('/api/v2/me/', HTTP_AUTHORIZATION='Token%s' % api_key.key)
+        res = self.client.get('/api/v2/me/', HTTP_AUTHORIZATION='Token' % api_key.key)
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
         res = self.client.get('/api/v2/me/', HTTP_AUTHORIZATION='Token %s %s' % (api_key.key, api_key.key))
