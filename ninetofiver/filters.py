@@ -95,11 +95,11 @@ class AdminReportUserRangeInfoFilter(FilterSet):
 
 class AdminReportUserLeaveOverviewFilter(FilterSet):
     """User leave overview admin report filter."""
-    user = django_filters.ModelChoiceFilter(name='leave__user',
+    user = django_filters.ModelChoiceFilter(field_name='leave__user',
                                             queryset=auth_models.User.objects.filter(is_active=True))
-    from_date = django_filters.DateFilter(label='From', widget=admin_widgets.AdminDateWidget(), name='starts_at',
+    from_date = django_filters.DateFilter(label='From', widget=admin_widgets.AdminDateWidget(), field_name='starts_at',
                                           lookup_expr='date__gte')
-    until_date = django_filters.DateFilter(label='Until', widget=admin_widgets.AdminDateWidget(), name='starts_at',
+    until_date = django_filters.DateFilter(label='Until', widget=admin_widgets.AdminDateWidget(), field_name='starts_at',
                                            lookup_expr='date__lte')
 
     class Meta:
@@ -130,9 +130,9 @@ class AdminReportResourceAvailabilityOverviewFilter(FilterSet):
     contract = (django_filters.ModelMultipleChoiceFilter(label='Contract',
                                                          queryset=models.Contract.objects.filter(active=True),
                                                          distinct=True))
-    from_date = django_filters.DateFilter(label='From', widget=admin_widgets.AdminDateWidget(), name='starts_at',
+    from_date = django_filters.DateFilter(label='From', widget=admin_widgets.AdminDateWidget(), field_name='starts_at',
                                           lookup_expr='date__gte')
-    until_date = django_filters.DateFilter(label='Until', widget=admin_widgets.AdminDateWidget(), name='starts_at',
+    until_date = django_filters.DateFilter(label='Until', widget=admin_widgets.AdminDateWidget(), field_name='starts_at',
                                            lookup_expr='date__lte')
 
     class Meta:
@@ -143,7 +143,7 @@ class AdminReportResourceAvailabilityOverviewFilter(FilterSet):
 class AdminReportExpiringConsultancyContractOverviewFilter(FilterSet):
     """Expiring consultancy contract overview admin report filter."""
     ends_at_lte = django_filters.DateFilter(label='Ends before', widget=admin_widgets.AdminDateWidget(),
-                                            name='ends_at', lookup_expr='lte')
+                                            field_name='ends_at', lookup_expr='lte')
     remaining_hours_lte = django_filters.NumberFilter(label='Remaining hours (<=, less than or equal)')
     remaining_days_lte = django_filters.NumberFilter(label='Remaining 8h days (<=, less than or equal)')
     only_final = django_filters.ChoiceFilter(label='Only display final consultancy contract for a user?',
@@ -157,7 +157,7 @@ class AdminReportExpiringConsultancyContractOverviewFilter(FilterSet):
 class AdminReportProjectContractOverviewFilter(FilterSet):
     """Project contract overview admin report filter."""
     contract = (django_filters.ModelMultipleChoiceFilter(label='Contract',
-                                                         name='contract_ptr', lookup_expr='in',
+                                                         field_name='contract_ptr', lookup_expr='in',
                                                          queryset=models.ProjectContract.objects.filter(active=True),
                                                          distinct=True))
     customer = (django_filters.ModelMultipleChoiceFilter(queryset=models.Company.objects.filter(),
@@ -184,11 +184,11 @@ class AdminReportProjectContractOverviewFilter(FilterSet):
 
 class AdminReportUserOvertimeOverviewFilter(FilterSet):
     """User overtime overview admin report filter."""
-    user = django_filters.ModelChoiceFilter(name='leave__user',
+    user = django_filters.ModelChoiceFilter(field_name='leave__user',
                                             queryset=auth_models.User.objects.filter(is_active=True))
-    from_date = django_filters.DateFilter(label='From', widget=admin_widgets.AdminDateWidget(), name='starts_at',
+    from_date = django_filters.DateFilter(label='From', widget=admin_widgets.AdminDateWidget(), field_name='starts_at',
                                           lookup_expr='date__gte')
-    until_date = django_filters.DateFilter(label='Until', widget=admin_widgets.AdminDateWidget(), name='starts_at',
+    until_date = django_filters.DateFilter(label='Until', widget=admin_widgets.AdminDateWidget(), field_name='starts_at',
                                            lookup_expr='date__lte')
 
     class Meta:
@@ -199,7 +199,7 @@ class AdminReportUserOvertimeOverviewFilter(FilterSet):
 class AdminReportExpiringSupportContractOverviewFilter(FilterSet):
     """Expiring support contract overview admin report filter."""
     ends_at_lte = django_filters.DateFilter(label='Ends before', widget=admin_widgets.AdminDateWidget(),
-                                            name='ends_at', lookup_expr='lte')
+                                            field_name='ends_at', lookup_expr='lte')
 
     class Meta:
         model = models.SupportContract

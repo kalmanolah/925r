@@ -18,9 +18,11 @@ now = datetime.date.today()
 class AuthenticatedAPITestCase(APITestCase):
     """"Authenticated API test case."""
 
+    user_factory = factories.UserFactory
+
     def setUp(self):
         super().setUp()
-        self.user = factories.UserFactory()
+        self.user = self.user_factory()
         self.user.set_password('password')
         self.user.save()
         self.client.login(username=self.user.username, password='password')
@@ -167,33 +169,71 @@ class ContractUserGroupTests(AuthenticatedAPITestCase):
         self.assertEqual(contract.contractuser_set.count(), 0)
 
 
-# class LeaveAPITestCase(testcases.ReadRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
-#     base_name = 'leave'
-#     factory_class = factories.LeaveFactory
-#     user_factory = factories.AdminFactory
-#     create_data = {
-#         'description': 'Not going to work',
-#         'status': 'draft',
-#     }
-#     update_data = {
-#         'description': 'Going to sleep',
-#         'status': 'pending',
-#     }
+class AdminReportViewTests(AuthenticatedAPITestCase):
+    """Admin report view tests."""
 
-#     def setUp(self):
-#         self.leave_type = factories.LeaveTypeFactory.create()
-#         super().setUp()
+    user_factory = factories.AdminFactory
 
-#     def get_object(self, factory):
-#         return factory.create(
-#             user=self.user,
-#             leave_type=self.leave_type,
-#         )
+    def setUp(self):
+        super().setUp()
 
-#     def get_create_data(self):
-#         self.create_data.update({
-#             'user': self.user.id,
-#             'leave_type': self.leave_type.id,
-#         })
+    def test_report_index_view(self):
+        """Test the report index view."""
+        response = self.client.get(reverse('admin_report_index'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-#         return self.create_data
+    #      in/ninetofiver/report/timesheet_contract_overview/$', views.admin_report_timesheet_contract_overview_view, name='admin_report_timesheet_contract_overview'),  # noqa
+    # url(r'^admin/ninetofiver/report/timesheet_overview/$', views.admin_report_timesheet_overview_view, name='admin_report_timesheet_overview'),  # noqa
+    # url(r'^admin/ninetofiver/report/user_range_info/$', views.admin_report_user_range_info_view, name='admin_report_user_range_info'),  # noqa
+    # url(r'^admin/ninetofiver/report/user_leave_overview/$', views.admin_report_user_leave_overview_view, name='admin_report_user_leave_overview'),  # noqa
+    # url(r'^admin/ninetofiver/report/user_work_ratio_overview/$', views.admin_report_user_work_ratio_overview_view, name='admin_report_user_work_ratio_overview'),  # noqa
+    # url(r'^admin/ninetofiver/report/user_overtime_overview/$', views.admin_report_user_overtime_overview_view, name='admin_report_user_overtime_overview'),  # noqa
+    # url(r'^admin/ninetofiver/report/resource_availability_overview/$', views.admin_report_resource_availability_overview_view, name='admin_report_resource_availability_overview'),  # noqa
+    # url(r'^admin/ninetofiver/report/expiring_consultancy_contract_overview/$', views.admin_report_expiring_consultancy_contract_overview_view, name='admin_report_expiring_consultancy_contract_overview'),  # noqa
+    # url(r'^admin/ninetofiver/report/expiring_support_contract_overview/$', views.admin_report_expiring_support_contract_overview_view, name='admin_report_expiring_support_contract_overview'),  # noqa
+    # url(r'^admin/nin
+
+    def test_timesheet_contract_overview_report_view(self):
+        """Test the timesheet contract overview report view."""
+        response = self.client.get(reverse('admin_report_timesheet_contract_overview'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_timesheet_overview_report_view(self):
+        """Test the timesheet overview report view."""
+        response = self.client.get(reverse('admin_report_timesheet_overview'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_user_range_info_report_view(self):
+        """Test the user range info report view."""
+        response = self.client.get(reverse('admin_report_user_range_info'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_user_leave_overview_report_view(self):
+        """Test the user leave overview report view."""
+        response = self.client.get(reverse('admin_report_user_leave_overview'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_user_work_ratio_overview_report_view(self):
+        """Test the user work ratio overview report view."""
+        response = self.client.get(reverse('admin_report_user_work_ratio_overview'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_user_overtime_overview_report_view(self):
+        """Test the user overtime overview report view."""
+        response = self.client.get(reverse('admin_report_user_overtime_overview'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_resource_availability_overview_report_view(self):
+        """Test the resource availability overview report view."""
+        response = self.client.get(reverse('admin_report_resource_availability_overview'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_expiring_consultancy_contract_overview_report_view(self):
+        """Test the expiring consultancy contract overview report view."""
+        response = self.client.get(reverse('admin_report_expiring_consultancy_contract_overview'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_expiring_support_contract_overview_report_view(self):
+        """Test the expiring support contract overview report view."""
+        response = self.client.get(reverse('admin_report_expiring_support_contract_overview'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
