@@ -22,6 +22,21 @@ class GenericViewTests(AuthenticatedAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.user.id)
 
+    def test_range_info_view(self):
+        """Test range info view."""
+        response = self.client.get('/api/v2/range_info/', {
+            'from': str(datetime.date.today()),
+            'until': str(datetime.date.today()),
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_range_availability_view(self):
+        """Test range availability view."""
+        response = self.client.get('/api/v2/range_availability/', {
+            'from': str(datetime.date.today()),
+            'until': str(datetime.date.today()),
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class ApiKeyAuthenticationTests(APITestCase):
@@ -101,7 +116,7 @@ class ApiKeyAuthenticationTests(APITestCase):
         user = factories.UserFactory()
         api_key = models.ApiKey.objects.create(user=user, read_only=False)
 
-        res = self.client.get('/api/v2/me/', HTTP_AUTHORIZATION='Token' % api_key.key)
+        res = self.client.get('/api/v2/me/', HTTP_AUTHORIZATION='Token')
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
         res = self.client.get('/api/v2/me/', HTTP_AUTHORIZATION='Token %s %s' % (api_key.key, api_key.key))
