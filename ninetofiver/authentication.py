@@ -25,7 +25,11 @@ class ApiKeyAuthentication(BaseTokenAuthentication):
                     msg = _('Invalid token header. Token string should not contain spaces.')
                     raise exceptions.AuthenticationFailed(msg)
 
-                token = auth[1]
+                try:
+                    token = auth[1].decode()
+                except UnicodeError:
+                    msg = _('Invalid token header. Token string should not contain invalid characters.')
+                    raise exceptions.AuthenticationFailed(msg)
 
         if not token:
             msg = _('Invalid token. No credentials provided.')
