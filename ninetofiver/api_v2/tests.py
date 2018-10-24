@@ -1,5 +1,6 @@
 """925r API v2 tests."""
 from rest_framework import status
+from rest_framework.test import APITestCase
 from rest_assured import testcases
 from ninetofiver import factories, models
 from ninetofiver.tests import ModelTestMixin, AuthenticatedAPITestCase
@@ -20,6 +21,48 @@ class GenericViewTests(AuthenticatedAPITestCase):
         response = self.client.get(reverse('ninetofiver_api_v2:me'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.user.id)
+
+
+
+class ApiKeyAuthenticationTests(APITestCase):
+    """API key authentication tests."""
+
+    def test_missing_api_key(self):
+        """Test with missing API key."""
+        res = self.client.get(reverse('ninetofiver_api_v2:me'))
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_read_only_api_key(self):
+        """Test with read-only API key."""
+        user = factories.UserFactory()
+        api_key = models.ApiKey.objects.create(user=user, read_only=True)
+
+        res = self.client.get('/api/v2/me/?api_key=%s' % api_key.key)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['id'], user.id)
+
+        res = self.client.post('/api/v2/timesheets/?api_key=%s' % api_key.key, data={
+            'year': datetime.date.today().year,
+            'month': datetime.date.today().month,
+            'status': models.STATUS_ACTIVE,
+        })
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_read_write__api_key(self):
+        """Test with read-write API key."""
+        user = factories.UserFactory()
+        api_key = models.ApiKey.objects.create(user=user, read_only=False)
+
+        res = self.client.get('/api/v2/me/?api_key=%s' % api_key.key)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['id'], user.id)
+
+        res = self.client.post('/api/v2/timesheets/?api_key=%s' % api_key.key, data={
+            'year': datetime.date.today().year,
+            'month': datetime.date.today().month,
+            'status': models.STATUS_ACTIVE,
+        })
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
 
 class AttachmentAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):

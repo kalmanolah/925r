@@ -20,7 +20,7 @@ class ApiKeyAuthentication(BaseTokenAuthentication):
 
         res = self.authenticate_credentials(token)
 
-        # Only allow GETs using API keys
+        # Only allow GETs using read-only API keys
         if res[1].read_only and (request.method != 'GET'):
             msg = _('The token provided is only valid for read-only requests.')
             raise exceptions.AuthenticationFailed(msg)
