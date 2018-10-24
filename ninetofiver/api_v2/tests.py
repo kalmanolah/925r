@@ -96,6 +96,17 @@ class ApiKeyAuthenticationTests(APITestCase):
         })
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
+    def test_invalid_header_api_key(self):
+        """Test with invalid header API key."""
+        user = factories.UserFactory()
+        api_key = models.ApiKey.objects.create(user=user, read_only=False)
+
+        res = self.client.get('/api/v2/me/', HTTP_AUTHORIZATION='Token%s' % api_key.key)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        res = self.client.get('/api/v2/me/', HTTP_AUTHORIZATION='Token %s %s' % (api_key.key, api_key.key))
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
 class AttachmentAPITestCase(testcases.ReadWriteRESTAPITestCaseMixin, testcases.BaseRESTAPITestCase, ModelTestMixin):
     """Attachment API test case."""
