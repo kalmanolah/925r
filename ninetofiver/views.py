@@ -34,7 +34,7 @@ from rest_framework_swagger.renderers import SwaggerUIRenderer
 from rest_framework.authtoken import models as authtoken_models
 from ninetofiver import settings, tables, calculation, pagination
 from ninetofiver.utils import month_date_range, dates_in_range
-from django.db.models import Q, F, Sum, Prefetch
+from django.db.models import Q, F, Sum, Prefetch, DecimalField
 from django_tables2 import RequestConfig
 from django_tables2.export.export import TableExport
 from datetime import datetime, date, timedelta
@@ -876,7 +876,8 @@ def admin_report_project_contract_overview_view(request):
             # Fetch invoiced amount
             invoiced_amount = (models.InvoiceItem.objects
                     .filter(invoice__contract=contract)
-                    .aggregate(invoiced_amount=Sum(F('price') * F('amount'))))['invoiced_amount']
+                    .aggregate(invoiced_amount=Sum(F('price') * F('amount'),
+                                                   output_field=DecimalField(max_digits=9, decimal_places=2))))['invoiced_amount']
             invoiced_amount = invoiced_amount if invoiced_amount else 0
 
             data.append({
