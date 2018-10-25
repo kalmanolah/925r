@@ -51,22 +51,38 @@ div(class='row')
                         td
                             - include 'ninetofiver/admin/reports/progress_bar.html' with value=record.estimated_pct
 
-div(class='mt-3')
-    table(class='table table-sm table-striped my-0')
-        thead
-            tr
-                th User
-                th Performed
-                th Performed ratio
-        tbody
-            for user_data in record.users
-                tr
-                    td {{ user_data.user }}
-                    td(class='text-nowrap') {{ user_data.performed_hours | format_duration }}
-                    td
-                        - include 'ninetofiver/admin/reports/progress_bar.html' with value=user_data.performed_pct
+    div(class='w-100 mt-3')
 
-            tr
-                th Total
-                td(class='text-nowrap') {{ record.performed_hours | format_duration }}
-                td
+    div(class='col-4')
+        table(class='table table-sm table-striped my-0')
+            thead
+                tr
+                    th Fixed fee
+                    th Invoiced amount
+                    th Invoiced ratio
+            tbody
+                tr
+                    td {{ record.contract.fixed_fee }}
+                    td {{ record.invoiced_amount }}
+                    td
+                        - include 'ninetofiver/admin/reports/progress_bar.html' with value=record.invoiced_pct
+
+    div(class='col-8')
+        table(class='table table-sm table-striped my-0')
+            thead
+                tr
+                    th User
+                    th Performed
+                    th Performed ratio
+            tbody
+                for user_data in record.users
+                    tr
+                        td {{ user_data.user }}
+                        td(class='text-nowrap') {{ user_data.performed_hours | format_duration }}
+                        td
+                            - include 'ninetofiver/admin/reports/progress_bar.html' with value=user_data.performed_pct
+
+                tr
+                    th Total
+                    td(class='text-nowrap') {{ record.performed_hours | format_duration }}
+                    td

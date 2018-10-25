@@ -873,6 +873,12 @@ def admin_report_project_contract_overview_view(request):
             for country, item in country_data.items():
                 item['performed_pct'] = round((item['performed_hours'] / performed_hours) * 100, 2) if performed_hours else None
 
+            # Fetch invoiced amount
+            invoiced_amount = (models.InvoiceItem.objects
+                    .filter(invoice__contract=contract)
+                    .aggregate(invoiced_amount=Sum(F('price') * F('amount'))))['invoiced_amount']
+            invoiced_amount = invoiced_amount if invoiced_amount else 0
+
             data.append({
                 'contract': contract,
                 'contract_roles': contract_role_data.values(),
@@ -881,6 +887,8 @@ def admin_report_project_contract_overview_view(request):
                 'performed_hours': performed_hours,
                 'estimated_hours': estimated_hours,
                 'estimated_pct': round((performed_hours / estimated_hours) * 100, 2) if estimated_hours else None,
+                'invoiced_amount': invoiced_amount,
+                'invoiced_pct': round((invoiced_amount / contract.fixed_fee) * 100, 2) if contract.fixed_fee else None,
             })
 
     config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})

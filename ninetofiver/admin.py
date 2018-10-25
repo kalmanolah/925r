@@ -402,6 +402,15 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
             return real_obj.day_rate
         return None
 
+    def item_actions(obj):
+        """Actions."""
+        actions = []
+
+        actions.append('<a class="button" href="%s?contract__id__exact=%s">%s</a>' %
+                       (reverse('admin:ninetofiver_invoice_changelist'), obj.id, _('Invoices')))
+
+        return format_html('&nbsp;'.join(actions))
+
     base_model = models.Contract
     child_models = (
         models.ProjectContract,
@@ -410,7 +419,7 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
     )
     list_display = ('__str__', 'name', 'company', 'customer', contract_users, contract_user_groups, performance_type,
                     'active', 'starts_at', 'ends_at', 'description', attachments, fixed_fee, fixed_fee_period,
-                    duration, day_rate)
+                    duration, day_rate, item_actions)
 
     list_filter = (
         PolymorphicChildModelFilter,
@@ -695,3 +704,49 @@ class ActivityPerformanceChildAdmin(PerformanceChildAdmin):
 @admin.register(models.StandbyPerformance)
 class StandbyPerformanceChildAdmin(PerformanceChildAdmin):
     base_model = models.StandbyPerformance
+
+
+class InvoiceItemInline(admin.TabularInline):
+    """Invoice item inline."""
+
+    model = models.InvoiceItem
+
+
+@admin.register(models.Invoice)
+class InvoiceAdmin(admin.ModelAdmin):
+    """Invoice admin."""
+
+    def get_queryset(self, request):
+        """Get the queryset."""
+        return (super().get_queryset(request)
+                .select_related('contract', 'contract__customer')
+                .prefetch_related('invoiceitem_set'))
+
+    def amount(self, obj):
+        """Amount."""
+        return sum([x.price * x.amount for x in obj.invoiceitem_set.all()])
+
+    list_display = (
+        '__str__',
+        'date',
+        'amount',
+        'contract',
+        'reference',
+        'period_starts_at',
+        'period_ends_at',
+        'description',
+    )
+    list_filter = (
+        ('contract', RelatedDropdownFilter),
+        ('contract__company', RelatedDropdownFilter),
+        ('contract__customer', RelatedDropdownFilter),
+        ('date', DateTimeRangeFilter),
+        ('period_starts_at', DateTimeRangeFilter),
+        ('period_ends_at', DateTimeRangeFilter),
+    )
+    search_fields = ('reference', 'contract__name', 'contract__customer__name', 'contract__company__name',
+                     'description', 'date')
+    inlines = [
+        InvoiceItemInline,
+    ]
+    ordering = ('-reference',)

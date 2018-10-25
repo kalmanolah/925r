@@ -2,7 +2,7 @@
 import humanize
 import uuid
 import logging
-from datetime import datetime, date
+import datetime
 from decimal import Decimal
 from django.contrib.auth import models as auth_models
 from django.core import validators
@@ -361,11 +361,11 @@ class UserRelative(BaseModel):
         super().perform_additional_validation()
 
         if self.birth_date:
-            if self.birth_date > datetime.now().date():
+            if self.birth_date > datetime.datetime.now().date():
                 raise ValidationError({'birth_date': _('A birth date should not be set in the future')})
 
         if self.birth_date:
-            if self.birth_date.year < (datetime.now().year - 110):
+            if self.birth_date.year < (datetime.datetime.now().year - 110):
                 raise ValidationError({'birth_date': _('The selected birth date is likely incorrect.')})
 
 
@@ -394,17 +394,17 @@ class UserInfo(BaseModel):
         try:
             return EmploymentContract.objects.filter(user=self.user).earliest('started_at').started_at
         except BaseException:
-            return date.today()
+            return datetime.date.today()
 
     def perform_additional_validation(self):
         """Perform additional validation on the object."""
         super().perform_additional_validation()
 
         if self.birth_date:
-            if self.birth_date > datetime.now().date():
+            if self.birth_date > datetime.datetime.now().date():
                 raise ValidationError({'birth_date': _('A birth date should not be set in the future')})
 
-            if self.birth_date.year < (datetime.now().year - 110):
+            if self.birth_date.year < (datetime.datetime.now().year - 110):
                 raise ValidationError({'birth_date': _('The selected birth date is likely incorrect.')})
 
     class Meta(BaseModel.Meta):
@@ -447,7 +447,7 @@ class Timesheet(BaseModel):
 
     def get_date_range(self):
         """Get the date range for this timesheet."""
-        from_date = date.today().replace(year=self.year, month=self.month, day=1)
+        from_date = datetime.date.today().replace(year=self.year, month=self.month, day=1)
         until_date = from_date.replace() + relativedelta(months=1) - relativedelta(days=1)
         return [from_date, until_date]
 
@@ -1132,7 +1132,6 @@ class ActivityPerformance(Performance):
 
 
 class StandbyPerformance(Performance):
-
     """Standby (oncall) performance model."""
 
     def __str__(self):
@@ -1160,3 +1159,35 @@ class StandbyPerformance(Performance):
             if self.contract.get_real_instance_class() != SupportContract:
                 raise ValidationError({'contract':
                                       _('Standy performances can only be created for support contracts.')})
+
+
+class Invoice(BaseModel):
+    """Invoice model."""
+
+    contract = models.ForeignKey(Contract, on_delete=models.PROTECT)
+    period_starts_at = models.DateField(default=datetime.date.today)
+    period_ends_at = models.DateField(default=datetime.date.today)
+    date = models.DateField(default=datetime.date.today)
+    reference = models.CharField(max_length=255)
+    description = models.TextField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        """Return a string representation."""
+        return '%s' % self.reference
+
+
+class InvoiceItem(BaseModel):
+    """Invoice item."""
+
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
+    price = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        default=0.00,
+        validators=[
+            validators.MinValueValidator(-9999999),
+            validators.MaxValueValidator(9999999),
+        ]
+    )
+    amount = models.PositiveIntegerField(default=1)
+    description = models.TextField(max_length=255, blank=True, null=True)
