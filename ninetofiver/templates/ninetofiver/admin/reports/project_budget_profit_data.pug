@@ -34,7 +34,7 @@ script.
                 },
                 title: {
                     display: true,
-                    text: 'Performance cost vs. Fixed fee: {{ record.fixed_fee_pct }}%'
+                    text: 'Performance cost vs. Fixed fee: {% if record.fixed_fee_pct is not None %}{{ record.fixed_fee_pct }}%{% else %}n/a{% endif %}'
                 },
                 scales: {
                     yAxes: [

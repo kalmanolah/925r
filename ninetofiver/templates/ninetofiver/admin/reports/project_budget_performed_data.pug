@@ -34,7 +34,7 @@ script.
                 },
                 title: {
                     display: true,
-                    text: 'Performed vs. Estimated hours: {{ record.estimated_pct }}%'
+                    text: 'Performed vs. Estimated hours: {% if record.estimated_pct is not None %}{{ record.estimated_pct }}%{% else %}n/a{% endif %}'
                 },
                 scales: {
                     yAxes: [

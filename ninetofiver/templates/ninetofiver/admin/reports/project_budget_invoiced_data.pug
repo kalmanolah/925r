@@ -34,7 +34,7 @@ script.
                 },
                 title: {
                     display: true,
-                    text: 'Invoiced amount vs. Fixed fee: {{ record.invoiced_pct }}%'
+                    text: 'Invoiced amount vs. Fixed fee: {% if record.invoiced_pct is not None %}{{ record.invoiced_pct }}%{% else %}n/a{% endif %}'
                 },
                 scales: {
                     yAxes: [
