@@ -1037,11 +1037,11 @@ def admin_report_project_contract_budget_overview_view(request):
     data = []
 
     contracts = (fltr.qs.all()
-                .select_related('customer')
-                .filter(active=True)
-                # Ensure contracts where the internal company and the customer are the same are filtered out
-                # These are internal contracts to cover things such as meetings, talks, etc..
-                .exclude(customer=F('company')))
+                 .select_related('customer')
+                 .filter(active=True)
+                 # Ensure contracts where the internal company and the customer are the same are filtered out
+                 # These are internal contracts to cover things such as meetings, talks, etc..
+                 .exclude(customer=F('company')))
 
     for contract in contracts:
         performed_hours = (models.ActivityPerformance.objects
