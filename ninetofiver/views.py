@@ -1036,44 +1036,42 @@ def admin_report_project_contract_budget_overview_view(request):
     fltr = filters.AdminReportProjectContractOverviewFilter(request.GET, models.ProjectContract.objects)
     data = []
 
-    if True in map(bool, list(fltr.data.values())):
-        contracts = (fltr.qs.all()
-                    .select_related('customer')
-                    .prefetch_related('contractestimate_set', 'contractestimate_set__contract_role')
-                    .filter(active=True)
-                    # Ensure contracts where the internal company and the customer are the same are filtered out
-                    # These are internal contracts to cover things such as meetings, talks, etc..
-                    .exclude(customer=F('company')))
+    contracts = (fltr.qs.all()
+                .select_related('customer')
+                .filter(active=True)
+                # Ensure contracts where the internal company and the customer are the same are filtered out
+                # These are internal contracts to cover things such as meetings, talks, etc..
+                .exclude(customer=F('company')))
 
-        for contract in contracts:
-            performed_hours = (models.ActivityPerformance.objects
-                               .filter(contract=contract)
-                               .aggregate(performed_hours=Sum(F('duration') * F('performance_type__multiplier'))))['performed_hours']
-            performed_hours = performed_hours if performed_hours else Decimal('0.00')
+    for contract in contracts:
+        performed_hours = (models.ActivityPerformance.objects
+                            .filter(contract=contract)
+                            .aggregate(performed_hours=Sum(F('duration') * F('performance_type__multiplier'))))['performed_hours']
+        performed_hours = performed_hours if performed_hours else Decimal('0.00')
 
-            estimated_hours = (models.ContractEstimate.objects
-                               .filter(contract=contract)
-                               .aggregate(estimated_hours=Sum('duration')))['estimated_hours']
-            estimated_hours = estimated_hours if estimated_hours else Decimal('0.00')
+        estimated_hours = (models.ContractEstimate.objects
+                            .filter(contract=contract)
+                            .aggregate(estimated_hours=Sum('duration')))['estimated_hours']
+        estimated_hours = estimated_hours if estimated_hours else Decimal('0.00')
 
-            invoiced_amount = (models.InvoiceItem.objects
-                               .filter(invoice__contract=contract)
-                               .aggregate(invoiced_amount=Sum(F('price') * F('amount'),
-                                          output_field=DecimalField(max_digits=9, decimal_places=2))))['invoiced_amount']
-            invoiced_amount = invoiced_amount if invoiced_amount else Decimal('0.00')
+        invoiced_amount = (models.InvoiceItem.objects
+                            .filter(invoice__contract=contract)
+                            .aggregate(invoiced_amount=Sum(F('price') * F('amount'),
+                                        output_field=DecimalField(max_digits=9, decimal_places=2))))['invoiced_amount']
+        invoiced_amount = invoiced_amount if invoiced_amount else Decimal('0.00')
 
-            performance_cost = Decimal('0.00')
+        performance_cost = Decimal('0.00')
 
-            data.append({
-                'contract': contract,
-                'performed_hours': performed_hours,
-                'estimated_hours': estimated_hours,
-                'estimated_pct': round((performed_hours / estimated_hours) * 100, 2) if estimated_hours else None,
-                'invoiced_amount': invoiced_amount,
-                'invoiced_pct': round((invoiced_amount / contract.fixed_fee) * 100, 2) if contract.fixed_fee else None,
-                'performance_cost': performance_cost,
-                'fixed_fee_pct': round((performance_cost / contract.fixed_fee) * 100, 2) if contract.fixed_fee else None,
-            })
+        data.append({
+            'contract': contract,
+            'performed_hours': performed_hours,
+            'estimated_hours': estimated_hours,
+            'estimated_pct': round((performed_hours / estimated_hours) * 100, 2) if estimated_hours else None,
+            'invoiced_amount': invoiced_amount,
+            'invoiced_pct': round((invoiced_amount / contract.fixed_fee) * 100, 2) if contract.fixed_fee else None,
+            'performance_cost': performance_cost,
+            'fixed_fee_pct': round((performance_cost / contract.fixed_fee) * 100, 2) if contract.fixed_fee else None,
+        })
 
     config = RequestConfig(request, paginate={'per_page': pagination.CustomizablePageNumberPagination.page_size})
     table = tables.ProjectContractBudgetOverviewTable(data, order_by='-performed')
