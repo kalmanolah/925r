@@ -1,0 +1,54 @@
+canvas(id="project-{{ record.contract.id }}-invoiced-data-chart")
+
+script.
+    window.addEventListener('load', () => {
+        var ctx = document.getElementById('project-{{ record.contract.id }}-invoiced-data-chart').getContext('2d');
+        window.myBar = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                datasets: [
+                    {
+                        label: 'Invoiced amount',
+                        backgroundColor: '#FE4365',
+                        borderColor: '#F02311',
+                        borderWidth: 1,
+                        data: [
+                            {{ record.invoiced_amount }}
+                        ]
+                    },
+                    {
+                        label: 'Fixed fee',
+                        backgroundColor: '#CAE8A2',
+                        borderColor: '#7FAF1B',
+                        borderWidth: 1,
+                        data: [
+                            {{ record.contract.fixed_fee }}
+                        ]
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Invoiced amount vs. Fixed fee: {{ record.invoiced_pct }}%'
+                },
+                scales: {
+                    yAxes: [
+                        {
+                            scaleLabel: {
+                                labelString: 'Cost (€)',
+                                display: true
+                            },
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }
+                    ]
+                }
+            }
+        });
+    });

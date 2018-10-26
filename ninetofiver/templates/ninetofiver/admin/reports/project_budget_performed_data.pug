@@ -1,0 +1,54 @@
+canvas(id="project-{{ record.contract.id }}-performed-data-chart")
+
+script.
+    window.addEventListener('load', () => {
+        var ctx = document.getElementById('project-{{ record.contract.id }}-performed-data-chart').getContext('2d');
+        window.myBar = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                datasets: [
+                    {
+                        label: 'Performed hours',
+                        backgroundColor: '#FE4365',
+                        borderColor: '#F02311',
+                        borderWidth: 1,
+                        data: [
+                            {{ record.performed_hours }}
+                        ]
+                    },
+                    {
+                        label: 'Estimated hours',
+                        backgroundColor: '#CAE8A2',
+                        borderColor: '#7FAF1B',
+                        borderWidth: 1,
+                        data: [
+                            {{ record.estimated_hours }}
+                        ]
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Performed vs. Estimated hours: {{ record.estimated_pct }}%'
+                },
+                scales: {
+                    yAxes: [
+                        {
+                            scaleLabel: {
+                                labelString: 'Hours',
+                                display: true
+                            },
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }
+                    ]
+                }
+            }
+        });
+    });

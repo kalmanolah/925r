@@ -182,17 +182,6 @@ class AdminReportViewTests(AuthenticatedAPITestCase):
         response = self.client.get(reverse('admin_report_index'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    #      in/ninetofiver/report/timesheet_contract_overview/$', views.admin_report_timesheet_contract_overview_view, name='admin_report_timesheet_contract_overview'),  # noqa
-    # url(r'^admin/ninetofiver/report/timesheet_overview/$', views.admin_report_timesheet_overview_view, name='admin_report_timesheet_overview'),  # noqa
-    # url(r'^admin/ninetofiver/report/user_range_info/$', views.admin_report_user_range_info_view, name='admin_report_user_range_info'),  # noqa
-    # url(r'^admin/ninetofiver/report/user_leave_overview/$', views.admin_report_user_leave_overview_view, name='admin_report_user_leave_overview'),  # noqa
-    # url(r'^admin/ninetofiver/report/user_work_ratio_overview/$', views.admin_report_user_work_ratio_overview_view, name='admin_report_user_work_ratio_overview'),  # noqa
-    # url(r'^admin/ninetofiver/report/user_overtime_overview/$', views.admin_report_user_overtime_overview_view, name='admin_report_user_overtime_overview'),  # noqa
-    # url(r'^admin/ninetofiver/report/resource_availability_overview/$', views.admin_report_resource_availability_overview_view, name='admin_report_resource_availability_overview'),  # noqa
-    # url(r'^admin/ninetofiver/report/expiring_consultancy_contract_overview/$', views.admin_report_expiring_consultancy_contract_overview_view, name='admin_report_expiring_consultancy_contract_overview'),  # noqa
-    # url(r'^admin/ninetofiver/report/expiring_support_contract_overview/$', views.admin_report_expiring_support_contract_overview_view, name='admin_report_expiring_support_contract_overview'),  # noqa
-    # url(r'^admin/nin
-
     def test_timesheet_contract_overview_report_view(self):
         """Test the timesheet contract overview report view."""
         response = self.client.get(reverse('admin_report_timesheet_contract_overview'))
@@ -236,4 +225,14 @@ class AdminReportViewTests(AuthenticatedAPITestCase):
     def test_expiring_support_contract_overview_report_view(self):
         """Test the expiring support contract overview report view."""
         response = self.client.get(reverse('admin_report_expiring_support_contract_overview'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_project_contract_overview_report_view(self):
+        """Test the project contract overview report view."""
+        response = self.client.get(reverse('admin_report_project_contract_overview'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_project_contract_budget_overview_report_view(self):
+        """Test the project contract budget overview report view."""
+        response = self.client.get(reverse('admin_report_project_contract_budget_overview'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)

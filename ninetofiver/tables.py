@@ -446,33 +446,6 @@ class ExpiringConsultancyContractOverviewTable(BaseTable):
         return format_html('%s' % ('&nbsp;'.join(buttons)))
 
 
-class ProjectCountryColumn(tables.TemplateColumn):
-    """Project country column."""
-
-    def __init__(self, *args, **kwargs):
-        """Constructor."""
-        kwargs['template_name'] = 'ninetofiver/admin/reports/project_country.pug'
-        super().__init__(*args, **kwargs)
-
-
-class ProjectContractRoleColumn(tables.TemplateColumn):
-    """Project contract role column."""
-
-    def __init__(self, *args, **kwargs):
-        """Constructor."""
-        kwargs['template_name'] = 'ninetofiver/admin/reports/project_contract_role.pug'
-        super().__init__(*args, **kwargs)
-
-
-class ProjectDataColumn(tables.TemplateColumn):
-    """Project data column."""
-
-    def __init__(self, *args, **kwargs):
-        """Constructor."""
-        kwargs['template_name'] = 'ninetofiver/admin/reports/project_data.pug'
-        super().__init__(*args, **kwargs)
-
-
 class ProjectContractOverviewTable(BaseTable):
     """Project contract overview table."""
 
@@ -492,7 +465,7 @@ class ProjectContractOverviewTable(BaseTable):
             }
         }
     )
-    data = ProjectDataColumn(accessor='', orderable=False)
+    data = tables.TemplateColumn(template_name='ninetofiver/admin/reports/project_data.pug', accessor='', orderable=False)
 
     # actions = tables.Column(accessor='user', orderable=False, exclude_from_export=True)
 
@@ -556,5 +529,41 @@ class ExpiringSupportContractOverviewTable(BaseTable):
 
     def render_actions(self, record):
         buttons = []
+
+        return format_html('%s' % ('&nbsp;'.join(buttons)))
+
+
+class ProjectContractBudgetOverviewTable(BaseTable):
+    """Project contract budget overview table."""
+
+    export_formats = []
+
+    class Meta(BaseTable.Meta):
+        pass
+
+    contract = tables.LinkColumn(
+        viewname='admin:ninetofiver_contract_change',
+        args=[A('contract.id')],
+        accessor='contract',
+        order_by=['contract.name'],
+        attrs={
+            'th': {
+                'style': 'width: 15%; min-width: 150px;'
+            }
+        }
+    )
+    performed = tables.TemplateColumn(template_name='ninetofiver/admin/reports/project_budget_performed_data.pug', accessor='estimated_pct')
+    profit = tables.TemplateColumn(template_name='ninetofiver/admin/reports/project_budget_profit_data.pug', accessor='fixed_fee_pct')
+    invoiced = tables.TemplateColumn(template_name='ninetofiver/admin/reports/project_budget_invoiced_data.pug', accessor='invoiced_pct')
+    actions = tables.Column(accessor='contract', orderable=False, exclude_from_export=True)
+
+    def render_actions(self, record):
+        buttons = []
+
+        buttons.append(('<a class="button" href="%(url)s?' +
+                        'contract=%(contract)s">Details</a>') % {
+            'url': reverse('admin_report_project_contract_overview'),
+            'contract': record['contract'].id,
+        })
 
         return format_html('%s' % ('&nbsp;'.join(buttons)))
