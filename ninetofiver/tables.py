@@ -1,4 +1,5 @@
 """Tables."""
+import uuid
 from django.utils.translation import ugettext_lazy as _
 from django.utils.html import format_html
 from django.urls import reverse
@@ -40,6 +41,51 @@ class HoursColumn(tables.Column):
     def value(self, value):
         """Return the value."""
         return value
+
+
+class BarChartComparisonColumn(tables.TemplateColumn):
+    """Bar chart comparison column."""
+
+    def __init__(self, dataset=[], yLabel=None, **kwargs):
+        """Constructor."""
+        kwargs['template_name'] = 'ninetofiver/admin/reports/bar_chart_comparison_column.pug'
+        kwargs['extra_context'] = {
+            'yLabel': yLabel,
+            'dataset': dataset,
+        }
+
+        super().__init__(**kwargs)
+
+    def render(self, record, table, value, bound_column, **kwargs):
+        self.extra_context['uniqueId'] = str(uuid.uuid4())
+
+        for item in self.extra_context['dataset']:
+            if item.get('accessor', None):
+                item['value'] = item['accessor'].resolve(record)
+
+        self.extra_context['title'] = '%s vs. %s: %s' % (self.extra_context['dataset'][0]['label'],
+                                                         self.extra_context['dataset'][1]['label'],
+                                                         ('%s%%' % round((self.extra_context['dataset'][0]['value'] / self.extra_context['dataset'][1]['value']) * 100, 2) \
+                                                          if self.extra_context['dataset'][1]['value'] else 'n/a'))
+
+        return super().render(record, table, value, bound_column, **kwargs)
+
+    def value(self, record, table, value, bound_column, **kwargs):
+        return bound_column.accessor.resolve(record)
+
+    def render_footer(self, table, column, bound_column, **kwargs):
+        self.extra_context['uniqueId'] = str(uuid.uuid4())
+
+        for item in self.extra_context['dataset']:
+            if item.get('accessor', None):
+                item['value'] = sum([item['accessor'].resolve(record) for record in table.data])
+
+        self.extra_context['title'] = 'Total: %s vs. %s: %s' % (self.extra_context['dataset'][0]['label'],
+                                                         self.extra_context['dataset'][1]['label'],
+                                                         ('%s%%' % round((self.extra_context['dataset'][0]['value'] / self.extra_context['dataset'][1]['value']) * 100, 2) \
+                                                          if self.extra_context['dataset'][1]['value'] else 'n/a'))
+
+        return super().render(None, table, None, bound_column, bound_row=tables.rows.BoundRow(None, table))
 
 
 class SummedHoursColumn(HoursColumn):
@@ -552,9 +598,27 @@ class ProjectContractBudgetOverviewTable(BaseTable):
             }
         }
     )
-    performed = tables.TemplateColumn(template_name='ninetofiver/admin/reports/project_budget_performed_data.pug', accessor='estimated_pct')
-    profit = tables.TemplateColumn(template_name='ninetofiver/admin/reports/project_budget_profit_data.pug', accessor='fixed_fee_pct')
-    invoiced = tables.TemplateColumn(template_name='ninetofiver/admin/reports/project_budget_invoiced_data.pug', accessor='invoiced_pct')
+    performed = BarChartComparisonColumn(yLabel='Hours', accessor='estimated_pct', dataset=[{
+        'label': 'Performed hours',
+        'accessor': A('performed_hours')
+    }, {
+        'label': 'Estimated hours',
+        'accessor': A('estimated_hours')
+    }])
+    profit = BarChartComparisonColumn(yLabel='Cost (€)', accessor='fixed_fee_pct', dataset=[{
+        'label': 'Performance cost',
+        'accessor': A('performance_cost')
+    }, {
+        'label': 'Fixed fee',
+        'accessor': A('contract.fixed_fee')
+    }])
+    invoiced = BarChartComparisonColumn(yLabel='Cost (€)', accessor='invoiced_pct', dataset=[{
+        'label': 'Invoiced amount',
+        'accessor': A('invoiced_amount')
+    }, {
+        'label': 'Fixed fee',
+        'accessor': A('contract.fixed_fee')
+    }])
     actions = tables.Column(accessor='contract', orderable=False, exclude_from_export=True)
 
     def render_actions(self, record):

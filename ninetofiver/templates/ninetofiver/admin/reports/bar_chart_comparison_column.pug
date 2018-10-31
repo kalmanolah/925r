@@ -1,0 +1,49 @@
+canvas(id="bar-chart-comparison-column-{{ uniqueId }}-data-chart")
+
+script.
+    window.addEventListener('load', () => {
+        var ctx = document.getElementById('bar-chart-comparison-column-{{ uniqueId }}-data-chart').getContext('2d');
+        window.myBar = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                datasets: [
+                    {% for item in dataset %}
+                        {
+                            label: '{{ item.label }}',
+                            backgroundColor: '{% cycle '#FE4365' '#CAE8A2' %}',
+                            borderColor: '{% cycle '#F02311' '#7FAF1B' %}',
+                            borderWidth: 1,
+                            data: [
+                                {{ item.value }}
+                            ]
+                        },
+                    {% endfor %}
+                ]
+            },
+            options: {
+                responsive: true,
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: '{{ title }}'
+                },
+                scales: {
+                    yAxes: [
+                        {
+                            {% if yLabel %}
+                                scaleLabel: {
+                                    labelString: '{{ yLabel }}',
+                                    display: true
+                                },
+                            {% endif %}
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }
+                    ]
+                }
+            }
+        });
+    });
