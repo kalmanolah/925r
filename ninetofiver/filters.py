@@ -35,6 +35,9 @@ class AdminReportTimesheetContractOverviewFilter(FilterSet):
     performance__contract__company = (django_filters.ModelMultipleChoiceFilter(
                                       label='Contract company', queryset=models.Company.objects.filter(internal=True),
                                       distinct=True))
+    performance__contract__contract_groups = (django_filters.ModelMultipleChoiceFilter(
+                                              label='Contract group', queryset=models.ContractGroup.objects.all(),
+                                              distinct=True))
     user = django_filters.ModelMultipleChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True))
     year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
                                                                          .values_list('year', flat=True)
@@ -50,6 +53,7 @@ class AdminReportTimesheetContractOverviewFilter(FilterSet):
             'performance__contract__polymorphic_ctype__model': ['exact'],
             'performance__contract__customer': ['exact'],
             'performance__contract__company': ['exact'],
+            'performance__contract__contract_groups': ['exact'],
             'user': ['exact'],
             'status': ['exact'],
             'year': ['exact'],

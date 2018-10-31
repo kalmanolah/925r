@@ -306,6 +306,10 @@ def admin_report_timesheet_contract_overview_view(request):
         contract_customers = list(map(int, request.GET.getlist('performance__contract__customer', [])))
     except Exception:
         contract_customers = None
+    try:
+        contract_groups = list(map(int, request.GET.getlist('performance__contract__contract_groups', [])))
+    except Exception:
+        contract_groups = None
 
     if contract_ids:
         contracts = contracts.filter(id__in=contract_ids)
@@ -315,6 +319,8 @@ def admin_report_timesheet_contract_overview_view(request):
         contracts = contracts.filter(company__id__in=contract_companies)
     if contract_customers:
         contracts = contracts.filter(customer__id__in=contract_customers)
+    if contract_groups:
+        contracts = contracts.filter(contract_groups__id__in=contract_groups)
 
     contracts = contracts.values_list('id', flat=True)
 
