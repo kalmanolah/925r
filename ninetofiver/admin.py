@@ -348,8 +348,36 @@ class ContractForm(forms.ModelForm):
         self.fields['redmine_id'].widget = forms.Select(choices=redmine_project_choices)
 
 
+class ContractResource(ModelResource):
+    """Contract resource."""
+
+    class Meta:
+        """Contract resource meta class."""
+
+        model = models.Contract
+        fields = (
+            'id',
+            'name',
+            'company__id',
+            'company__name',
+            'customer__id',
+            'customer__name',
+            'active',
+            'starts_at',
+            'ends_at',
+            'description',
+            'projectcontract__fixed_fee',
+            'consultancycontract__duration',
+            'consultancycontract__day_rate',
+            'supportcontract_fixed_fee',
+            'supportcontract__fixed_fee_period',
+            'supportcontract__day_rate',
+            'polymorphic_ctype__model',
+        )
+
+
 @admin.register(models.Contract)
-class ContractParentAdmin(PolymorphicParentModelAdmin):
+class ContractParentAdmin(ExportMixin, PolymorphicParentModelAdmin):
     """Contract parent admin."""
 
     def get_queryset(self, request):
@@ -410,6 +438,8 @@ class ContractParentAdmin(PolymorphicParentModelAdmin):
                        (reverse('admin:ninetofiver_invoice_changelist'), obj.id, _('Invoices')))
 
         return format_html('&nbsp;'.join(actions))
+
+    resource_class = ContractResource
 
     base_model = models.Contract
     child_models = (
