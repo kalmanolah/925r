@@ -51,6 +51,7 @@ django-import-export = "*"
 django-admin-sortable = "*"
 django-logentry-admin = "*"
 "django-admin-select2" = "*"
+django-sql-explorer = "*"
 
 
 [dev-packages]

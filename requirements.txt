@@ -35,6 +35,7 @@ django-rest-framework==0.1.0
 django-rest-swagger==2.0.7
 django-settings-export==1.2.1
 django-silk==2.0.0
+django-sql-explorer==1.1.2
 django-tables2==1.21.1
 django-wkhtmltopdf==3.1.0
 djangorestframework==3.7.7

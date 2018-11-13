@@ -98,6 +98,7 @@ class Base(Configuration):
         'phonenumber_field',
         'import_export',
         'adminsortable',
+        'explorer',
         'logentry_admin',
     ]
 
@@ -257,6 +258,12 @@ class Base(Configuration):
     SILKY_MAX_RECORDED_REQUESTS = 1000
     SILKY_MAX_RECORDED_REQUESTS_CHECK_PERCENT = 1
     SILKY_INTERCEPT_PERCENT = 5
+
+    # Django SQL explorer
+    EXPLORER_CONNECTIONS = { 'Default': 'default' }
+    EXPLORER_DEFAULT_CONNECTION = 'default'
+    EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = []
+    EXPLORER_PERMISSION_CHANGE = lambda env: lambda u: u.is_superuser
 
     # Crispy forms
     CRISPY_TEMPLATE_PACK = 'bootstrap3'

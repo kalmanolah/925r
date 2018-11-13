@@ -97,6 +97,9 @@ urlpatterns += [
     # Silk (profiling)
     url(r'^admin/silk/', include('silk.urls', namespace='silk')),
 
+    # Django SQL explorer
+    url(r'^admin/sqlexplorer/', include('explorer.urls')),
+
     # Custom admin routes
     url(r'^admin/ninetofiver/leave/approve/(?P<leave_pk>[0-9,]+)/$', views.admin_leave_approve_view, name='admin_leave_approve'),  # noqa
     url(r'^admin/ninetofiver/leave/reject/(?P<leave_pk>[0-9,]+)/$', views.admin_leave_reject_view, name='admin_leave_reject'),  # noqa

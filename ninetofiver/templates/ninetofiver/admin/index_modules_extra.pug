@@ -5,10 +5,13 @@ div(class='module' style='width: 100%')
       if perms.ninetofiver.change_leave
         tr
           th(scope='row')
-            a(href="/admin/ninetofiver/leave/?status__exact=pending") Pending leaves
+            a(href="/admin/ninetofiver/leave/?status__exact=pending") Pending leave
       //- tr
       //-   th(scope='row')
       //-     a(href="/admin/ninetofiver/timesheet/?status__exact=pending") Pending timesheets
       tr
         th(scope='row')
           a(href="{% url 'admin_report_index' %}") Reports
+      tr
+        th(scope='row')
+          a(href="{% url 'explorer_index' %}") Experimental report playground
