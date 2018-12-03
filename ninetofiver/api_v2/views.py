@@ -203,7 +203,7 @@ class TimesheetContractPdfDownloadAPIView(BaseTimesheetContractPdfExportServiceA
         """Resolve the users, timesheets and contracts for this export."""
         user = context['view'].request.user
         timesheet = get_object_or_404(models.Timesheet, pk=context.get('timesheet_pk', None), user=user)
-        contract = get_object_or_404(models.Contract.objects.distinct(), pk=context.get('contract_pk', None), contractuser__user=user)
+        contract = get_object_or_404(models.Contract.objects.distinct(), pk=context.get('contract_pk', None))
         return [[user, timesheet, contract]]
 
 

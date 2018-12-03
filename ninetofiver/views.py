@@ -1110,7 +1110,6 @@ class AdminTimesheetContractPdfExportView(BaseTimesheetContractPdfExportServiceA
         for item in data:
             item[0] = get_object_or_404(auth_models.User.objects.filter().distinct(), pk=item[0])
             item[1] = get_object_or_404(models.Timesheet.objects.filter().distinct(), pk=item[1], user=item[0])
-            item[2] = get_object_or_404(models.Contract.objects.filter().distinct(), pk=item[2],
-                                        contractuser__user=item[0])
+            item[2] = get_object_or_404(models.Contract.objects.filter().distinct(), pk=item[2])
 
         return data
