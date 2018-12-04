@@ -309,7 +309,7 @@ class TimesheetSerializer(BasicSerializer):
         if instance.status != models.STATUS_ACTIVE:
             # If the timesheet is updated when it is finalized, only allow adding of attachments
             if ((len(validated_data) > 1) or ('attachments' not in validated_data) or
-                (list(set(instance.attachments.values_list('id', flat=True)) - set(validated_data['attachments'])))):
+                (list(set(instance.attachments.all()) - set(validated_data['attachments'])))):
                 raise serializers.ValidationError({'status': _('You can only add attachments to finalized timesheets.')})
 
         return super().update(instance, validated_data)
@@ -364,7 +364,7 @@ class LeaveSerializer(BasicSerializer):
         if instance.status not in [models.STATUS_DRAFT, models.STATUS_PENDING]:
             # If the leave is updated when it is finalized, only allow adding of attachments
             if ((len(validated_data) > 1) or ('attachments' not in validated_data) or
-                (list(set(instance.attachments.values_list('id', flat=True)) - set(validated_data['attachments'])))):
+                (list(set(instance.attachments.all()) - set(validated_data['attachments'])))):
                 raise serializers.ValidationError({'status': _('You can only add attachments to finalized leave.')})
 
         leave = None
