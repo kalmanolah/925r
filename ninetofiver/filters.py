@@ -39,12 +39,10 @@ class AdminReportTimesheetContractOverviewFilter(FilterSet):
                                               label='Contract group', queryset=models.ContractGroup.objects.all(),
                                               distinct=True))
     user = django_filters.ModelMultipleChoiceFilter(queryset=auth_models.User.objects.filter(is_active=True))
-    year = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
-                                                                         .values_list('year', flat=True)
-                                                                         .order_by('year').distinct())])
-    month = django_filters.ChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
-                                                                          .values_list('month', flat=True)
-                                                                          .order_by('month').distinct())])
+    year = django_filters.MultipleChoiceFilter(choices=lambda: [[x, x] for x in (models.Timesheet.objects
+                                                                                 .values_list('year', flat=True)
+                                                                                 .order_by('year').distinct())])
+    month = django_filters.MultipleChoiceFilter(choices=lambda: [[x + 1, x + 1] for x in range(12)])
 
     class Meta:
         model = models.Timesheet
