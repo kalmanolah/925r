@@ -381,8 +381,10 @@ class LeaveSerializer(BasicSerializer):
     def apply_date_range_to_leave(self, leave, starts_at, ends_at, full_day):
         starts_at = dateutil.parser.parse(starts_at)
         starts_at = timezone.make_aware(starts_at) if not timezone.is_aware(starts_at) else starts_at
+        starts_at = starts_at.replace(second=1)
         ends_at = dateutil.parser.parse(ends_at)
         ends_at = timezone.make_aware(ends_at) if not timezone.is_aware(ends_at) else ends_at
+        ends_at = ends_at.replace(second=0)
 
         # If the leave isn't pending/draft, NOPE
         if leave.status not in [models.STATUS_PENDING, models.STATUS_DRAFT]:
