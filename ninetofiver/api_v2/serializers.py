@@ -446,10 +446,10 @@ class LeaveSerializer(BasicSerializer):
                 if (work_hours > 0.0) and (not holiday):
                     # Ensure the leave starts when the working day does
                     pair_starts_at = current_dt.replace(hour=settings.DEFAULT_WORKING_DAY_STARTING_HOUR, minute=0,
-                                                        second=0)
+                                                        second=1)
                     # Add work hours to pair start to obtain pair end
                     pair_ends_at = pair_starts_at.replace(hour=int(pair_starts_at.hour + work_hours),
-                                                            minute=int((work_hours % 1) * 60))
+                                                          minute=int((work_hours % 1) * 60), second=0)
                     # Log pair
                     leave_dates.append([pair_starts_at, pair_ends_at])
 
