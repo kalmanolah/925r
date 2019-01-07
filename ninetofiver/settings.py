@@ -333,6 +333,16 @@ class Base(Configuration):
     # Default starting hour for working days
     DEFAULT_WORKING_DAY_STARTING_HOUR = 9
 
+    # Mattermost integration
+    MATTERMOST_INCOMING_WEBHOOK_URL = values.Value(None)
+    MATTERMOST_PERFORMANCE_REMINDER_NOTIFICATION_ENABLED = values.Value(True)
+    MATTERMOST_TIMESHEET_REMINDER_NOTIFICATION_ENABLED = values.Value(True)
+
+    # Rocketchat integration
+    ROCKETCHAT_INCOMING_WEBHOOK_URL = values.Value(None)
+    ROCKETCHAT_PERFORMANCE_REMINDER_NOTIFICATION_ENABLED = values.Value(True)
+    ROCKETCHAT_TIMESHEET_REMINDER_NOTIFICATION_ENABLED = values.Value(True)
+
 
 class Dev(Base):
     """Dev configuration."""

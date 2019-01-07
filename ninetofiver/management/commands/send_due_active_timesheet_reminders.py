@@ -2,13 +2,15 @@
 import logging
 from django.core.management.base import BaseCommand
 from django.contrib.auth import models as auth_models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext as _
 from django.db.models import Q
 import calendar
 import datetime
+import requests
 from dateutil.relativedelta import relativedelta
-from ninetofiver import models
+from ninetofiver import models, settings
 from ninetofiver.utils import send_mail
+
 
 log = logging.getLogger(__name__)
 
@@ -72,3 +74,22 @@ class Command(BaseCommand):
                         'timesheet_count': len(timesheets),
                     }
                 )
+
+                if settings.MATTERMOST_INCOMING_WEBHOOK_URL and settings.MATTERMOST_TIMESHEET_REMINDER_NOTIFICATION_ENABLED:
+                    try:
+                        requests.post(settings.MATTERMOST_INCOMING_WEBHOOK_URL, json={
+                            'channel': '@%s' % user.username,
+                            'text': _('Hey there! Did you know you have %(timesheet_count)s active timesheet(s) due for submission? Please review and submit them soon!') % {'timesheet_count': len(timesheets)},
+                        })
+                    except:
+                        log.error('Could not send mattermost notification!', exc_info=True)
+
+
+                if settings.ROCKETCHAT_INCOMING_WEBHOOK_URL and settings.ROCKETCHAT_TIMESHEET_REMINDER_NOTIFICATION_ENABLED:
+                    try:
+                        requests.post(settings.ROCKETCHAT_INCOMING_WEBHOOK_URL, json={
+                            'channel': '@%s' % user.username,
+                            'text': _('Hey there! Did you know you have %(timesheet_count)s active timesheet(s) due for submission? Please review and submit them soon!') % {'timesheet_count': len(timesheets)},
+                        })
+                    except:
+                        log.error('Could not send rocketchat notification!', exc_info=True)
