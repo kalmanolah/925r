@@ -1,12 +1,9 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
-
 django = "==1.11.15"
 djangorestframework = "==3.7.7"
 django-filter = "*"
@@ -52,10 +49,9 @@ django-admin-sortable = "*"
 django-logentry-admin = "*"
 "django-admin-select2" = "*"
 django-sql-explorer = "*"
-
+django-app-namespace-template-loader = "*"
 
 [dev-packages]
-
 tox = "*"
 pudb = "*"
 pylint = "*"
