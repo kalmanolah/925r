@@ -154,7 +154,7 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
 
     # Fetch all leave dates for this period
     leave_dates = (models.LeaveDate.objects
-                   .filter(leave__user__in=users, leave__status=models.STATUS_APPROVED,
+                   .filter(leave__user__in=users, leave__status__in=[models.STATUS_PENDING, models.STATUS_APPROVED],
                            starts_at__date__gte=from_date, starts_at__date__lte=until_date)
                    .select_related('leave', 'leave__leave_type', 'leave__user')
                    .prefetch_related('leave__attachments', 'leave__leavedate_set'))
@@ -211,6 +211,7 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
         user_res['work_hours'] = 0
         user_res['holiday_hours'] = 0
         user_res['leave_hours'] = 0
+        user_res['pending_leave_hours'] = 0
         user_res['performed_hours'] = 0
         user_res['remaining_hours'] = 0
         user_res['total_hours'] = 0
@@ -229,6 +230,7 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
             day_res['work_hours'] = 0
             day_res['holiday_hours'] = 0
             day_res['leave_hours'] = 0
+            day_res['pending_leave_hours'] = 0
             day_res['performed_hours'] = 0
             day_res['remaining_hours'] = 0
             day_res['total_hours'] = 0
@@ -273,8 +275,12 @@ def get_range_info(users, from_date, until_date, daily=False, detailed=False, su
                 for leave_date in leave_date_data[str(current_date)][user.id]:
                     duration = round((leave_date.ends_at - leave_date.starts_at).total_seconds() / 3600, 2)
                     duration = Decimal(str(duration))
-                    user_res['leave_hours'] += duration
-                    day_res['leave_hours'] += duration
+                    if leave_date.leave.status == models.STATUS_APPROVED:
+                        user_res['leave_hours'] += duration
+                        day_res['leave_hours'] += duration
+                    else:
+                        user_res['pending_leave_hours'] += duration
+                        day_res['pending_leave_hours'] += duration
                     day_res['leaves'].append(leave_date.leave)
             except KeyError:
                 pass
