@@ -101,10 +101,10 @@
         },
         "django-admin-sortable": {
             "hashes": [
-                "sha256:92a66ff7e58da22b8ef4c9d046b60d9aab7b2d5dd1856c306da8139a8b358cc0"
+                "sha256:6e9e6eff347340bb3c6740badb40e1cb2a9cbd5025e9a7459ca3b13fea00d2ba"
             ],
             "index": "pypi",
-            "version": "==2.1.10"
+            "version": "==2.1.11"
         },
         "django-app-namespace-template-loader": {
             "hashes": [
@@ -178,11 +178,11 @@
         },
         "django-filter": {
             "hashes": [
-                "sha256:6f4e4bc1a11151178520567b50320e5c32f8edb552139d93ea3e30613b886f56",
-                "sha256:86c3925020c27d072cdae7b828aaa5d165c2032a629abbe3c3a1be1edae61c58"
+                "sha256:3dafb7d2810790498895c22a1f31b2375795910680ac9c1432821cbedb1e176d",
+                "sha256:a3014de317bef0cd43075a0f08dfa1d319a7ccc5733c3901fb860da70b0dda68"
             ],
             "index": "pypi",
-            "version": "==2.0.0"
+            "version": "==2.1.0"
         },
         "django-gravatar2": {
             "hashes": [
@@ -202,6 +202,7 @@
         },
         "django-import-export": {
             "hashes": [
+                "sha256:830824f79aae39e4212bb03aabdd83dc57931420557b757981cf6add8d07e611",
                 "sha256:99fae7d963af4ade97af9237a843f250312421fa4ee350a3b735fcc5684c3fb5"
             ],
             "index": "pypi",
@@ -296,11 +297,11 @@
         },
         "django-tables2": {
             "hashes": [
-                "sha256:100fe1be2faa620b807dc0c2a49016f466e1ce7e3a2845dc6ecf3aaf9a96df67",
-                "sha256:efdc460717b738f5d6bc65d35066f7aca870586ab254737d623f273d88fbf22e"
+                "sha256:a893fca1afe2e95b9739c6428cc6c9735a219f65707e24274df3920f61358525",
+                "sha256:b5f7b4c76160ee927005e52ebea633c86d4529cf84757c0acd5d0434d31798a1"
             ],
             "index": "pypi",
-            "version": "==2.0.3"
+            "version": "==2.0.4"
         },
         "django-wkhtmltopdf": {
             "hashes": [
@@ -438,12 +439,12 @@
         },
         "mysqlclient": {
             "hashes": [
-                "sha256:062d78953acb23066c0387a8f3bd0ecf946626f599145bb7fd201460e8f773e1",
-                "sha256:3981ae9ce545901a36a8b7aed76ed02960a429f75dc53b7ad77fb2f9ab7cd56b",
-                "sha256:b3591a00c0366de71d65108627899710d9cfb00e575c4d211aa8de59b1f130c9"
+                "sha256:6883a4dd98903bad375c859ead1a480e1245ea3a8d9b038ea2c091c1865ba673",
+                "sha256:a62220410e26ce2d2ff94dd0138c3ecfb91db634464a9afb4c8e6b50f0a67e00",
+                "sha256:e1b9f3a8928ddb4985ca3e3c9f2aa81b19e831bbf6fabf5681ee356738dbbbb2"
             ],
             "index": "pypi",
-            "version": "==1.3.14"
+            "version": "==1.4.1"
         },
         "oauthlib": {
             "hashes": [
@@ -806,9 +807,9 @@
         },
         "wrapt": {
             "hashes": [
-                "sha256:e03f19f64d81d0a3099518ca26b04550026f131eced2e76ced7b85c6b8d32128"
+                "sha256:4aea003270831cceb8a90ff27c4031da6ead7ec1886023b80ce0dfe0adf61533"
             ],
-            "version": "==1.11.0"
+            "version": "==1.11.1"
         }
     }
 }
