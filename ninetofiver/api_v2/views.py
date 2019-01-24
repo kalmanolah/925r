@@ -285,7 +285,7 @@ class RangeAvailabilityAPIView(APIView):
         users = users if not request.query_params.get('user', None) else \
             users.filter(id__in=list(map(int, request.query_params.get('user', None).split(','))))
 
-        data = calculation.get_availability_info(users, from_date, until_date)
+        data = calculation.get_availability(users, from_date, until_date, serialize=True)
 
         return Response(data, status=status.HTTP_200_OK)
 
