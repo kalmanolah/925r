@@ -456,6 +456,7 @@ class ContractParentAdmin(ExportMixin, PolymorphicParentModelAdmin):
         ContractStatusFilter,
         ('company', RelatedDropdownFilter),
         ('customer', RelatedDropdownFilter),
+        ('contract_groups', RelatedDropdownFilter),
         ('contractuser__user', RelatedDropdownFilter),
         ('contractusergroup__group', RelatedDropdownFilter),
         ('performance_types', RelatedDropdownFilter),
