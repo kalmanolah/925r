@@ -50,6 +50,8 @@ django-logentry-admin = "*"
 "django-admin-select2" = "*"
 django-sql-explorer = "*"
 django-app-namespace-template-loader = "*"
+gunicorn = "*"
+dj-static = "*"
 
 [dev-packages]
 tox = "*"
