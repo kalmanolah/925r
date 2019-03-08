@@ -72,7 +72,9 @@ class Base(Configuration):
     ]
 
     # Application definition
-    INSTALLED_APPS = NINETOFIVER_APPS + [
+    INSTALLED_APPS = [
+        'whitenoise.runserver_nostatic',
+    ] + NINETOFIVER_APPS + [
         'django_admin_select2',
         'django.contrib.admin',
         'django.contrib.auth',
@@ -106,6 +108,7 @@ class Base(Configuration):
         'silk.middleware.SilkyMiddleware',
         'corsheaders.middleware.CorsMiddleware',
         'django.middleware.security.SecurityMiddleware',
+        'whitenoise.middleware.WhiteNoiseMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.middleware.common.CommonMiddleware',
         'django.middleware.csrf.CsrfViewMiddleware',

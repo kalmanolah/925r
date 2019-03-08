@@ -51,7 +51,7 @@ django-logentry-admin = "*"
 django-sql-explorer = "*"
 django-app-namespace-template-loader = "*"
 gunicorn = "*"
-dj-static = "*"
+whitenoise = "*"
 
 [dev-packages]
 tox = "*"
