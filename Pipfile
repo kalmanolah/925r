@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 django = "==1.11.15"
-djangorestframework = "==3.7.7"
+djangorestframework = "==3.11.2"
 django-filter = "*"
 django-rest-swagger = "==2.0.7"
 django-crispy-forms = "==1.6.1"
